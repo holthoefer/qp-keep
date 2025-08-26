@@ -58,7 +58,7 @@ export default function DashboardPage() {
         await sendEmailVerification(user);
         toast({
           title: "Verification Email Sent",
-          description: "Please check your inbox.",
+          description: "Please check your inbox and spam folder.",
         });
       } catch (error: any) {
         toast({
@@ -80,7 +80,7 @@ export default function DashboardPage() {
   }
 
   const isAdmin = profile?.role === 'admin';
-  const isActive = profile?.status === 'active' && user?.emailVerified;
+  const isActive = profile?.status === 'active'; // Removed emailVerified check
   const isPending = profile?.status === 'pending_approval';
 
   return (

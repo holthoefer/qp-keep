@@ -68,7 +68,7 @@ export function LoginForm() {
         createdAt: serverTimestamp(),
       });
       
-      // Send verification email
+      // Send verification email to all users
       await sendEmailVerification(user);
 
       toast({ 
