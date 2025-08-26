@@ -3,17 +3,17 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { addNote, getNotes, deleteNote, type Note, getProfile } from '@/lib/data';
+import { addNote, getNotes, deleteNote, type Note, getProfile, type UserProfile } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 
@@ -27,7 +27,7 @@ export default function NotesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -38,14 +38,13 @@ export default function NotesPage() {
 
     const fetchProfileAndNotes = async () => {
         setLoadingNotes(true);
-        // Fetch user profile to check for admin role
+        // Fetch user profile to check for admin role and status
         try {
-            const profile = await getProfile(user.uid);
-            if (profile && profile.role === 'admin') {
-                setIsAdmin(true);
-            }
+            const userProfile = await getProfile(user.uid);
+            setProfile(userProfile);
         } catch (err) {
             console.error("Error fetching profile:", err);
+            setError("Fehler beim Laden des Benutzerprofils.");
         }
 
         // Subscribe to notes
@@ -134,6 +133,8 @@ export default function NotesPage() {
     }
   }
 
+  const isFormDisabled = isSaving || profile?.status === 'inactive';
+
   if (authLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -152,7 +153,7 @@ export default function NotesPage() {
           </h1>
         </div>
         <div className="flex items-center gap-4">
-            {isAdmin && (
+            {profile?.role === 'admin' && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                     <Shield className="mr-2 h-4 w-4" />
                     Admin
@@ -172,28 +173,38 @@ export default function NotesPage() {
               <CardTitle className="font-headline">Neue Notiz erstellen</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSaveNote} className="space-y-4">
-                <Input
-                  placeholder="Titel"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  disabled={isSaving}
-                  className="font-headline"
-                />
-                <Textarea
-                  placeholder="Schreiben Sie hier Ihre Notiz..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={6}
-                  disabled={isSaving}
-                />
-                <div className="flex items-center justify-end">
-                  <Button type="submit" disabled={isSaving}>
-                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Speichern & Tags generieren
-                  </Button>
-                </div>
-              </form>
+              {profile?.status === 'inactive' ? (
+                <Alert variant="destructive">
+                  <ShieldAlert className="h-4 w-4" />
+                  <AlertTitle>Konto inaktiv</AlertTitle>
+                  <AlertDescription>
+                    Ihr Konto wurde von einem Administrator als inaktiv markiert. Sie können keine neuen Notizen erstellen oder bestehende bearbeiten.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <form onSubmit={handleSaveNote} className="space-y-4">
+                  <Input
+                    placeholder="Titel"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    disabled={isFormDisabled}
+                    className="font-headline"
+                  />
+                  <Textarea
+                    placeholder="Schreiben Sie hier Ihre Notiz..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    rows={6}
+                    disabled={isFormDisabled}
+                  />
+                  <div className="flex items-center justify-end">
+                    <Button type="submit" disabled={isFormDisabled}>
+                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Speichern & Tags generieren
+                    </Button>
+                  </div>
+                </form>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -223,7 +234,12 @@ export default function NotesPage() {
                                 {note.createdAt?.toDate().toLocaleDateString('de-DE')}
                             </p>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteNote(note.id)}>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleDeleteNote(note.id)}
+                            disabled={profile?.status === 'inactive'}
+                        >
                             <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                     </div>
