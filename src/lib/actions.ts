@@ -43,6 +43,9 @@ export async function saveNoteAction(formData: FormData) {
   }
   
   const dataToSave = { ...validatedFields.data };
+
+  // If it's a new note, we don't have an ID yet.
+  // The 'new' string comes from the form's hidden input.
   if (!noteId || noteId === 'new') {
     delete dataToSave.id;
   }

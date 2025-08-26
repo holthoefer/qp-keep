@@ -10,6 +10,7 @@ let notes: Note[] = [];
 // Helper function to get notes from localStorage
 const loadNotesFromLocalStorage = (): Note[] => {
   if (typeof window === 'undefined') {
+    // Return a default structure if window is not defined (e.g., during server-side rendering)
     return [];
   }
   try {
@@ -71,7 +72,8 @@ const seedInitialData = () => {
 const loadedNotes = loadNotesFromLocalStorage();
 if (loadedNotes.length > 0) {
   notes = loadedNotes;
-} else {
+} else if (typeof window !== 'undefined') {
+  // Seed only on client side if no notes are found
   seedInitialData();
 }
 
@@ -80,12 +82,13 @@ export const getNotes = async (): Promise<Note[]> => {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 100));
   const notesFromStorage = loadNotesFromLocalStorage();
-  if (notesFromStorage.length === 0) {
+  if (notesFromStorage.length === 0 && typeof window !== 'undefined') {
     seedInitialData();
-    return notes;
+    notes = loadNotesFromLocalStorage();
+  } else {
+    notes = notesFromStorage;
   }
-  notes = notesFromStorage;
-  return notes.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  return [...notes].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 };
 
 export const getNote = async (id: string): Promise<Note | undefined> => {
@@ -111,9 +114,10 @@ export const saveNote = async (noteData: Omit<Note, 'id' | 'createdAt' | 'update
     }
   }
   
+  // This is a new note
   const newNote: Note = {
     ...noteData,
-    id: (Math.random() + 1).toString(36).substring(7),
+    id: (Date.now() + Math.random()).toString(36), // More unique ID
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
