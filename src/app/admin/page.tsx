@@ -1,9 +1,12 @@
+
 import { getAllUsers } from "@/lib/actions";
 import { UserManagementTable } from "@/components/admin/user-management-table";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default async function AdminPage() {
-  const allUsers = await getAllUsers();
+  // This page is temporarily disabled while fixing core profile loading.
+  // const allUsers = await getAllUsers();
+  const allUsers = [];
 
   return (
     <div className="flex h-full flex-col">
@@ -17,7 +20,10 @@ export default async function AdminPage() {
                 <CardTitle>User Management</CardTitle>
                 <CardDescription>Update roles and statuses for all users in the system.</CardDescription>
             </CardHeader>
-            <UserManagementTable users={allUsers} />
+            {/* <UserManagementTable users={allUsers} /> */}
+             <div className="p-6 pt-0 text-center text-muted-foreground">
+                User management is temporarily disabled.
+            </div>
          </Card>
       </main>
     </div>
