@@ -7,27 +7,46 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { TagInput } from './tag-input';
-import { Save, Trash2, FilePlus, XCircle } from 'lucide-react';
+import { Save, Trash2, FilePlus, XCircle, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 
 export function NoteEditor({ note }: { note?: Note }) {
   const [title, setTitle] = useState(note?.title || '');
   const [content, setContent] = useState(note?.content || '');
   const [tags, setTags] = useState<string[]>(note?.tags || []);
   const router = useRouter();
+  const { user, loading } = useAuth();
 
   const isNewNote = !note?.id;
 
   const handleCancel = () => {
-    router.back();
+    router.push('/notes');
   }
-
+  
   const handleSave = (formData: FormData) => {
+    if (!user) return;
     formData.set('title', title);
     formData.set('content', content);
     formData.set('tags', tags.join(','));
+    formData.set('userId', user.uid);
     saveNoteAction(formData);
+  }
+
+  if (loading) {
+    return (
+        <div className="flex h-full w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    )
+  }
+
+  if (!user) {
+      // This should ideally not happen if routing is protected.
+      // But as a fallback, we can show a message.
+      router.push('/');
+      return null;
   }
 
   return (
@@ -50,12 +69,12 @@ export function NoteEditor({ note }: { note?: Note }) {
                </Button>
             </form>
             {!isNewNote && (
-               <form action={deleteNoteAction} className="m-0">
-                 <input type="hidden" name="id" value={note.id} />
-                 <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
-                     <Trash2 />
-                 </Button>
-               </form>
+                 <form action={deleteNoteAction} className="m-0">
+                   <input type="hidden" name="id" value={note.id} />
+                   <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
+                       <Trash2 />
+                   </Button>
+                 </form>
             )}
           </div>
         </div>

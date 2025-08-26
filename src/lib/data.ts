@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import type { Note } from './types';
 
 const notesCollection = collection(db, 'notes');
@@ -9,6 +9,7 @@ const mapFirestoreDocToNote = (doc: any): Note => {
   const data = doc.data();
   return {
     id: doc.id,
+    userId: data.userId,
     title: data.title,
     content: data.content,
     tags: data.tags || [],
@@ -17,9 +18,10 @@ const mapFirestoreDocToNote = (doc: any): Note => {
   };
 };
 
-export const getNotes = async (): Promise<Note[]> => {
+export const getNotes = async (userId: string): Promise<Note[]> => {
+  if (!userId) return [];
   try {
-    const q = query(notesCollection, orderBy('updatedAt', 'desc'));
+    const q = query(notesCollection, where('userId', '==', userId), orderBy('updatedAt', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(mapFirestoreDocToNote);
   } catch (error) {
@@ -34,6 +36,8 @@ export const getNote = async (id: string): Promise<Note | undefined> => {
     const docRef = doc(db, 'notes', id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
+      // Basic security check, more robust checks should be in Firestore rules
+      // This is a simplified example.
       return mapFirestoreDocToNote(docSnap);
     } else {
       console.log("No such document!");

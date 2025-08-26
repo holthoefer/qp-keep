@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { PlusCircle, LogOut, User } from "lucide-react";
+import { PlusCircle, LogOut, User, Loader2 } from "lucide-react";
 import type { Note } from "@/lib/types";
 import { KeepKnowLogo } from "@/components/icons";
 import { NoteCard } from "./note-card";
@@ -14,9 +14,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter
 } from "@/components/ui/sidebar";
 import { 
   DropdownMenu, 
@@ -27,11 +24,30 @@ import {
   DropdownMenuSeparator 
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export function NoteList({ notes }: { notes: Note[] }) {
   const searchParams = useSearchParams();
   const currentNoteId = searchParams.get('noteId');
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+      </div>
+    );
+  }
+  
   return (
     <div className="flex h-full flex-col">
       <SidebarHeader>
@@ -44,7 +60,7 @@ export function NoteList({ notes }: { notes: Note[] }) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://picsum.photos/40/40" alt="User Avatar" data-ai-hint="person" />
+                    <AvatarImage src={user?.photoURL ?? `https://picsum.photos/seed/${user?.uid}/40/40`} alt="User Avatar" data-ai-hint="person" />
                     <AvatarFallback>
                       <User className="h-5 w-5" />
                     </AvatarFallback>
@@ -52,13 +68,11 @@ export function NoteList({ notes }: { notes: Note[] }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{user?.email ?? 'My Account'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Logout</span>
-                  </Link>
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -86,8 +100,6 @@ export function NoteList({ notes }: { notes: Note[] }) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-      </SidebarFooter>
     </div>
   );
 }
