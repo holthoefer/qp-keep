@@ -82,7 +82,7 @@ export async function getAiTags(noteContent: string): Promise<{ tags?: string[];
   }
 }
 
-// New actions for admin panel
+// User Profile Actions
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
     return Data.getUserProfile(userId);
 }
