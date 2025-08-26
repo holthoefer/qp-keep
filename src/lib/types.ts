@@ -1,3 +1,4 @@
+
 export interface Note {
   id: string;
   userId: string; 
@@ -15,4 +16,13 @@ export interface UserProfile {
   role: 'admin' | 'user';
   status: 'active' | 'pending_approval' | 'suspended';
   createdAt: string; // ISO string
+}
+
+export interface UserProfileQueryResult {
+  profile: UserProfile | null;
+  debug: {
+    uid: string;
+    docsFound: number;
+    error: string | null | any;
+  }
 }

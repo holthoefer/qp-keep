@@ -1,8 +1,9 @@
+
 'use server';
 
 import { db } from './firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp, serverTimestamp, setDoc, where } from 'firebase/firestore';
-import type { Note, UserProfile } from './types';
+import type { Note, UserProfile, UserProfileQueryResult } from './types';
 
 const notesCollection = collection(db, 'notes');
 const usersCollection = collection(db, 'users');
@@ -108,27 +109,25 @@ export const deleteNote = async (id: string): Promise<void> => {
 
 // --- User Profile Functions ---
 
-export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+export const getUserProfile = async (userId: string): Promise<UserProfileQueryResult> => {
     if (!userId) {
-        console.log("getUserProfile: No userId provided.");
-        return null;
+        return { profile: null, debug: { uid: userId, error: 'No userId provided.', docsFound: 0 } };
     }
     try {
         const q = query(usersCollection, where("uid", "==", userId));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            console.warn(`No user profile found for UID: ${userId}`);
-            return null;
+            return { profile: null, debug: { uid: userId, error: 'No user profile document found.', docsFound: 0 } };
         }
         
-        // Should only be one document, but we'll take the first.
         const userDoc = querySnapshot.docs[0];
-        return mapFirestoreDocToUserProfile(userDoc);
+        const profile = mapFirestoreDocToUserProfile(userDoc);
+        return { profile, debug: { uid: userId, docsFound: querySnapshot.docs.length, error: null } };
 
-    } catch (error) {
+    } catch (error: any) {
         console.error(`Error getting user profile for UID: ${userId}`, error);
-        return null;
+        return { profile: null, debug: { uid: userId, error: error.message, docsFound: 0 } };
     }
 };
 
@@ -153,5 +152,3 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
         throw new Error('Failed to update user profile.');
     }
 };
-
-    

@@ -4,7 +4,7 @@
 import { useAuth } from '@/hooks/use-auth';
 import { getUserProfile } from '@/lib/actions';
 import { useEffect, useState } from 'react';
-import type { UserProfile } from '@/lib/types';
+import type { UserProfile, UserProfileQueryResult } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Loader2, Shield, Notebook, LogOut, MailWarning } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileQueryResult, setProfileQueryResult] = useState<UserProfileQueryResult | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
@@ -34,11 +34,11 @@ export default function DashboardPage() {
 
     async function fetchProfile() {
       try {
-        const userProfile = await getUserProfile(user!.uid);
-        setProfile(userProfile);
+        const result = await getUserProfile(user!.uid);
+        setProfileQueryResult(result);
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
-        setProfile(null); // Ensure profile is null on error
+        setProfileQueryResult({ profile: null, debug: { error: error, uid: user!.uid, docsFound: 0 }});
       } finally {
         setLoading(false);
       }
@@ -79,9 +79,8 @@ export default function DashboardPage() {
     );
   }
 
+  const profile = profileQueryResult?.profile ?? null;
   const isAdmin = profile?.role === 'admin';
-  // IMPORTANT: We no longer check for emailVerified here. 
-  // Authorization is based SOLELY on the database status.
   const isActive = profile?.status === 'active';
   const isPending = profile?.status === 'pending_approval';
 
@@ -156,7 +155,7 @@ export default function DashboardPage() {
                     <pre className="whitespace-pre-wrap text-xs bg-muted p-4 rounded-lg">
                         {JSON.stringify({
                             auth_user: user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null,
-                            db_profile: profile,
+                            db_query_result: profileQueryResult
                         }, null, 2)}
                     </pre>
                 </CardContent>

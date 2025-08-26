@@ -1,10 +1,11 @@
+
 'use server';
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import * as Data from './data';
-import type { Note, UserProfile } from './types';
+import type { Note, UserProfile, UserProfileQueryResult } from './types';
 import { suggestTags } from '@/ai/flows/suggest-tags';
 
 export async function getNotes(userId: string): Promise<Note[]> {
@@ -83,8 +84,8 @@ export async function getAiTags(noteContent: string): Promise<{ tags?: string[];
 }
 
 // User Profile Actions
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-    if (!userId) return null;
+export async function getUserProfile(userId: string): Promise<UserProfileQueryResult> {
+    if (!userId) return { profile: null, debug: { uid: userId, error: 'No user ID provided', docsFound: 0 } };
     return Data.getUserProfile(userId);
 }
 
