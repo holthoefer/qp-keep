@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -30,9 +32,15 @@ export default function DashboardPage() {
     }
 
     async function fetchProfile() {
-      const userProfile = await getUserProfile(user!.uid);
-      setProfile(userProfile);
-      setLoading(false);
+      try {
+        const userProfile = await getUserProfile(user!.uid);
+        setProfile(userProfile);
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+        setProfile(null); // Ensure profile is null on error
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchProfile();
@@ -55,56 +63,84 @@ export default function DashboardPage() {
   const isActive = profile?.status === 'active';
   const isPending = profile?.status === 'pending_approval';
 
+  const debugInfo = {
+    auth_user: user ? {
+      uid: user.uid,
+      email: user.email,
+      emailVerified: user.emailVerified,
+    } : null,
+    db_profile: profile
+  };
+
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 flex flex-col items-center justify-center space-y-4">
-          <KeepKnowLogo className="h-16 w-16 text-primary" />
-          <h1 className="font-headline text-5xl font-bold tracking-tighter">
-            Willkommen!
-          </h1>
-          <p className="text-muted-foreground">{profile?.email}</p>
+      <div className="w-full max-w-md space-y-8">
+        <div>
+            <div className="mb-8 flex flex-col items-center justify-center space-y-4">
+            <KeepKnowLogo className="h-16 w-16 text-primary" />
+            <h1 className="font-headline text-5xl font-bold tracking-tighter">
+                Willkommen!
+            </h1>
+            <p className="text-muted-foreground">{profile?.email}</p>
+            </div>
+
+            <Card>
+            <CardHeader>
+                <CardTitle>Dashboard</CardTitle>
+                <CardDescription>Wählen Sie eine Aktion aus.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {isPending && (
+                <Alert>
+                    <AlertTitle>Konto ausstehend</AlertTitle>
+                    <AlertDescription>
+                    Ihr Konto wartet auf die Freigabe durch einen Administrator. Sie werden per E-Mail benachrichtigt.
+                    </AlertDescription>
+                </Alert>
+                )}
+
+                <Button
+                onClick={() => router.push('/notes')}
+                className="w-full justify-start"
+                disabled={!isActive}
+                >
+                <Notebook className="mr-2 h-4 w-4" />
+                Notizen verwalten
+                </Button>
+
+                <Button
+                onClick={() => router.push('/admin')}
+                className="w-full justify-start"
+                disabled={!isAdmin || !isActive}
+                >
+                <Shield className="mr-2 h-4 w-4" />
+                Admin Panel
+                </Button>
+                
+                <Button onClick={handleLogout} className="w-full" variant="secondary">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Ausloggen
+                </Button>
+            </CardContent>
+            </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Dashboard</CardTitle>
-            <CardDescription>Wählen Sie eine Aktion aus.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isPending && (
-              <Alert>
-                <AlertTitle>Konto ausstehend</AlertTitle>
-                <AlertDescription>
-                  Ihr Konto wartet auf die Freigabe durch einen Administrator. Sie werden per E-Mail benachrichtigt.
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <Button
-              onClick={() => router.push('/notes')}
-              className="w-full justify-start"
-              disabled={!isActive}
-            >
-              <Notebook className="mr-2 h-4 w-4" />
-              Notizen verwalten
-            </Button>
-
-            <Button
-              onClick={() => router.push('/admin')}
-              className="w-full justify-start"
-              disabled={!isAdmin || !isActive}
-            >
-              <Shield className="mr-2 h-4 w-4" />
-              Admin Panel
-            </Button>
-            
-             <Button onClick={handleLogout} className="w-full" variant="secondary">
-                <LogOut className="mr-2 h-4 w-4" />
-                Ausloggen
-            </Button>
-          </CardContent>
+        <Card className="bg-muted/50">
+            <CardHeader>
+                <CardTitle className="text-lg">Debug Info</CardTitle>
+                <CardDescription>Bitte kopieren Sie diesen Text und senden Sie ihn an den Support.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Label htmlFor="debug-output">Rohdaten</Label>
+                <Textarea 
+                    id="debug-output"
+                    readOnly 
+                    className="h-64 font-mono text-xs"
+                    value={JSON.stringify(debugInfo, null, 2)}
+                />
+            </CardContent>
         </Card>
+
       </div>
     </main>
   );
