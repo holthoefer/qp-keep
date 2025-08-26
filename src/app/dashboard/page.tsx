@@ -147,9 +147,22 @@ export default function DashboardPage() {
             </CardContent>
             </Card>
         </div>
+        
+        {/* Kontrollfenster */}
+        <Card>
+            <CardHeader>
+                <CardTitle>Kontrollfenster</CardTitle>
+                <CardDescription>Debug-Informationen zur Authentifizierung und Datenbankabfrage.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <pre className="mt-4 text-xs bg-black/90 text-white p-4 rounded-md overflow-x-auto">
+                    <code>
+                    {JSON.stringify({ auth_user: user, db_query_result: profileQueryResult }, null, 2)}
+                    </code>
+                </pre>
+            </CardContent>
+        </Card>
       </div>
     </main>
   );
 }
-
-    
