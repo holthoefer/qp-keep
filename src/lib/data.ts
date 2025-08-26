@@ -25,7 +25,7 @@ const MOCK_NOTE: Note = {
     updatedAt: new Date().toISOString(),
 };
 
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
 // Helper to convert Firestore Timestamps to ISO strings in any object
 const mapTimestamps = (data: any) => {
@@ -199,5 +199,7 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
         throw new Error('Failed to update user profile.');
     }
 };
+
+    
 
     
