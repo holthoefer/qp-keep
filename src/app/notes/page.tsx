@@ -14,9 +14,11 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useRouter } from 'next/navigation';
 
 export default function NotesPage() {
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -26,24 +28,30 @@ export default function NotesPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      const unsubscribe = getNotes(user.uid, 
-        (newNotes) => {
-          setNotes(newNotes);
-          setError(null);
-        }, 
-        (err) => {
-          console.error(err);
-          setError("Fehler: Sie haben keine ausreichenden Berechtigungen, um Notizen zu laden. Bitte überprüfen Sie Ihre Firestore-Sicherheitsregeln.");
-        },
-        () => setLoadingNotes(false)
-      );
-      return () => unsubscribe();
+    if (authLoading) return; // Wait until auth state is determined
+    if (!user) {
+      router.push('/'); // Redirect to login if not authenticated
+      return;
     }
-  }, [user]);
+
+    const unsubscribe = getNotes(user.uid, 
+      (newNotes) => {
+        setNotes(newNotes);
+        setError(null);
+        setLoadingNotes(false);
+      }, 
+      (err) => {
+        console.error(err);
+        setError("Fehler: Sie haben keine ausreichenden Berechtigungen, um Notizen zu laden. Bitte überprüfen Sie Ihre Firestore-Sicherheitsregeln.");
+        setLoadingNotes(false);
+      }
+    );
+    return () => unsubscribe();
+  }, [user, authLoading, router]);
 
   const handleLogout = async () => {
     await signOut(auth);
+    // The useAuth hook will trigger a redirect to '/'
   };
   
   const handleSaveNote = async (e: React.FormEvent) => {
@@ -83,6 +91,7 @@ export default function NotesPage() {
   };
 
   const handleDeleteNote = async (noteId: string) => {
+    if(!user) return;
     try {
       await deleteNote(noteId);
       toast({
@@ -101,7 +110,7 @@ export default function NotesPage() {
     }
   }
 
-  if (authLoading) {
+  if (authLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />

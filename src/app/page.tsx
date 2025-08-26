@@ -16,7 +16,7 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     await signOut(auth);
-    // The useAuth hook will handle the user state change and redirect.
+    // The useAuth hook will handle the user state change.
   };
 
   const goToNotes = () => {
@@ -50,7 +50,7 @@ export default function HomePage() {
                     Zur Notizenseite
                 </Button>
                 <Button onClick={handleLogout} variant="secondary" className="w-full">
-                    <LogOut className="mr-2" />
+                    <LogOut className="mr-2 h-4 w-4" />
                     Ausloggen
                 </Button>
             </div>
