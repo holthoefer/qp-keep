@@ -58,6 +58,13 @@ export function TagInput({ tags, setTags, noteContent }: TagInputProps) {
     }
     setIsSuggesting(false);
   };
+  
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(inputValue);
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -77,6 +84,7 @@ export function TagInput({ tags, setTags, noteContent }: TagInputProps) {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleInputKeyDown}
           placeholder="Add a tag..."
           className="bg-transparent"
         />
@@ -84,7 +92,7 @@ export function TagInput({ tags, setTags, noteContent }: TagInputProps) {
           <Plus />
           Add Tag
         </Button>
-        <Button variant="outline" type="button" onClick={handleSuggestTags} disabled={isSuggesting}>
+        <Button variant="outline" type="button" onClick={handleSuggestTags} disabled={isSuggesting || noteContent.trim().length < 10}>
           {isSuggesting ? (
             <Loader2 className="animate-spin" />
           ) : (
