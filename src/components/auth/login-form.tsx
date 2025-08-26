@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +37,8 @@ export function LoginForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The auth state listener on the page will trigger the AuthRedirector.
+      // The auth state change will be caught by the parent page,
+      // which will then render the AuthRedirector.
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
         setError("Invalid email or password. Please try again.");
@@ -65,23 +67,19 @@ export function LoginForm() {
         createdAt: serverTimestamp(),
       });
       
-      if (isAdmin) {
-         toast({
-            title: "Admin Account Created",
-            description: "Welcome! You will be redirected shortly...",
-         });
-         // The AuthRedirector will handle the redirect.
-      } else {
-        await sendEmailVerification(user);
-        await signOut(auth); // Sign out user so they have to log in after verification
-        toast({ 
-          title: "Account Created & Verification Sent", 
-          description: "Please check your inbox. Your account is now pending administrator approval.",
-          duration: 10000,
-        });
-        router.push('/pending-approval');
+      // Send verification email for non-admins
+      if (!isAdmin) {
+          await sendEmailVerification(user);
       }
 
+      toast({ 
+        title: "Account Created", 
+        description: isAdmin ? "Welcome, Admin!" : "Please check your inbox to verify your email. Your account is pending administrator approval.",
+        duration: 10000,
+      });
+
+      // The auth state change will be caught by the parent page,
+      // which will render the AuthRedirector to send the user to the dashboard.
     } catch (err: any) {
         console.error("Signup Error:", err);
         if (err.code === 'auth/email-already-in-use') {

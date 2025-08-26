@@ -1,3 +1,4 @@
+
 'use client';
 
 import { getNotes, getUserProfile } from '@/lib/actions';
@@ -27,16 +28,14 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     }
 
     async function loadUserData() {
-      // User is authenticated, now get their data.
       const [profile, userNotes] = await Promise.all([
         getUserProfile(user!.uid),
         getNotes(user!.uid)
       ]);
       
-      // The AuthRedirector should handle this, but this layout still protects itself.
-      // If a non-active user somehow lands here, redirect them.
+      // If a non-active user somehow lands here, redirect them to the central dashboard.
       if (!profile || profile.status !== 'active') {
-          router.push('/pending-approval');
+          router.push('/dashboard');
           return;
       }
       

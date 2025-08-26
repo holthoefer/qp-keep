@@ -1,3 +1,4 @@
+
 'use client';
 
 import { getUserProfile } from '@/lib/actions';
@@ -27,12 +28,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     async function checkAdminStatus() {
       const profile = await getUserProfile(user!.uid);
       
-      if (profile && profile.role === 'admin') {
+      if (profile && profile.role === 'admin' && profile.status === 'active') {
         setIsAuthorized(true);
       } else {
         setIsAuthorized(false);
-        // If not an admin, redirect them away. The notes page is a safe default.
-        router.push('/notes'); 
+        // If not an admin, redirect them away. The dashboard is the central hub.
+        router.push('/dashboard'); 
       }
       setCheckingStatus(false);
     }

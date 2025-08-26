@@ -1,3 +1,4 @@
+
 'use client';
 
 import { LoginForm } from '@/components/auth/login-form';
@@ -18,8 +19,8 @@ export default function LoginPage() {
   }
 
   if (user) {
-    // User is logged in, but we need to check their profile to redirect correctly.
-    // This component will handle fetching the profile and redirecting.
+    // User is logged in. The AuthRedirector will handle figuring out
+    // where to send them.
     return <AuthRedirector user={user} />;
   }
   
