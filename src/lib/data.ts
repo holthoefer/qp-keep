@@ -24,7 +24,7 @@ export interface Note {
   createdAt: Timestamp;
 }
 
-export const addNote = async (note: Omit<Note, 'id' | 'createdAt'>) => {
+export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'tags'>) => {
   await addDoc(collection(db, 'notes'), {
     ...note,
     createdAt: serverTimestamp(),
@@ -33,23 +33,26 @@ export const addNote = async (note: Omit<Note, 'id' | 'createdAt'>) => {
 
 export const getNotes = (
   userId: string,
-  callback: (notes: Note[]) => void,
-  setLoading: (loading: boolean) => void
+  onSuccess: (notes: Note[]) => void,
+  onError: (error: Error) => void,
+  onFinally: () => void,
 ) => {
-  setLoading(true);
   const q = query(collection(db, 'notes'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   
-  const unsubscribe = onSnapshot(q, (querySnapshot) => {
-    const notes: Note[] = [];
-    querySnapshot.forEach((doc) => {
-      notes.push({ id: doc.id, ...doc.data() } as Note);
-    });
-    callback(notes);
-    setLoading(false);
-  }, (error) => {
-    console.error("Error fetching notes: ", error);
-    setLoading(false);
-  });
+  const unsubscribe = onSnapshot(q, 
+    (querySnapshot) => {
+      const notes: Note[] = [];
+      querySnapshot.forEach((doc) => {
+        notes.push({ id: doc.id, ...doc.data() } as Note);
+      });
+      onSuccess(notes);
+      onFinally();
+    }, 
+    (error) => {
+      onError(error);
+      onFinally();
+    }
+  );
   
   return unsubscribe;
 };

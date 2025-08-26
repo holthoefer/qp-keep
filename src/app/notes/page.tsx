@@ -12,8 +12,6 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { suggestTags } from '@/ai/flows/suggest-tags';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -24,14 +22,22 @@ export default function NotesPage() {
   const [content, setContent] = useState('');
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [isTagging, setIsTagging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
-      const unsubscribe = getNotes(user.uid, setNotes, setLoadingNotes);
+      const unsubscribe = getNotes(user.uid, 
+        (newNotes) => {
+          setNotes(newNotes);
+          setError(null);
+        }, 
+        (err) => {
+          console.error(err);
+          setError("Fehler: Sie haben keine ausreichenden Berechtigungen, um Notizen zu laden. Bitte überprüfen Sie Ihre Firestore-Sicherheitsregeln.");
+        },
+        () => setLoadingNotes(false)
+      );
       return () => unsubscribe();
     }
   }, [user]);
@@ -40,23 +46,6 @@ export default function NotesPage() {
     await signOut(auth);
   };
   
-  const handleContentChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    setContent(newContent);
-    
-    if (newContent.length > 50 && !isTagging) {
-      setIsTagging(true);
-      try {
-        const result = await suggestTags({ noteContent: newContent });
-        setSuggestedTags(result.tags);
-      } catch (e) {
-        console.error("Error suggesting tags:", e);
-      } finally {
-        setIsTagging(false);
-      }
-    }
-  }
-
   const handleSaveNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !title || !content) {
@@ -72,18 +61,22 @@ export default function NotesPage() {
         userId: user.uid,
         title,
         content,
-        tags: suggestedTags
       });
       setTitle('');
       setContent('');
-      setSuggestedTags([]);
       toast({
         title: "Notiz gespeichert!",
         description: "Ihre Notiz wurde erfolgreich hinzugefügt.",
       })
     } catch (e) {
       console.error("Error saving note: ", e);
-      setError("Fehler beim Speichern der Notiz.");
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      setError(`Fehler beim Speichern der Notiz: ${errorMessage}`);
+      toast({
+        title: "Fehler",
+        description: "Notiz konnte nicht gespeichert werden.",
+        variant: "destructive"
+      })
     } finally {
       setIsSaving(false);
     }
@@ -94,15 +87,21 @@ export default function NotesPage() {
       await deleteNote(noteId);
       toast({
         title: "Notiz gelöscht!",
-        variant: "destructive",
+        description: "Die Notiz wurde entfernt.",
       })
     } catch (e) {
       console.error("Error deleting note: ", e);
-      setError("Fehler beim Löschen der Notiz.");
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      setError(`Fehler beim Löschen der Notiz: ${errorMessage}`);
+      toast({
+        title: "Fehler",
+        description: "Notiz konnte nicht gelöscht werden.",
+        variant: "destructive"
+      })
     }
   }
 
-  if (authLoading || loadingNotes) {
+  if (authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -136,11 +135,6 @@ export default function NotesPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSaveNote} className="space-y-4">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
                 <Input
                   placeholder="Titel"
                   value={title}
@@ -150,17 +144,11 @@ export default function NotesPage() {
                 <Textarea
                   placeholder="Schreiben Sie hier Ihre Notiz..."
                   value={content}
-                  onChange={handleContentChange}
+                  onChange={(e) => setContent(e.target.value)}
                   rows={6}
                   disabled={isSaving}
                 />
-                <div className="flex items-center justify-between">
-                    <div className="flex gap-2 flex-wrap">
-                      {isTagging && <Loader2 className="animate-spin text-primary" size={16} />}
-                      {suggestedTags.map((tag) => (
-                        <Badge key={tag} variant="secondary">{tag}</Badge>
-                      ))}
-                    </div>
+                <div className="flex items-center justify-end">
                   <Button type="submit" disabled={isSaving}>
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Speichern
@@ -173,9 +161,18 @@ export default function NotesPage() {
 
         <div className="mx-auto w-full max-w-3xl">
           <h2 className="mb-4 font-headline text-2xl font-semibold">Meine Notizen</h2>
+           {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
           <div className="grid gap-4">
-            {notes.length === 0 ? (
-              <p className="text-muted-foreground">Sie haben noch keine Notizen.</p>
+            {loadingNotes ? (
+                 <div className="flex items-center justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                 </div>
+            ) : notes.length === 0 && !error ? (
+              <p className="text-muted-foreground text-center">Sie haben noch keine Notizen. Erstellen Sie Ihre erste!</p>
             ) : (
               notes.map((note) => (
                 <Card key={note.id}>
@@ -194,11 +191,6 @@ export default function NotesPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="whitespace-pre-wrap">{note.content}</p>
-                     <div className="flex gap-2 flex-wrap mt-4">
-                      {note.tags?.map((tag) => (
-                        <Badge key={tag} variant="outline">{tag}</Badge>
-                      ))}
-                    </div>
                   </CardContent>
                 </Card>
               ))
