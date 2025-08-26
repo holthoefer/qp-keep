@@ -19,8 +19,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { getUserProfile } from "@/lib/actions";
 
-// Set the admin email address
+
 const ADMIN_EMAIL = "holthofer@gmail.com";
 
 export function LoginForm() {
@@ -37,14 +38,34 @@ export function LoginForm() {
     setError(null);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
       if (!userCredential.user.emailVerified) {
         setError("Please verify your email address before logging in.");
-        // Do not sign out, just show the error
-      } else {
-        toast({ title: "Success", description: "You are now logged in." });
-        // The layout will redirect based on role
-        router.push('/notes'); 
+        setIsLoginLoading(false);
+        return;
       }
+      
+      const profile = await getUserProfile(userCredential.user.uid);
+
+      if (profile?.status === 'pending_approval') {
+        router.push('/pending-approval');
+        return;
+      }
+
+      if (profile?.status === 'suspended') {
+        setError("Your account has been suspended. Please contact an administrator.");
+        setIsLoginLoading(false);
+        return;
+      }
+
+      toast({ title: "Success", description: "You are now logged in." });
+      
+      if (profile?.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/notes');
+      }
+
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -59,7 +80,6 @@ export function LoginForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Create user profile in Firestore
       const userDocRef = doc(db, "users", user.uid);
       const isAdmin = email.toLowerCase() === ADMIN_EMAIL;
       
@@ -73,19 +93,17 @@ export function LoginForm() {
       
       await sendEmailVerification(user);
       
-      // Don't sign out automatically. The user is in a pending state.
-      // The app will route them to the correct page based on their status.
-      
       toast({ 
         title: "Verification Email Sent", 
-        description: "Please check your inbox to verify your email.",
+        description: "Please check your inbox to verify your email. You will be redirected shortly.",
         duration: 10000,
       });
 
-      // Let the user attempt to log in after verification.
-      // Or redirect them to a pending page after they log in.
-      setEmail('');
-      setPassword('');
+      if (isAdmin) {
+        router.push('/notes');
+      } else {
+        router.push('/pending-approval');
+      }
 
     } catch (err: any) {
         if (err.code === 'auth/email-already-in-use') {
@@ -122,11 +140,11 @@ export function LoginForm() {
         </div>
       </CardContent>
       <CardFooter className="flex-col space-y-2">
-        <Button onClick={handleLogin} className="w-full" disabled={isLoginLoading || isSignupLoading}>
+        <Button onClick={handleLogin} className="w-full" disabled={isLoading}>
           {isLoginLoading && <Loader2 className="animate-spin" />}
           Sign In
         </Button>
-        <Button onClick={handleSignup} className="w-full" variant="secondary" disabled={isLoginLoading || isSignupLoading}>
+        <Button onClick={handleSignup} className="w-full" variant="secondary" disabled={isLoading}>
           {isSignupLoading && <Loader2 className="animate-spin" />}
           Create Account
         </Button>
