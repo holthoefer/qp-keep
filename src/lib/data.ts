@@ -21,15 +21,10 @@ export const getNotes = async (): Promise<Note[]> => {
   try {
     const q = query(notesCollection, orderBy('updatedAt', 'desc'));
     const querySnapshot = await getDocs(q);
-     if (querySnapshot.empty) {
-      console.log('No notes found, seeding initial data...');
-      await seedInitialData();
-      const seededSnapshot = await getDocs(q);
-      return seededSnapshot.docs.map(mapFirestoreDocToNote);
-    }
     return querySnapshot.docs.map(mapFirestoreDocToNote);
   } catch (error) {
     console.error("Error getting notes: ", error);
+    // In case of error (e.g. permissions), return an empty array to avoid crashing the app.
     return [];
   }
 };
