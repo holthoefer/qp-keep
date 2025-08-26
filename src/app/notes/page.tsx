@@ -7,7 +7,7 @@ import { addNote, getNotes, deleteNote, type Note } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Loader2, Trash2 } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { signOut } from 'firebase/auth';
@@ -15,6 +15,7 @@ import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 
 export default function NotesPage() {
   const { user, loading: authLoading } = useAuth();
@@ -34,6 +35,7 @@ export default function NotesPage() {
       return;
     }
 
+    setLoadingNotes(true);
     const unsubscribe = getNotes(user.uid, 
       (newNotes) => {
         setNotes(newNotes);
@@ -42,11 +44,7 @@ export default function NotesPage() {
       }, 
       (err) => {
         console.error(err);
-        if (err.message.includes("permission-denied") || err.message.includes("insufficient permissions")) {
-            setError("Fehler: Sie haben keine ausreichenden Berechtigungen, um Notizen zu laden. Bitte überprüfen Sie Ihre Firestore-Sicherheitsregeln.");
-        } else {
-            setError(`Ein Fehler ist aufgetreten: ${err.message}`);
-        }
+        setError(`Fehler beim Laden der Notizen: ${err.message}. Bitte überprüfen Sie Ihre Firestore-Regeln und die Browser-Konsole für weitere Details.`);
         setLoadingNotes(false);
       }
     );
@@ -78,7 +76,7 @@ export default function NotesPage() {
       setContent('');
       toast({
         title: "Notiz gespeichert!",
-        description: "Ihre Notiz wurde erfolgreich hinzugefügt.",
+        description: "Ihre Notiz wurde erfolgreich hinzugefügt und wird gerade getaggt.",
       })
     } catch (e) {
       console.error("Error saving note: ", e);
@@ -86,7 +84,7 @@ export default function NotesPage() {
       setError(`Fehler beim Speichern der Notiz: ${errorMessage}`);
       toast({
         title: "Fehler",
-        description: "Notiz konnte nicht gespeichert werden.",
+        description: `Notiz konnte nicht gespeichert werden. ${errorMessage}`,
         variant: "destructive"
       })
     } finally {
@@ -144,7 +142,6 @@ export default function NotesPage() {
           <Card>
             <CardHeader>
               <CardTitle className="font-headline">Neue Notiz erstellen</CardTitle>
-              <CardDescription>Erfassen Sie Ihre Gedanken und Ideen.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSaveNote} className="space-y-4">
@@ -153,6 +150,7 @@ export default function NotesPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={isSaving}
+                  className="font-headline"
                 />
                 <Textarea
                   placeholder="Schreiben Sie hier Ihre Notiz..."
@@ -164,7 +162,7 @@ export default function NotesPage() {
                 <div className="flex items-center justify-end">
                   <Button type="submit" disabled={isSaving}>
                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Speichern
+                    Speichern & Tags generieren
                   </Button>
                 </div>
               </form>
@@ -205,6 +203,13 @@ export default function NotesPage() {
                   <CardContent>
                     <p className="whitespace-pre-wrap">{note.content}</p>
                   </CardContent>
+                  {note.tags && note.tags.length > 0 && (
+                    <CardFooter className="flex-wrap gap-2 pt-4">
+                      {note.tags.map(tag => (
+                        <Badge key={tag} variant="secondary">{tag}</Badge>
+                      ))}
+                    </CardFooter>
+                  )}
                 </Card>
               ))
             )}
