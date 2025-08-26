@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,13 +36,13 @@ export function LoginForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Let the layout handle redirection.
-      router.push('/notes');
+      // The auth state listener in the layout will handle the redirect.
+      router.push('/notes'); 
     } catch (err: any) {
-       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
         setError("Invalid email or password. Please try again or create an account.");
       } else {
-        setError(err.message);
+        setError("An unexpected error occurred. Please try again.");
       }
     } finally {
       setIsLoginLoading(false);
@@ -58,7 +58,7 @@ export function LoginForm() {
       
       const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL;
       
-      // Create user profile in Firestore. This is the critical step.
+      // THIS IS THE CRITICAL STEP. Create user profile in Firestore.
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, {
         uid: user.uid,
@@ -71,15 +71,17 @@ export function LoginForm() {
       if (isAdmin) {
          toast({
             title: "Admin Account Created",
-            description: "Welcome! You have been registered as an administrator.",
+            description: "Welcome! Redirecting to your notes...",
          });
-         // For the admin, just log them in and redirect.
+         // The auth state change will trigger a redirect via the layout.
+         // We can force a router push just in case.
          router.push('/notes');
       } else {
         await sendEmailVerification(user);
+        await signOut(auth); // Sign out user so they can't login before verification/approval
         toast({ 
-          title: "Verification Email Sent", 
-          description: "Please check your inbox to verify your email. You will be redirected shortly.",
+          title: "Account Created & Verification Email Sent", 
+          description: "Please check your inbox. Your account is now pending administrator approval.",
           duration: 10000,
         });
         router.push('/pending-approval');
@@ -89,7 +91,7 @@ export function LoginForm() {
         if (err.code === 'auth/email-already-in-use') {
             setError("This email is already registered. Please try logging in.");
         } else {
-            setError(err.message);
+            setError("Failed to create account. " + err.message);
         }
     } finally {
       setIsSignupLoading(false);
