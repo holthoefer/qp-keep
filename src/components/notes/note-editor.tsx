@@ -23,6 +23,13 @@ export function NoteEditor({ note }: { note?: Note }) {
     router.back();
   }
 
+  const handleSave = (formData: FormData) => {
+    formData.set('title', title);
+    formData.set('content', content);
+    formData.set('tags', tags.join(','));
+    saveNoteAction(formData);
+  }
+
   return (
     <div className="flex h-full flex-col">
         <div className="flex-shrink-0 p-4 pb-0">
@@ -50,10 +57,9 @@ export function NoteEditor({ note }: { note?: Note }) {
                 </div>
               </div>
           </div>
-       <form id="note-editor-form" action={saveNoteAction} className="m-0 flex h-full flex-col flex-grow min-h-0">
-            <div className="flex flex-grow flex-col space-y-4 p-4 pt-0 min-h-0">
+       <form id="note-editor-form" action={handleSave} className="m-0 flex h-full flex-col flex-grow min-h-0">
+            <div className="flex flex-grow flex-col space-y-4 p-4 min-h-0 bg-white dark:bg-card rounded-b-lg">
                 <input type="hidden" name="id" value={note?.id ?? ''} />
-                <input type="hidden" name="tags" value={tags.join(',')} />
                 
                 <div className="flex-shrink-0 space-y-2">
                    <Input
@@ -61,7 +67,7 @@ export function NoteEditor({ note }: { note?: Note }) {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Untitled Note"
-                    className="border-0 bg-transparent px-0 text-3xl font-bold font-headline shadow-none focus-visible:ring-0"
+                    className="border-0 px-0 text-3xl font-bold font-headline shadow-none focus-visible:ring-0"
                     aria-label="Note title"
                    />
 
@@ -75,7 +81,7 @@ export function NoteEditor({ note }: { note?: Note }) {
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                       placeholder="Start writing your brilliant ideas here..."
-                      className="h-full min-h-[400px] w-full resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
+                      className="h-full min-h-[400px] w-full resize-none border-0 p-0 text-base shadow-none focus-visible:ring-0"
                       aria-label="Note content"
                     />
                   </ScrollArea>
