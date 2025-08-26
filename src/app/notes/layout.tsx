@@ -17,44 +17,32 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
 
   useEffect(() => {
-    if (authLoading) {
-      return; // Wait for Firebase Auth to be initialized
-    }
+    if (authLoading) return; // Wait for Firebase Auth to be initialized
 
     if (!user) {
       router.push('/'); // If no user, send to login page
       return;
     }
 
-    // User is authenticated, now check their profile in Firestore
-    getUserProfile(user.uid).then(profile => {
-      if (profile) {
-        if (profile.role === 'admin') {
-          // Admin should not be in the notes section, redirect to admin panel
-          router.push('/admin');
-          return;
-        }
-        
-        if (profile.status === 'active') {
-          // This is a valid, active user. Load their data.
-          setUserProfile(profile);
-          getNotes(user.uid).then(setNotes);
-          setDataLoading(false); // Allow rendering
-        } else {
-          // User is pending or suspended, redirect
-          router.push('/pending-approval');
-        }
+    // Since this layout is only for 'user' roles, we check for that.
+    // Admins are routed to /admin by the AuthRedirector.
+    async function loadUserData() {
+      const profile = await getUserProfile(user.uid);
+      if (profile && profile.role === 'user' && profile.status === 'active') {
+        setUserProfile(profile);
+        const userNotes = await getNotes(user.uid);
+        setNotes(userNotes);
+        setDataLoading(false);
       } else {
-        // No profile found in Firestore, treat as pending
-        router.push('/pending-approval');
+        // If not an active user (or admin, who shouldn't be here), redirect.
+        router.push('/');
       }
-    }).catch(error => {
-      console.error("Failed to fetch user profile:", error);
-      router.push('/'); // On error, redirect to login
-    });
+    }
+
+    loadUserData();
   }, [user, authLoading, router]);
 
-  // Show a loader while authentication and profile checks are in progress
+  // Show a loader while authentication and data checks are in progress
   if (authLoading || dataLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">

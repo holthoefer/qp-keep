@@ -3,29 +3,24 @@
 import { LoginForm } from '@/components/auth/login-form';
 import { KeepKnowLogo } from '@/components/icons';
 import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { AuthRedirector } from '@/components/auth/auth-redirector';
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
 
-  useEffect(() => {
-    // If auth state is determined and a user exists, redirect.
-    // The /notes layout will handle all role-based routing from here.
-    if (!loading && user) {
-      router.push('/notes');
-    }
-  }, [user, loading, router]);
-
-  // While checking auth state or redirecting, show a loader.
-  if (loading || user) {
+  if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (user) {
+    // User is logged in, but we need to check their profile to redirect correctly.
+    // This component will handle fetching the profile and redirecting.
+    return <AuthRedirector user={user} />;
   }
   
   // If not loading and no user, show the login form.
