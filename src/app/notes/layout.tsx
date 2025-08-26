@@ -33,7 +33,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
         getNotes(user!.uid)
       ]);
       
-      // If a non-active user somehow lands here, redirect them to the central dashboard.
+      // Authorization is based on database status, not email verification
       if (!profile || profile.status !== 'active') {
           router.push('/dashboard');
           return;

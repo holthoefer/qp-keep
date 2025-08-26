@@ -80,7 +80,9 @@ export default function DashboardPage() {
   }
 
   const isAdmin = profile?.role === 'admin';
-  const isActive = profile?.status === 'active' && user?.emailVerified;
+  // IMPORTANT: We no longer check for emailVerified here. 
+  // Authorization is based SOLELY on the database status.
+  const isActive = profile?.status === 'active';
   const isPending = profile?.status === 'pending_approval';
 
   return (
@@ -115,7 +117,7 @@ export default function DashboardPage() {
                     <MailWarning className="h-4 w-4" />
                     <AlertTitle>Email nicht verifiziert</AlertTitle>
                     <AlertDescription>
-                      Sie müssen Ihre E-Mail-Adresse bestätigen, um vollen Zugriff zu erhalten.
+                      Bitte bestätigen Sie Ihre E-Mail-Adresse.
                       <Button variant="link" className="p-0 h-auto ml-1" onClick={handleResendVerification}>Bestätigungs-E-Mail erneut senden.</Button>
                     </AlertDescription>
                   </Alert>

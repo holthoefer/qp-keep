@@ -28,6 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     async function checkAdminStatus() {
       const profile = await getUserProfile(user!.uid);
       
+      // Authorization is based on database role and status, not email verification
       if (profile && profile.role === 'admin' && profile.status === 'active') {
         setIsAuthorized(true);
       } else {
