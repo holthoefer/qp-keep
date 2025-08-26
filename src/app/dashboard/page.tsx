@@ -146,20 +146,6 @@ export default function DashboardPage() {
                 </Button>
             </CardContent>
             </Card>
-
-            <Card className="mt-4">
-                <CardHeader>
-                    <CardTitle>Debug-Kontrollfenster</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <pre className="whitespace-pre-wrap text-xs bg-muted p-4 rounded-lg">
-                        {JSON.stringify({
-                            auth_user: user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null,
-                            db_query_result: profileQueryResult
-                        }, null, 2)}
-                    </pre>
-                </CardContent>
-            </Card>
         </div>
       </div>
     </main>
