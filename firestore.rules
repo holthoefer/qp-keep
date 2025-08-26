@@ -1,13 +1,23 @@
 
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access to all documents for any authenticated user
-    // This is a simple rule for development. For production, you'd likely
-    // want more granular rules, e.g., a user can only write to their own document.
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+    // Users can only read/update their own profile.
+    // Any authenticated user can create a profile document.
+    match /users/{userId} {
+      allow read, update: if request.auth.uid == userId;
+      allow create: if request.auth.uid != null;
+    }
+
+    // Allow admins to read all user profiles. This is necessary for the admin panel.
+    match /users/{userId} {
+        allow read: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Users can manage their own notes.
+    match /notes/{noteId} {
+      allow read, write: if request.auth.uid == request.resource.data.userId;
+      allow create: if request.auth.uid != null;
     }
   }
 }
