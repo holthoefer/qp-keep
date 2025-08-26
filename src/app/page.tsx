@@ -16,8 +16,8 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     await signOut(auth);
-    // Force a reload to ensure auth state is cleared and user is redirected to login.
-    router.push('/');
+    // After sign-out, the useAuth hook will trigger a re-render.
+    // A forced refresh ensures the state is clean.
     router.refresh(); 
   };
 
@@ -25,6 +25,7 @@ export default function HomePage() {
     router.push('/notes');
   }
 
+  // State 1: Loading authentication status
   if (loading) {
     return (
       <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
@@ -33,6 +34,7 @@ export default function HomePage() {
     );
   }
 
+  // State 2: User is logged in
   if (user) {
     return (
       <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
@@ -61,7 +63,7 @@ export default function HomePage() {
     );
   }
   
-  // If not loading and no user, show the login form.
+  // State 3: No user is logged in, show the login form
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
