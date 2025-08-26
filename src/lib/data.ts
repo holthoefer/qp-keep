@@ -37,10 +37,10 @@ export const getNotes = (
   onSuccess: (notes: Note[]) => void,
   onError: (error: Error) => void,
 ) => {
+  // Query without server-side ordering to avoid needing an index immediately.
   const q = query(
     collection(db, 'notes'), 
-    where('userId', '==', userId), 
-    orderBy('createdAt', 'desc')
+    where('userId', '==', userId)
   );
   
   const unsubscribe = onSnapshot(q, 
@@ -49,6 +49,13 @@ export const getNotes = (
       querySnapshot.forEach((doc) => {
         notes.push({ id: doc.id, ...doc.data() } as Note);
       });
+      // Sort notes on the client-side by creation date (newest first)
+      notes.sort((a, b) => {
+        const dateA = a.createdAt?.toDate() ?? new Date(0);
+        const dateB = b.createdAt?.toDate() ?? new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
       onSuccess(notes);
     }, 
     (error) => {

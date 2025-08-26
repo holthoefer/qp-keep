@@ -42,7 +42,11 @@ export default function NotesPage() {
       }, 
       (err) => {
         console.error(err);
-        setError("Fehler: Sie haben keine ausreichenden Berechtigungen, um Notizen zu laden. Bitte überprüfen Sie Ihre Firestore-Sicherheitsregeln.");
+        if (err.message.includes("permission-denied") || err.message.includes("insufficient permissions")) {
+            setError("Fehler: Sie haben keine ausreichenden Berechtigungen, um Notizen zu laden. Bitte überprüfen Sie Ihre Firestore-Sicherheitsregeln.");
+        } else {
+            setError(`Ein Fehler ist aufgetreten: ${err.message}`);
+        }
         setLoadingNotes(false);
       }
     );
@@ -51,7 +55,7 @@ export default function NotesPage() {
 
   const handleLogout = async () => {
     await signOut(auth);
-    // The useAuth hook will trigger a redirect to '/'
+    router.push('/');
   };
   
   const handleSaveNote = async (e: React.FormEvent) => {
