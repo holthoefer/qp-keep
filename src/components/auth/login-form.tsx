@@ -45,26 +45,8 @@ export function LoginForm() {
         return;
       }
       
-      const profile = await getUserProfile(userCredential.user.uid);
-
-      if (profile?.status === 'pending_approval') {
-        router.push('/pending-approval');
-        return;
-      }
-
-      if (profile?.status === 'suspended') {
-        setError("Your account has been suspended. Please contact an administrator.");
-        setIsLoginLoading(false);
-        return;
-      }
-
-      toast({ title: "Success", description: "You are now logged in." });
-      
-      if (profile?.role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/notes');
-      }
+      // Let the layout handle the redirection based on role
+      router.push('/notes');
 
     } catch (err: any) {
       setError(err.message);
