@@ -5,8 +5,27 @@ import { db } from './firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import type { Note, UserProfile, UserProfileQueryResult } from './types';
 
-const notesCollection = collection(db, 'notes');
-const usersCollection = collection(db, 'users');
+// --- MOCK DATA ---
+const MOCK_USER_PROFILE: UserProfile = {
+    id: 'kJsHJfZ0lgav0BOZyitQpezfI352',
+    uid: 'kJsHJfZ0lgav0BOZyitQpezfI352',
+    email: 'holthofer@gmail.com',
+    role: 'admin',
+    status: 'active',
+    createdAt: new Date().toISOString(),
+};
+
+const MOCK_NOTE: Note = {
+    id: 'mock-note-1',
+    userId: 'kJsHJfZ0lgav0BOZyitQpezfI352',
+    title: 'My First Note',
+    content: 'This is a mock note. The database connection is currently being blocked by Firebase project settings (likely App Check).',
+    tags: ['mock', 'debug'],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+};
+
+const USE_MOCK_DATA = true;
 
 // Helper to convert Firestore Timestamps to ISO strings in any object
 const mapTimestamps = (data: any) => {
@@ -43,9 +62,12 @@ const mapFirestoreDocToUserProfile = (docSnap: any): UserProfile => {
 }
 
 export const getNotes = async (userId: string): Promise<Note[]> => {
+  if (USE_MOCK_DATA) {
+      return userId === MOCK_USER_PROFILE.uid ? [MOCK_NOTE] : [];
+  }
   if (!userId) return [];
   try {
-    const q = query(notesCollection, where('userId', '==', userId), orderBy('updatedAt', 'desc'));
+    const q = query(collection(db, 'notes'), where('userId', '==', userId), orderBy('updatedAt', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(mapFirestoreDocToNote);
   } catch (error) {
@@ -55,6 +77,9 @@ export const getNotes = async (userId: string): Promise<Note[]> => {
 };
 
 export const getNote = async (id: string): Promise<Note | undefined> => {
+    if (USE_MOCK_DATA) {
+        return id === MOCK_NOTE.id ? MOCK_NOTE : undefined;
+    }
   try {
     const docRef = doc(db, 'notes', id);
     const docSnap = await getDoc(docRef);
@@ -70,6 +95,11 @@ export const getNote = async (id: string): Promise<Note | undefined> => {
 };
 
 export const saveNote = async (noteData: Omit<Note, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): Promise<Note> => {
+    if (USE_MOCK_DATA) {
+        const savedNote = { ...MOCK_NOTE, ...noteData, id: noteData.id || MOCK_NOTE.id };
+        console.log("Mock saving note:", savedNote);
+        return savedNote;
+    }
   try {
     const { id, ...data } = noteData;
     if (id) {
@@ -87,7 +117,7 @@ export const saveNote = async (noteData: Omit<Note, 'id' | 'createdAt' | 'update
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
-      const docRef = await addDoc(notesCollection, dataToCreate);
+      const docRef = await addDoc(collection(db, 'notes'), dataToCreate);
       const newDoc = await getDoc(docRef);
       return mapFirestoreDocToNote(newDoc);
     }
@@ -98,6 +128,10 @@ export const saveNote = async (noteData: Omit<Note, 'id' | 'createdAt' | 'update
 };
 
 export const deleteNote = async (id: string): Promise<void> => {
+    if (USE_MOCK_DATA) {
+        console.log("Mock deleting note:", id);
+        return;
+    }
   try {
     const docRef = doc(db, 'notes', id);
     await deleteDoc(docRef);
@@ -110,6 +144,14 @@ export const deleteNote = async (id: string): Promise<void> => {
 // --- User Profile Functions ---
 
 export const getUserProfile = async (userId: string): Promise<UserProfileQueryResult> => {
+    if (USE_MOCK_DATA) {
+        if (userId === MOCK_USER_PROFILE.uid) {
+            return { profile: MOCK_USER_PROFILE, debug: { uid: userId, docsFound: 1, error: "Using Mock Data" } };
+        } else {
+            return { profile: null, debug: { uid: userId, docsFound: 0, error: "User not found in Mock Data" } };
+        }
+    }
+
     if (!userId) {
         return { profile: null, debug: { uid: userId, error: 'No userId provided.', docsFound: 0 } };
     }
@@ -131,8 +173,11 @@ export const getUserProfile = async (userId: string): Promise<UserProfileQueryRe
 };
 
 export const getAllUsers = async (): Promise<UserProfile[]> => {
+    if (USE_MOCK_DATA) {
+        return [MOCK_USER_PROFILE];
+    }
     try {
-        const q = query(usersCollection, orderBy('email', 'asc'));
+        const q = query(collection(db, 'users'), orderBy('email', 'asc'));
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(mapFirestoreDocToUserProfile);
     } catch (error) {
@@ -142,6 +187,10 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 }
 
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>): Promise<void> => {
+    if (USE_MOCK_DATA) {
+        console.log("Mock updating user:", uid, data);
+        return;
+    }
     try {
         const docRef = doc(db, 'users', uid);
         await updateDoc(docRef, data);
@@ -150,3 +199,5 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
         throw new Error('Failed to update user profile.');
     }
 };
+
+    
