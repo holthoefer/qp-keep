@@ -30,24 +30,13 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
       try {
         const profile = await getUserProfile(user!.uid);
         
-        if (profile) {
-          // Profile exists, check role and status
-          if (profile.role === 'admin') {
-            setUserProfile(profile);
-            const userNotes = await getNotes(user!.uid);
-            setNotes(userNotes);
-          } else if (profile.status === 'active') {
-            setUserProfile(profile);
-            const userNotes = await getNotes(user!.uid);
-            setNotes(userNotes);
-          } else {
-            // User is pending or suspended
-            router.push('/pending-approval');
-          }
+        if (profile && (profile.role === 'admin' || profile.status === 'active')) {
+          // If user is admin OR active, they can see notes.
+          setUserProfile(profile);
+          const userNotes = await getNotes(user!.uid);
+          setNotes(userNotes);
         } else {
-          // Profile doesn't exist in Firestore yet.
-          // This can happen for a brief moment after signup.
-          // Redirecting to pending approval is a safe default.
+          // If profile doesn't exist, or status is pending/suspended, redirect.
           router.push('/pending-approval');
         }
       } catch (error) {
@@ -70,7 +59,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // This content will only be rendered for 'active' users (admin or user).
+  // This content will only be rendered for 'active' or 'admin' users.
   return (
     <SidebarProvider>
       <Sidebar>
