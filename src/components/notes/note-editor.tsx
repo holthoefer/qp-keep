@@ -12,8 +12,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRouter } from 'next/navigation';
 
 export function NoteEditor({ note }: { note?: Note }) {
-  const [tags, setTags] = useState<string[]>(note?.tags || []);
+  const [title, setTitle] = useState(note?.title || '');
   const [content, setContent] = useState(note?.content || '');
+  const [tags, setTags] = useState<string[]>(note?.tags || []);
   const router = useRouter();
 
   const isNewNote = !note?.id;
@@ -58,7 +59,8 @@ export function NoteEditor({ note }: { note?: Note }) {
         <div className="flex-shrink-0 space-y-2">
            <Input
             name="title"
-            defaultValue={note?.title}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="Untitled Note"
             className="border-0 bg-transparent px-0 text-3xl font-bold font-headline shadow-none focus-visible:ring-0"
             aria-label="Note title"
@@ -71,7 +73,7 @@ export function NoteEditor({ note }: { note?: Note }) {
           <ScrollArea className="h-full">
             <Textarea
               name="content"
-              defaultValue={note?.content}
+              value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Start writing your brilliant ideas here..."
               className="h-full min-h-[400px] w-full resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"

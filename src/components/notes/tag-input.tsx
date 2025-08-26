@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Sparkles, Loader2 } from 'lucide-react';
+import { X, Sparkles, Loader2, Plus } from 'lucide-react';
 import { getAiTags } from '@/lib/actions';
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,13 +29,6 @@ export function TagInput({ tags, setTags, noteContent }: TagInputProps) {
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addTag(inputValue);
-    }
   };
 
   const handleSuggestTags = async () => {
@@ -84,10 +77,13 @@ export function TagInput({ tags, setTags, noteContent }: TagInputProps) {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
           placeholder="Add a tag..."
           className="bg-transparent"
         />
+        <Button variant="outline" type="button" onClick={() => addTag(inputValue)} disabled={!inputValue.trim()}>
+          <Plus />
+          Add Tag
+        </Button>
         <Button variant="outline" type="button" onClick={handleSuggestTags} disabled={isSuggesting}>
           {isSuggesting ? (
             <Loader2 className="animate-spin" />
