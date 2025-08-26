@@ -1,3 +1,5 @@
+'use server';
+
 import { db } from './firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import type { Note, UserProfile } from './types';
@@ -107,22 +109,25 @@ export const deleteNote = async (id: string): Promise<void> => {
 // --- User Profile Functions ---
 
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
-    if (!userId) return null;
+    if (!userId) {
+        console.log("getUserProfile: No userId provided.");
+        return null;
+    }
     try {
-        // This is the most direct way to get a document by its ID.
-        // The document ID in our 'users' collection is the user's UID.
-        const docRef = doc(db, 'users', userId);
-        const docSnap = await getDoc(docRef);
+        const q = query(usersCollection, where("uid", "==", userId));
+        const querySnapshot = await getDocs(q);
 
-        if (docSnap.exists()) {
-            return mapFirestoreDocToUserProfile(docSnap);
-        } else {
-            console.warn(`No user profile document found for ID (UID): ${userId}`);
+        if (querySnapshot.empty) {
+            console.warn(`No user profile found for UID: ${userId}`);
             return null;
         }
+        
+        // Should only be one document, but we'll take the first.
+        const userDoc = querySnapshot.docs[0];
+        return mapFirestoreDocToUserProfile(userDoc);
 
     } catch (error) {
-        console.error("Error getting user profile for UID:", userId, error);
+        console.error(`Error getting user profile for UID: ${userId}`, error);
         return null;
     }
 };
@@ -148,3 +153,5 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
         throw new Error('Failed to update user profile.');
     }
 };
+
+    
