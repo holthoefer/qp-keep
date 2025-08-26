@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield, ShieldAlert } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert, UserCircle } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -28,6 +28,7 @@ export default function NotesPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     if (authLoading) return;
@@ -38,17 +39,22 @@ export default function NotesPage() {
 
     const fetchProfileAndNotes = async () => {
         setLoadingNotes(true);
-        // Fetch user profile to check for admin role and status
+        let userProfile: UserProfile | null = null;
+        
         try {
-            const userProfile = await getProfile(user.uid);
+            userProfile = await getProfile(user.uid);
             setProfile(userProfile);
         } catch (err) {
             console.error("Error fetching profile:", err);
             setError("Fehler beim Laden des Benutzerprofils.");
+            setLoadingNotes(false);
+            return; // Stop if profile fails to load
         }
 
+        const isAdminUser = userProfile?.role === 'admin';
+
         // Subscribe to notes
-        const unsubscribe = getNotes(user.uid, 
+        const unsubscribe = getNotes(user.uid, isAdminUser,
           (newNotes) => {
             setNotes(newNotes);
             setError(null);
@@ -90,6 +96,7 @@ export default function NotesPage() {
     try {
       await addNote({
         userId: user.uid,
+        userEmail: user.email!,
         title,
         content,
       });
@@ -153,7 +160,7 @@ export default function NotesPage() {
           </h1>
         </div>
         <div className="flex items-center gap-4">
-            {profile?.role === 'admin' && (
+            {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                     <Shield className="mr-2 h-4 w-4" />
                     Admin
@@ -210,7 +217,9 @@ export default function NotesPage() {
         </div>
 
         <div className="mx-auto w-full max-w-3xl">
-          <h2 className="mb-4 font-headline text-2xl font-semibold">Meine Notizen</h2>
+          <h2 className="mb-4 font-headline text-2xl font-semibold">
+            {isAdmin ? 'Alle Notizen' : 'Meine Notizen'}
+          </h2>
            {error && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>{error}</AlertDescription>
@@ -225,20 +234,30 @@ export default function NotesPage() {
               <p className="text-muted-foreground text-center">Sie haben noch keine Notizen. Erstellen Sie Ihre erste!</p>
             ) : (
               notes.map((note) => (
-                <Card key={note.id}>
+                <Card key={note.id} className={isAdmin && note.userId !== user.uid ? 'border-primary' : ''}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                         <div>
                             <CardTitle>{note.title}</CardTitle>
-                            <p className="text-xs text-muted-foreground pt-1">
-                                {note.createdAt?.toDate().toLocaleDateString('de-DE')}
-                            </p>
+                             <div className="text-xs text-muted-foreground pt-1 flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                                <span>{note.createdAt?.toDate().toLocaleString('de-DE')}</span>
+                                {isAdmin && note.userId !== user.uid && (
+                                    <>
+                                        <span className="hidden sm:inline-block">•</span>
+                                        <div className="flex items-center gap-1 font-medium text-primary">
+                                          <UserCircle className="h-3 w-3" />
+                                          <span>{note.userEmail || 'Unbekannt'}</span>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                         <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleDeleteNote(note.id)}
-                            disabled={profile?.status === 'inactive'}
+                            // Admins cannot delete other users' notes from this view.
+                            disabled={profile?.status === 'inactive' || (isAdmin && note.userId !== user.uid)}
                         >
                             <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
