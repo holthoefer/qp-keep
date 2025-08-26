@@ -30,7 +30,6 @@ export function LoginForm() {
 
   const handleLogin = async () => {
     setIsLoginLoading(true);
-    setIsSignupLoading(false);
     setError(null);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -50,7 +49,6 @@ export function LoginForm() {
 
   const handleSignup = async () => {
     setIsSignupLoading(true);
-    setIsLoginLoading(false);
     setError(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
