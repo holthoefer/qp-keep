@@ -57,14 +57,14 @@ export default function DashboardPage() {
       try {
         await sendEmailVerification(user);
         toast({
-          title: "Verification Email Sent",
-          description: "Please check your inbox and spam folder.",
+          title: "Bestätigungs-E-Mail gesendet",
+          description: "Bitte überprüfen Sie Ihren Posteingang und Spam-Ordner.",
         });
       } catch (error: any) {
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Failed to send verification email. Please try again shortly.",
+          title: "Fehler beim Senden der E-Mail",
+          description: `Die E-Mail konnte nicht gesendet werden. Firebase-Fehler: ${error.message}`,
         });
         console.error("Resend verification error:", error);
       }
@@ -80,7 +80,7 @@ export default function DashboardPage() {
   }
 
   const isAdmin = profile?.role === 'admin';
-  const isActive = profile?.status === 'active'; // Removed emailVerified check
+  const isActive = profile?.status === 'active' && user?.emailVerified;
   const isPending = profile?.status === 'pending_approval';
 
   return (
