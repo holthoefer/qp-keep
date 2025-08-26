@@ -61,11 +61,6 @@ export default function DashboardPage() {
   const isActive = profile?.status === 'active';
   const isPending = profile?.status === 'pending_approval';
 
-  const debugData = {
-    auth_user: user ? { uid: user.uid, email: user.email, emailVerified: user.emailVerified } : null,
-    db_profile: profile,
-  };
-
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
@@ -116,17 +111,6 @@ export default function DashboardPage() {
                     Ausloggen
                 </Button>
             </CardContent>
-            </Card>
-
-            <Card className="mt-4">
-                <CardHeader>
-                    <CardTitle>Debug Info</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <pre className="whitespace-pre-wrap break-all text-xs bg-muted p-4 rounded-lg">
-                        {JSON.stringify(debugData, null, 2)}
-                    </pre>
-                </CardContent>
             </Card>
         </div>
       </div>

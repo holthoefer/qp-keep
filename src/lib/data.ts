@@ -109,14 +109,18 @@ export const deleteNote = async (id: string): Promise<void> => {
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     if (!userId) return null;
     try {
-        const docRef = doc(db, 'users', userId);
-        const docSnap = await getDoc(docRef);
+        const q = query(usersCollection, where("uid", "==", userId));
+        const querySnapshot = await getDocs(q);
 
-        if (docSnap.exists()) {
-            return mapFirestoreDocToUserProfile(docSnap);
+        if (querySnapshot.empty) {
+            console.warn(`No user profile found for UID: ${userId}`);
+            return null;
         }
-        console.warn(`No user profile found for UID: ${userId}`);
-        return null;
+        
+        // Should only be one document, so we take the first.
+        const userDoc = querySnapshot.docs[0];
+        return mapFirestoreDocToUserProfile(userDoc);
+
     } catch (error) {
         console.error("Error getting user profile for UID:", userId, error);
         return null;
