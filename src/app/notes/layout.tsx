@@ -10,48 +10,49 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
 export default function NotesLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const router = useRouter();
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
 
   useEffect(() => {
-    if (loading) {
-      return; // Wait for Firebase auth to be ready
+    if (authLoading) {
+      return; // Warten, bis der Auth-Status klar ist.
     }
+
     if (!user) {
-      router.push('/'); // Not logged in, go to login page
+      router.push('/'); // Kein Benutzer angemeldet, zur Login-Seite.
       return;
     }
 
+    // Wenn ein Benutzer angemeldet ist, holen wir sein Profil.
     async function fetchData() {
       setIsCheckingProfile(true);
       try {
         const profile = await getUserProfile(user!.uid);
         
         if (profile && (profile.role === 'admin' || profile.status === 'active')) {
-          // If user is admin OR active, they can see notes.
+          // Benutzer ist Admin oder aktiv. Er darf bleiben.
           setUserProfile(profile);
           const userNotes = await getNotes(user!.uid);
           setNotes(userNotes);
         } else {
-          // If profile doesn't exist, or status is pending/suspended, redirect.
+          // Benutzer ist nicht berechtigt (pending, suspended, kein Profil)
           router.push('/pending-approval');
         }
       } catch (error) {
           console.error("Failed to fetch user data:", error);
-          // Handle error case, maybe redirect to an error page or login
-          router.push('/');
+          router.push('/'); // Im Fehlerfall zur Login-Seite
       } finally {
-        setIsCheckingProfile(false);
+        setIsCheckingProfile(false); // Profil-Prüfung ist abgeschlossen
       }
     }
 
     fetchData();
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
   
-  if (loading || isCheckingProfile) {
+  if (authLoading || isCheckingProfile) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -59,17 +60,14 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  // Wenn die Prüfung abgeschlossen ist, aber kein Profil gesetzt wurde,
+  // bedeutet das, der Benutzer wurde bereits weitergeleitet. 
+  // Das Anzeigen von 'null' verhindert ein kurzes Aufblitzen der alten UI.
   if (!userProfile) {
-    // This case should be handled by the redirection in useEffect, 
-    // but as a fallback, we prevent rendering the children.
-    return (
-        <div className="flex h-screen w-full items-center justify-center">
-             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-    );
+    return null;
   }
 
-  // This content will only be rendered for 'active' or 'admin' users.
+  // Dieser Inhalt wird nur für 'active' oder 'admin' Benutzer gerendert.
   return (
     <SidebarProvider>
       <Sidebar>
