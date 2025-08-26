@@ -27,13 +27,14 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     }
 
     async function loadUserData() {
+      // User is authenticated, now get their data.
       const [profile, userNotes] = await Promise.all([
         getUserProfile(user!.uid),
         getNotes(user!.uid)
       ]);
       
-      // Basic protection: if user is not active, they shouldn't be here.
-      // The AuthRedirector should handle this, but this is a fallback.
+      // The AuthRedirector should handle this, but this layout still protects itself.
+      // If a non-active user somehow lands here, redirect them.
       if (!profile || profile.status !== 'active') {
           router.push('/pending-approval');
           return;
