@@ -16,7 +16,9 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     await signOut(auth);
-    // The useAuth hook will handle the user state change.
+    // Force a reload to ensure auth state is cleared and user is redirected to login.
+    router.push('/');
+    router.refresh(); 
   };
 
   const goToNotes = () => {
