@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { createUserProfile } from "@/lib/data";
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -49,6 +50,14 @@ export function LoginForm() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      
+      // Create the user profile document in Firestore
+      await createUserProfile({
+        uid: user.uid,
+        email: user.email!,
+        role: 'user', // Default role
+        status: 'active', // Default status
+      });
       
       await sendEmailVerification(user);
 

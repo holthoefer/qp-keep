@@ -14,6 +14,7 @@ import {
   updateDoc,
   getDocs,
   getDoc,
+  setDoc,
   Timestamp
 } from 'firebase/firestore';
 import { suggestTags } from '@/ai/flows/suggest-tags';
@@ -32,7 +33,7 @@ export interface UserProfile {
     email: string;
     role: 'admin' | 'user';
     status: 'active' | 'inactive';
-    createdAt: Timestamp;
+    createdAt?: Timestamp;
 }
 
 
@@ -97,6 +98,14 @@ export const deleteNote = async (noteId: string) => {
 }
 
 // --- User Management Functions ---
+
+export const createUserProfile = async (userProfile: Omit<UserProfile, 'createdAt'>) => {
+    const userDocRef = doc(db, 'users', userProfile.uid);
+    await setDoc(userDocRef, {
+        ...userProfile,
+        createdAt: serverTimestamp(),
+    });
+};
 
 export const getProfile = async (userId: string): Promise<UserProfile | null> => {
     const userDocRef = doc(db, 'users', userId);
