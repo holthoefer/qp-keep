@@ -33,10 +33,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     checkAdminStatus();
-  }, [user, authLoading]);
+  }, [user, authLoading, router]);
   
   useEffect(() => {
-    if (checkingStatus || !profileQueryResult) {
+    if (checkingStatus || authLoading || !profileQueryResult) {
         return;
     }
     
@@ -46,7 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!isAuthorized) {
         router.push('/dashboard'); 
     }
-  }, [profileQueryResult, checkingStatus, router])
+  }, [profileQueryResult, checkingStatus, authLoading, router])
 
 
   if (checkingStatus || authLoading) {
