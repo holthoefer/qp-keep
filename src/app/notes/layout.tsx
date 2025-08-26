@@ -51,11 +51,21 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     fetchData();
   }, [user, loading, router]);
   
-  if (loading || isCheckingProfile || !userProfile) {
+  if (loading || isCheckingProfile) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (!userProfile) {
+    // This case should be handled by the redirection in useEffect, 
+    // but as a fallback, we prevent rendering the children.
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
     );
   }
 
