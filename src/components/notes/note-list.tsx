@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, LogOut } from "lucide-react";
 import type { Note } from "@/lib/types";
 import { KeepKnowLogo } from "@/components/icons";
 import { NoteCard } from "./note-card";
@@ -13,7 +13,8 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarMenu
+  SidebarMenu,
+  SidebarFooter
 } from "@/components/ui/sidebar";
 
 export function NoteList({ notes }: { notes: Note[] }) {
@@ -52,6 +53,18 @@ export function NoteList({ notes }: { notes: Note[] }) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Link href="/" className="w-full">
+              <SidebarMenuButton>
+                  <LogOut />
+                  Logout
+              </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </div>
   );
 }
