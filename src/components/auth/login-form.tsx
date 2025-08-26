@@ -40,7 +40,7 @@ export function LoginForm() {
       router.push('/notes'); 
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
-        setError("Invalid email or password. Please try again or create an account.");
+        setError("Invalid email or password. Please try again.");
       } else {
         setError("An unexpected error occurred. Please try again.");
       }
@@ -58,7 +58,6 @@ export function LoginForm() {
       
       const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL;
       
-      // THIS IS THE CRITICAL STEP. Create user profile in Firestore.
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, {
         uid: user.uid,
@@ -73,14 +72,13 @@ export function LoginForm() {
             title: "Admin Account Created",
             description: "Welcome! Redirecting to your notes...",
          });
-         // The auth state change will trigger a redirect via the layout.
-         // We can force a router push just in case.
+         // This is a reliable redirect after the admin user is created.
          router.push('/notes');
       } else {
         await sendEmailVerification(user);
-        await signOut(auth); // Sign out user so they can't login before verification/approval
+        await signOut(auth);
         toast({ 
-          title: "Account Created & Verification Email Sent", 
+          title: "Account Created & Verification Sent", 
           description: "Please check your inbox. Your account is now pending administrator approval.",
           duration: 10000,
         });
@@ -88,6 +86,7 @@ export function LoginForm() {
       }
 
     } catch (err: any) {
+        console.error("Signup Error:", err);
         if (err.code === 'auth/email-already-in-use') {
             setError("This email is already registered. Please try logging in.");
         } else {
