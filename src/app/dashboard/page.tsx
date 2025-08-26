@@ -6,20 +6,22 @@ import { getUserProfile } from '@/lib/actions';
 import { useEffect, useState } from 'react';
 import type { UserProfile } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { Loader2, Shield, Notebook, LogOut } from 'lucide-react';
+import { Loader2, Shield, Notebook, LogOut, MailWarning } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { signOut } from 'firebase/auth';
+import { signOut, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { User } from 'firebase/auth';
+import { useToast } from "@/hooks/use-toast";
+
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (authLoading) {
@@ -50,6 +52,25 @@ export default function DashboardPage() {
     router.push('/');
   };
 
+  const handleResendVerification = async () => {
+    if (user) {
+      try {
+        await sendEmailVerification(user);
+        toast({
+          title: "Verification Email Sent",
+          description: "Please check your inbox.",
+        });
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to send verification email. Please try again shortly.",
+        });
+        console.error("Resend verification error:", error);
+      }
+    }
+  };
+
   if (loading || authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -59,7 +80,7 @@ export default function DashboardPage() {
   }
 
   const isAdmin = profile?.role === 'admin';
-  const isActive = profile?.status === 'active';
+  const isActive = profile?.status === 'active' && user?.emailVerified;
   const isPending = profile?.status === 'pending_approval';
 
   return (
@@ -87,6 +108,17 @@ export default function DashboardPage() {
                     Ihr Konto wartet auf die Freigabe durch einen Administrator. Sie werden per E-Mail benachrichtigt.
                     </AlertDescription>
                 </Alert>
+                )}
+                
+                {user && !user.emailVerified && (
+                  <Alert variant="destructive">
+                    <MailWarning className="h-4 w-4" />
+                    <AlertTitle>Email nicht verifiziert</AlertTitle>
+                    <AlertDescription>
+                      Sie müssen Ihre E-Mail-Adresse bestätigen, um vollen Zugriff zu erhalten.
+                      <Button variant="link" className="p-0 h-auto ml-1" onClick={handleResendVerification}>Bestätigungs-E-Mail erneut senden.</Button>
+                    </AlertDescription>
+                  </Alert>
                 )}
 
                 <Button

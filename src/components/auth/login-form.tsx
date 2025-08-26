@@ -68,14 +68,12 @@ export function LoginForm() {
         createdAt: serverTimestamp(),
       });
       
-      // Send verification email for non-admins
-      if (!isAdmin) {
-          await sendEmailVerification(user);
-      }
+      // Send verification email
+      await sendEmailVerification(user);
 
       toast({ 
         title: "Account Created", 
-        description: isAdmin ? "Welcome, Admin!" : "Please check your inbox to verify your email. Your account is pending administrator approval.",
+        description: "Please check your inbox to verify your email.",
         duration: 10000,
       });
 
