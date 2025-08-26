@@ -35,7 +35,8 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       if (!userCredential.user.emailVerified) {
         setError("Please verify your email address before logging in.");
-        await auth.signOut();
+        // DO NOT SIGN OUT HERE. This was causing the redirect loop.
+        // await auth.signOut(); 
       } else {
         toast({ title: "Success", description: "You are now logged in." });
         router.push('/notes');
