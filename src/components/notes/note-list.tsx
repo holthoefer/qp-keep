@@ -15,6 +15,8 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter
 } from "@/components/ui/sidebar";
 import { 
   DropdownMenu, 
