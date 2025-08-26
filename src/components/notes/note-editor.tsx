@@ -18,30 +18,32 @@ export function NoteEditor({ note }: { note?: Note }) {
 
   return (
     <div className="flex h-full flex-col">
-      <form action={saveNoteAction} className="flex h-full flex-col space-y-4 p-4">
+      <div className="flex-shrink-0 p-4 pb-0">
+        <div className="flex items-center justify-between gap-4">
+            <h2 className="font-headline text-2xl font-bold truncate">
+              {isNewNote ? 'Create New Note' : 'Edit Note'}
+            </h2>
+            <div className="flex items-center gap-2">
+              <Button type="submit" form="note-editor-form">
+                {isNewNote ? <FilePlus /> : <Save />}
+                {isNewNote ? 'Create Note' : 'Save Changes'}
+              </Button>
+              {!isNewNote && (
+                <form action={deleteNoteAction}>
+                  <input type="hidden" name="id" value={note.id} />
+                  <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
+                    <Trash2 />
+                  </Button>
+                </form>
+              )}
+            </div>
+          </div>
+      </div>
+      
+      <form id="note-editor-form" action={saveNoteAction} className="flex flex-grow flex-col space-y-4 p-4 min-h-0">
         <input type="hidden" name="id" value={note?.id ?? ''} />
         <input type="hidden" name="tags" value={tags.join(',')} />
         
-        <div className="flex flex-shrink-0 items-center justify-between gap-4">
-          <h2 className="font-headline text-2xl font-bold truncate">
-            {isNewNote ? 'Create New Note' : 'Edit Note'}
-          </h2>
-          <div className="flex items-center gap-2">
-            <Button type="submit">
-              {isNewNote ? <FilePlus /> : <Save />}
-              {isNewNote ? 'Create Note' : 'Save Changes'}
-            </Button>
-            {!isNewNote && (
-              <form action={deleteNoteAction}>
-                <input type="hidden" name="id" value={note.id} />
-                <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
-                  <Trash2 />
-                </Button>
-              </form>
-            )}
-          </div>
-        </div>
-
         <div className="flex-shrink-0 space-y-2">
            <Input
             name="title"
