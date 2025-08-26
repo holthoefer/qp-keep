@@ -4,26 +4,18 @@ import { LoginForm } from '@/components/auth/login-form';
 import { KeepKnowLogo } from '@/components/icons';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { getUserProfile } from '@/lib/actions';
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // If not loading and a user exists, check their profile and redirect.
+    // If not loading and a user exists, redirect to the notes page.
+    // The notes layout will handle further role-based redirects.
     if (!loading && user) {
-        const checkUserAndRedirect = async () => {
-            const profile = await getUserProfile(user.uid);
-            if (profile && profile.role === 'admin') {
-                router.push('/admin');
-            } else {
-                router.push('/notes');
-            }
-        };
-        checkUserAndRedirect();
+      router.push('/notes');
     }
   }, [user, loading, router]);
 

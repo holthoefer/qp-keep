@@ -27,18 +27,30 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     }
 
     async function fetchData() {
-      setDataLoading(true);
       try {
         const profile = await getUserProfile(user!.uid);
         
-        if (profile && (profile.role === 'admin' || profile.status === 'active')) {
-          // User is authorized to see notes.
-          setUserProfile(profile);
-          const userNotes = await getNotes(user!.uid);
-          setNotes(userNotes);
+        if (profile) {
+          if (profile.role === 'admin') {
+            // Admin should be redirected to the admin panel.
+            router.push('/admin');
+            return; // Stop further execution
+          }
+          
+          if (profile.status === 'active') {
+            // User is active, load their notes.
+            setUserProfile(profile);
+            const userNotes = await getNotes(user!.uid);
+            setNotes(userNotes);
+          } else {
+            // User is pending or suspended.
+            router.push('/pending-approval');
+            return;
+          }
         } else {
-          // User is not authorized (pending, suspended, or no profile)
+          // No profile found, treat as pending.
           router.push('/pending-approval');
+          return;
         }
       } catch (error) {
           console.error("Failed to fetch user data:", error);
@@ -51,20 +63,14 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     fetchData();
   }, [user, authLoading, router]);
   
-  if (authLoading || dataLoading) {
+  if (authLoading || dataLoading || !userProfile) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-
-  // If loading is done, but there's no profile, it means the user was redirected.
-  // Rendering null prevents a brief flash of the UI.
-  if (!userProfile) {
-    return null;
-  }
-
+  
   return (
     <SidebarProvider>
       <Sidebar>
