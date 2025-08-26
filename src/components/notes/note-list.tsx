@@ -14,6 +14,8 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
   SidebarFooter
 } from "@/components/ui/sidebar";
 
