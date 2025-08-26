@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { PlusCircle, LogOut, User, Loader2 } from "lucide-react";
-import type { Note } from "@/lib/types";
+import { PlusCircle, LogOut, User, Loader2, Shield } from "lucide-react";
+import type { Note, UserProfile } from "@/lib/types";
 import { KeepKnowLogo } from "@/components/icons";
 import { NoteCard } from "./note-card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuItem
 } from "@/components/ui/sidebar";
 import { 
   DropdownMenu, 
@@ -29,7 +30,7 @@ import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
-export function NoteList({ notes }: { notes: Note[] }) {
+export function NoteList({ notes, userProfile }: { notes: Note[]; userProfile: UserProfile | null }) {
   const searchParams = useSearchParams();
   const currentNoteId = searchParams.get('noteId');
   const { user, loading } = useAuth();
@@ -70,6 +71,12 @@ export function NoteList({ notes }: { notes: Note[] }) {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>{user?.email ?? 'My Account'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {userProfile?.role === 'admin' && (
+                  <DropdownMenuItem onClick={() => router.push('/admin')}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    <span>Admin Panel</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>

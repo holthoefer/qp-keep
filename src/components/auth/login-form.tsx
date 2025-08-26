@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +18,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+
+// IMPORTANT: Replace this with your actual admin email
+const ADMIN_EMAIL = "your-admin-email@example.com";
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -35,8 +39,6 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       if (!userCredential.user.emailVerified) {
         setError("Please verify your email address before logging in.");
-        // DO NOT SIGN OUT HERE. This was causing the redirect loop.
-        // await auth.signOut(); 
       } else {
         toast({ title: "Success", description: "You are now logged in." });
         router.push('/notes');
@@ -53,14 +55,27 @@ export function LoginForm() {
     setError(null);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(userCredential.user);
+      const user = userCredential.user;
+
+      // Create user profile in Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: user.email,
+        role: email.toLowerCase() === ADMIN_EMAIL ? 'admin' : 'user',
+        status: email.toLowerCase() === ADMIN_EMAIL ? 'active' : 'pending_approval',
+        createdAt: serverTimestamp(),
+      });
+      
+      await sendEmailVerification(user);
       await auth.signOut(); // Log out user until they verify
+      
       toast({ 
         title: "Verification Email Sent", 
-        description: "Please check your inbox to verify your email address. You can close this tab.",
+        description: "Please check your inbox to verify your email. An administrator will review your account shortly.",
         duration: 10000,
       });
-      // Reset form or redirect to a "please verify" page
+
       setEmail('');
       setPassword('');
 

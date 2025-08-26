@@ -4,26 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import * as Data from './data';
-import type { Note } from './types';
+import type { Note, UserProfile } from './types';
 import { suggestTags } from '@/ai/flows/suggest-tags';
-import { auth } from './firebase';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-
-export async function login(data: FormData) {
-  const email = data.get('email') as string;
-  const password = data.get('password') as string;
-
-  // In a real app, you would handle this more gracefully.
-  // For this demo, we will redirect to notes on successful login.
-  // Firebase Auth SDK for Node.js doesn't manage session state,
-  // so we can't truly "log in" on the server. The client will need to handle auth state.
-  // This is a simplified example.
-  redirect('/notes');
-}
-
-export async function logout() {
-  redirect('/');
-}
 
 export async function getNotes(userId: string): Promise<Note[]> {
   if (!userId) return [];
@@ -68,6 +50,7 @@ export async function saveNoteAction(formData: FormData) {
   try {
     const savedNote = await Data.saveNote(dataToSave);
     revalidatePath('/notes');
+    revalidatePath('/admin');
     redirect(`/notes?noteId=${savedNote.id}`);
   } catch (error) {
      console.error('Failed to save note:', error);
@@ -82,6 +65,7 @@ export async function deleteNoteAction(formData: FormData) {
   }
   await Data.deleteNote(id);
   revalidatePath('/notes');
+  revalidatePath('/admin');
   redirect('/notes');
 }
 
@@ -96,4 +80,43 @@ export async function getAiTags(noteContent: string): Promise<{ tags?: string[];
     console.error('AI tag suggestion failed:', error);
     return { error: 'Failed to suggest tags at the moment. Please try again later.' };
   }
+}
+
+// New actions for admin panel
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+    return Data.getUserProfile(userId);
+}
+
+export async function getAllUsers(): Promise<UserProfile[]> {
+    return Data.getAllUsers();
+}
+
+const userProfileUpdateSchema = z.object({
+    uid: z.string(),
+    role: z.enum(['admin', 'user']),
+    status: z.enum(['active', 'pending_approval', 'suspended']),
+});
+
+export async function updateUserProfile(formData: FormData) {
+    const validatedFields = userProfileUpdateSchema.safeParse({
+        uid: formData.get('uid'),
+        role: formData.get('role'),
+        status: formData.get('status'),
+    });
+
+    if (!validatedFields.success) {
+        return { error: 'Invalid data for updating user profile.' };
+    }
+
+    try {
+        await Data.updateUserProfile(validatedFields.data.uid, {
+            role: validatedFields.data.role,
+            status: validatedFields.data.status,
+        });
+        revalidatePath('/admin');
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to update user profile:', error);
+        return { error: 'Failed to update user profile in the database.' };
+    }
 }

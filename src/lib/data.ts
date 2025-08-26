@@ -1,22 +1,40 @@
 import { db } from './firebase';
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp, serverTimestamp, setDoc, where } from 'firebase/firestore';
-import type { Note } from './types';
+import type { Note, UserProfile } from './types';
 
 const notesCollection = collection(db, 'notes');
+const usersCollection = collection(db, 'users');
 
-// Helper to convert Firestore Timestamps to ISO strings
+// Helper to convert Firestore Timestamps to ISO strings in any object
+const mapTimestamps = (data: any) => {
+  const newData: { [key: string]: any } = {};
+  for (const key in data) {
+    if (data[key] instanceof Timestamp) {
+      newData[key] = data[key].toDate().toISOString();
+    } else {
+      newData[key] = data[key];
+    }
+  }
+  return newData;
+};
+
 const mapFirestoreDocToNote = (doc: any): Note => {
   const data = doc.data();
+  const mappedData = mapTimestamps(data);
   return {
     id: doc.id,
-    userId: data.userId,
-    title: data.title,
-    content: data.content,
-    tags: data.tags || [],
-    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-    updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
-  };
+    ...mappedData,
+  } as Note;
 };
+
+const mapFirestoreDocToUserProfile = (doc: any): UserProfile => {
+    const data = doc.data();
+    const mappedData = mapTimestamps(data);
+    return {
+      id: doc.id,
+      ...mappedData,
+    } as UserProfile;
+}
 
 export const getNotes = async (userId: string): Promise<Note[]> => {
   if (!userId) return [];
@@ -26,7 +44,6 @@ export const getNotes = async (userId: string): Promise<Note[]> => {
     return querySnapshot.docs.map(mapFirestoreDocToNote);
   } catch (error) {
     console.error("Error getting notes: ", error);
-    // In case of error (e.g. permissions), return an empty array to avoid crashing the app.
     return [];
   }
 };
@@ -36,11 +53,8 @@ export const getNote = async (id: string): Promise<Note | undefined> => {
     const docRef = doc(db, 'notes', id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      // Basic security check, more robust checks should be in Firestore rules
-      // This is a simplified example.
       return mapFirestoreDocToNote(docSnap);
     } else {
-      console.log("No such document!");
       return undefined;
     }
   } catch (error) {
@@ -51,19 +65,19 @@ export const getNote = async (id: string): Promise<Note | undefined> => {
 
 export const saveNote = async (noteData: Omit<Note, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): Promise<Note> => {
   try {
-    if (noteData.id) {
-      const docRef = doc(db, 'notes', noteData.id);
+    const { id, ...data } = noteData;
+    if (id) {
+      const docRef = doc(db, 'notes', id);
       const dataToUpdate = {
-        ...noteData,
+        ...data,
         updatedAt: serverTimestamp(),
       };
-      delete dataToUpdate.id; // Don't save the id field inside the document
       await updateDoc(docRef, dataToUpdate);
       const updatedDoc = await getDoc(docRef);
       return mapFirestoreDocToNote(updatedDoc);
     } else {
       const dataToCreate = {
-        ...noteData,
+        ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -85,4 +99,41 @@ export const deleteNote = async (id: string): Promise<void> => {
     console.error("Error deleting note: ", error);
     throw new Error('Failed to delete note.');
   }
+};
+
+// --- User Profile Functions ---
+
+export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+        const docRef = doc(db, 'users', userId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return mapFirestoreDocToUserProfile(docSnap);
+        }
+        return null;
+    } catch (error) {
+        console.error("Error getting user profile:", error);
+        return null;
+    }
+};
+
+export const getAllUsers = async (): Promise<UserProfile[]> => {
+    try {
+        const q = query(usersCollection, orderBy('email', 'asc'));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(mapFirestoreDocToUserProfile);
+    } catch (error) {
+        console.error("Error getting all users:", error);
+        return [];
+    }
+}
+
+export const updateUserProfile = async (uid: string, data: Partial<UserProfile>): Promise<void> => {
+    try {
+        const docRef = doc(db, 'users', uid);
+        await updateDoc(docRef, data);
+    } catch (error) {
+        console.error("Error updating user profile:", error);
+        throw new Error('Failed to update user profile.');
+    }
 };
