@@ -1,23 +1,19 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only read/update their own profile.
-    // Any authenticated user can create a profile document.
+    // A user can read/write their own profile.
+    // An admin can read any user's profile.
     match /users/{userId} {
-      allow read, update: if request.auth.uid == userId;
       allow create: if request.auth.uid != null;
+      allow read, update, delete: if request.auth.uid == userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Allow admins to read all user profiles. This is necessary for the admin panel.
-    match /users/{userId} {
-        allow read: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    // Users can manage their own notes.
+    // A user can CRUD their own notes.
+    // An admin can read any user's notes.
     match /notes/{noteId} {
-      allow read, write: if request.auth.uid == request.resource.data.userId;
       allow create: if request.auth.uid != null;
+      allow read: if request.auth.uid == resource.data.userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow update, delete: if request.auth.uid == resource.data.userId;
     }
   }
 }

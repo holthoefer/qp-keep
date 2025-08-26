@@ -6,15 +6,13 @@ import { getUserProfile } from '@/lib/actions';
 import { useEffect, useState } from 'react';
 import type { UserProfile } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { Loader2, Shield, Notebook, User, LogOut } from 'lucide-react';
+import { Loader2, Shield, Notebook, LogOut } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -62,15 +60,6 @@ export default function DashboardPage() {
   const isAdmin = profile?.role === 'admin';
   const isActive = profile?.status === 'active';
   const isPending = profile?.status === 'pending_approval';
-
-  const debugInfo = {
-    auth_user: user ? {
-      uid: user.uid,
-      email: user.email,
-      emailVerified: user.emailVerified,
-    } : null,
-    db_profile: profile
-  };
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
@@ -124,23 +113,6 @@ export default function DashboardPage() {
             </CardContent>
             </Card>
         </div>
-
-        <Card className="bg-muted/50">
-            <CardHeader>
-                <CardTitle className="text-lg">Debug Info</CardTitle>
-                <CardDescription>Bitte kopieren Sie diesen Text und senden Sie ihn an den Support.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Label htmlFor="debug-output">Rohdaten</Label>
-                <Textarea 
-                    id="debug-output"
-                    readOnly 
-                    className="h-64 font-mono text-xs"
-                    value={JSON.stringify(debugInfo, null, 2)}
-                />
-            </CardContent>
-        </Card>
-
       </div>
     </main>
   );
