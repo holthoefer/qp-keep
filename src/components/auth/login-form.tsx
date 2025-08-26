@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,9 +33,14 @@ export function LoginForm() {
     setIsSignupLoading(false);
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: "Success", description: "You are now logged in." });
-      router.push('/notes');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (!userCredential.user.emailVerified) {
+        setError("Please verify your email address before logging in.");
+        await auth.signOut();
+      } else {
+        toast({ title: "Success", description: "You are now logged in." });
+        router.push('/notes');
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -48,9 +53,18 @@ export function LoginForm() {
     setIsLoginLoading(false);
     setError(null);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      toast({ title: "Success", description: "Account created and logged in." });
-      router.push('/notes');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(userCredential.user);
+      await auth.signOut(); // Log out user until they verify
+      toast({ 
+        title: "Verification Email Sent", 
+        description: "Please check your inbox to verify your email address. You can close this tab.",
+        duration: 10000,
+      });
+      // Reset form or redirect to a "please verify" page
+      setEmail('');
+      setPassword('');
+
     } catch (err: any) {
       setError(err.message);
     } finally {
