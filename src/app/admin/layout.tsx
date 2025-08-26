@@ -43,8 +43,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  // Ensure we only check for authorization after the query result is back.
   const profile = profileQueryResult?.profile;
-  const isAuthorized = profile?.role === 'admin' && profile?.status === 'active';
+  const isAuthorized = !checkingStatus && profile?.role === 'admin' && profile?.status === 'active';
 
   if (!isAuthorized) {
     // This state is briefly visible during the redirect.
