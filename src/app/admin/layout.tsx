@@ -8,10 +8,11 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { ShieldX } from 'lucide-react';
+import type { UserProfileQueryResult } from '@/lib/types';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [profileQueryResult, setProfileQueryResult] = useState<UserProfileQueryResult | null>(null);
   const [checkingStatus, setCheckingStatus] = useState(true);
   const router = useRouter();
 
@@ -27,29 +28,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     async function checkAdminStatus() {
       const result = await getUserProfile(user!.uid);
-      const profile = result.profile;
-      
-      // Authorization is based on database role and status, not email verification
-      if (profile && profile.role === 'admin' && profile.status === 'active') {
-        setIsAuthorized(true);
-      } else {
-        setIsAuthorized(false);
-        // If not an admin, redirect them away. The dashboard is the central hub.
-        router.push('/dashboard'); 
-      }
+      setProfileQueryResult(result);
       setCheckingStatus(false);
     }
 
     checkAdminStatus();
-  }, [user, authLoading, router]);
+  }, [user, authLoading]);
+  
+  useEffect(() => {
+    if (checkingStatus || !profileQueryResult) {
+        return;
+    }
+    
+    const profile = profileQueryResult.profile;
+    const isAuthorized = profile?.role === 'admin' && profile?.status === 'active';
 
-  if (checkingStatus) {
+    if (!isAuthorized) {
+        router.push('/dashboard'); 
+    }
+  }, [profileQueryResult, checkingStatus, router])
+
+
+  if (checkingStatus || authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
+
+  const profile = profileQueryResult?.profile;
+  const isAuthorized = profile?.role === 'admin' && profile?.status === 'active';
 
   if (!isAuthorized) {
     // This state is briefly visible during the redirect.

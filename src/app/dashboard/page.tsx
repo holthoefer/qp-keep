@@ -79,7 +79,7 @@ export default function DashboardPage() {
     );
   }
 
-  const profile = profileQueryResult?.profile ?? null;
+  const profile = profileQueryResult?.profile;
   const isAdmin = profile?.role === 'admin';
   const isActive = profile?.status === 'active';
   const isPending = profile?.status === 'pending_approval';
