@@ -114,16 +114,15 @@ export const getUserProfile = async (userId: string): Promise<UserProfileQueryRe
         return { profile: null, debug: { uid: userId, error: 'No userId provided.', docsFound: 0 } };
     }
     try {
-        const q = query(usersCollection, where("uid", "==", userId));
-        const querySnapshot = await getDocs(q);
+        const docRef = doc(db, 'users', userId);
+        const docSnap = await getDoc(docRef);
 
-        if (querySnapshot.empty) {
+        if (!docSnap.exists()) {
             return { profile: null, debug: { uid: userId, error: 'No user profile document found.', docsFound: 0 } };
         }
         
-        const userDoc = querySnapshot.docs[0];
-        const profile = mapFirestoreDocToUserProfile(userDoc);
-        return { profile, debug: { uid: userId, docsFound: querySnapshot.docs.length, error: null } };
+        const profile = mapFirestoreDocToUserProfile(docSnap);
+        return { profile, debug: { uid: userId, docsFound: 1, error: null } };
 
     } catch (error: any) {
         console.error(`Error getting user profile for UID: ${userId}`, error);
@@ -144,7 +143,6 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>): Promise<void> => {
     try {
-        // The document ID is the UID
         const docRef = doc(db, 'users', uid);
         await updateDoc(docRef, data);
     } catch (error) {

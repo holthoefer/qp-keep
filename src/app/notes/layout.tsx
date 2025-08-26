@@ -28,11 +28,15 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     }
 
     async function loadUserData() {
-      const [profile, userNotes] = await Promise.all([
+      // We need to get the user profile from the database, not from auth.
+      // The profile contains the role and status needed for authorization.
+      const [profileResult, userNotes] = await Promise.all([
         getUserProfile(user!.uid),
         getNotes(user!.uid)
       ]);
       
+      const profile = profileResult.profile;
+
       // Authorization is based on database status, not email verification
       if (!profile || profile.status !== 'active') {
           router.push('/dashboard');
