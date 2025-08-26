@@ -14,45 +14,44 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   const [notes, setNotes] = useState<Note[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const router = useRouter();
-  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) {
-      return; // Warten, bis der Auth-Status klar ist.
+      return; // Wait until auth status is clear.
     }
 
     if (!user) {
-      router.push('/'); // Kein Benutzer angemeldet, zur Login-Seite.
+      router.push('/'); // No user logged in, go to login page.
       return;
     }
 
-    // Wenn ein Benutzer angemeldet ist, holen wir sein Profil.
     async function fetchData() {
-      setIsCheckingProfile(true);
+      setDataLoading(true);
       try {
         const profile = await getUserProfile(user!.uid);
         
         if (profile && (profile.role === 'admin' || profile.status === 'active')) {
-          // Benutzer ist Admin oder aktiv. Er darf bleiben.
+          // User is authorized to see notes.
           setUserProfile(profile);
           const userNotes = await getNotes(user!.uid);
           setNotes(userNotes);
         } else {
-          // Benutzer ist nicht berechtigt (pending, suspended, kein Profil)
+          // User is not authorized (pending, suspended, or no profile)
           router.push('/pending-approval');
         }
       } catch (error) {
           console.error("Failed to fetch user data:", error);
-          router.push('/'); // Im Fehlerfall zur Login-Seite
+          router.push('/'); // On error, redirect to login
       } finally {
-        setIsCheckingProfile(false); // Profil-Prüfung ist abgeschlossen
+        setDataLoading(false);
       }
     }
 
     fetchData();
   }, [user, authLoading, router]);
   
-  if (authLoading || isCheckingProfile) {
+  if (authLoading || dataLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -60,14 +59,12 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Wenn die Prüfung abgeschlossen ist, aber kein Profil gesetzt wurde,
-  // bedeutet das, der Benutzer wurde bereits weitergeleitet. 
-  // Das Anzeigen von 'null' verhindert ein kurzes Aufblitzen der alten UI.
+  // If loading is done, but there's no profile, it means the user was redirected.
+  // Rendering null prevents a brief flash of the UI.
   if (!userProfile) {
     return null;
   }
 
-  // Dieser Inhalt wird nur für 'active' oder 'admin' Benutzer gerendert.
   return (
     <SidebarProvider>
       <Sidebar>

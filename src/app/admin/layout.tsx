@@ -7,38 +7,39 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { ShieldX } from 'lucide-react';
+import type { UserProfile } from '@/lib/types';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (authLoading) return; // Warten, bis Auth-Status klar ist.
+    if (authLoading) return;
 
     if (!user) {
-      router.push('/'); // Nicht eingeloggt -> zur Login-Seite
+      router.push('/');
       return;
     }
 
     async function checkAdmin() {
+      setDataLoading(true);
       const profile = await getUserProfile(user!.uid);
-      // Nur Admins, die auch aktiv sind, dürfen hier rein.
-      if (profile && profile.role === 'admin' && profile.status === 'active') {
+      
+      if (profile && profile.role === 'admin') {
         setIsAuthorized(true);
       } else {
         setIsAuthorized(false);
-        // Wenn kein Admin, zurück zur Haupt-Notizen-Ansicht.
         router.push('/notes'); 
       }
-      setIsChecking(false);
+      setDataLoading(false);
     }
 
     checkAdmin();
   }, [user, authLoading, router]);
 
-  if (authLoading || isChecking) {
+  if (authLoading || dataLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -47,7 +48,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (!isAuthorized) {
-    // Diese Ansicht wird nur kurz angezeigt, bevor die Weiterleitung greift.
     return (
         <div className="flex h-screen w-full items-center justify-center p-4">
             <Alert variant="destructive" className="max-w-lg">

@@ -4,32 +4,31 @@ import { LoginForm } from '@/components/auth/login-form';
 import { KeepKnowLogo } from '@/components/icons';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { getUserProfile } from '@/lib/actions';
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // If not loading and a user exists, redirect them.
+    // If not loading and a user exists, check their profile and redirect.
     if (!loading && user) {
-      router.push('/notes');
+        const checkUserAndRedirect = async () => {
+            const profile = await getUserProfile(user.uid);
+            if (profile && profile.role === 'admin') {
+                router.push('/admin');
+            } else {
+                router.push('/notes');
+            }
+        };
+        checkUserAndRedirect();
     }
   }, [user, loading, router]);
 
-  // Show a loader while authentication state is being checked.
-  if (loading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // If loading is finished and there is still a user, show loader until redirect happens.
-  // This prevents the login form from flashing briefly before redirection.
-  if (user) {
+  // Show a loader while authentication state is being checked or redirect is happening.
+  if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
