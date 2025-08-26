@@ -12,14 +12,14 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // If not loading and a user exists, redirect to the notes page.
-    // The notes layout will handle further role-based redirects.
+    // If auth state is determined and a user exists, redirect.
+    // The /notes layout will handle all role-based routing from here.
     if (!loading && user) {
       router.push('/notes');
     }
   }, [user, loading, router]);
 
-  // Show a loader while authentication state is being checked or redirect is happening.
+  // While checking auth state or redirecting, show a loader.
   if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">

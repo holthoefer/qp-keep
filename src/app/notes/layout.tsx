@@ -13,64 +13,57 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   const { user, loading: authLoading } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const router = useRouter();
   const [dataLoading, setDataLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (authLoading) {
-      return; // Wait until auth status is clear.
+      return; // Wait for Firebase Auth to be initialized
     }
 
     if (!user) {
-      router.push('/'); // No user logged in, go to login page.
+      router.push('/'); // If no user, send to login page
       return;
     }
 
-    async function fetchData() {
-      try {
-        const profile = await getUserProfile(user!.uid);
-        
-        if (profile) {
-          if (profile.role === 'admin') {
-            // Admin should be redirected to the admin panel.
-            router.push('/admin');
-            return; // Stop further execution
-          }
-          
-          if (profile.status === 'active') {
-            // User is active, load their notes.
-            setUserProfile(profile);
-            const userNotes = await getNotes(user!.uid);
-            setNotes(userNotes);
-          } else {
-            // User is pending or suspended.
-            router.push('/pending-approval');
-            return;
-          }
-        } else {
-          // No profile found, treat as pending.
-          router.push('/pending-approval');
+    // User is authenticated, now check their profile in Firestore
+    getUserProfile(user.uid).then(profile => {
+      if (profile) {
+        if (profile.role === 'admin') {
+          // Admin should not be in the notes section, redirect to admin panel
+          router.push('/admin');
           return;
         }
-      } catch (error) {
-          console.error("Failed to fetch user data:", error);
-          router.push('/'); // On error, redirect to login
-      } finally {
-        setDataLoading(false);
+        
+        if (profile.status === 'active') {
+          // This is a valid, active user. Load their data.
+          setUserProfile(profile);
+          getNotes(user.uid).then(setNotes);
+          setDataLoading(false); // Allow rendering
+        } else {
+          // User is pending or suspended, redirect
+          router.push('/pending-approval');
+        }
+      } else {
+        // No profile found in Firestore, treat as pending
+        router.push('/pending-approval');
       }
-    }
-
-    fetchData();
+    }).catch(error => {
+      console.error("Failed to fetch user profile:", error);
+      router.push('/'); // On error, redirect to login
+    });
   }, [user, authLoading, router]);
-  
-  if (authLoading || dataLoading || !userProfile) {
+
+  // Show a loader while authentication and profile checks are in progress
+  if (authLoading || dataLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  
+
+  // If all checks are passed, render the notes layout
   return (
     <SidebarProvider>
       <Sidebar>
