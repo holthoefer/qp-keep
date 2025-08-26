@@ -80,7 +80,7 @@ export default function DashboardPage() {
   }
 
   const profile = profileQueryResult?.profile;
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = profile?.role === 'admin' && profile?.status === 'active';
   const isActive = profile?.status === 'active';
   const isPending = profile?.status === 'pending_approval';
 
@@ -134,7 +134,7 @@ export default function DashboardPage() {
                 <Button
                 onClick={() => router.push('/admin')}
                 className="w-full justify-start"
-                disabled={!isAdmin || !isActive}
+                disabled={!isAdmin}
                 >
                 <Shield className="mr-2 h-4 w-4" />
                 Admin Panel
@@ -145,6 +145,19 @@ export default function DashboardPage() {
                     Ausloggen
                 </Button>
             </CardContent>
+            </Card>
+            
+            <Card className="mt-4">
+                <CardHeader>
+                <CardTitle>Kontrollfenster</CardTitle>
+                </CardHeader>
+                <CardContent>
+                <pre className="text-xs bg-muted p-2 rounded-md overflow-x-auto">
+                    <code>
+                    {JSON.stringify({ auth_user: user, db_query_result: profileQueryResult }, null, 2)}
+                    </code>
+                </pre>
+                </CardContent>
             </Card>
         </div>
       </div>

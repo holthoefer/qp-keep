@@ -35,20 +35,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     checkAdminStatus();
   }, [user, authLoading, router]);
   
-  useEffect(() => {
-    if (checkingStatus || authLoading || !profileQueryResult) {
-        return;
-    }
-    
-    const profile = profileQueryResult.profile;
-    const isAuthorized = profile?.role === 'admin' && profile?.status === 'active';
-
-    if (!isAuthorized) {
-        router.push('/dashboard'); 
-    }
-  }, [profileQueryResult, checkingStatus, authLoading, router])
-
-
   if (checkingStatus || authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -69,6 +55,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <AlertTitle>Access Denied</AlertTitle>
                 <AlertDescription>
                     You do not have permission to view this page. Redirecting...
+                     <pre className="mt-4 text-xs bg-black/80 text-white p-2 rounded-md overflow-x-auto">
+                        <code>
+                        {JSON.stringify({ profile, debug: profileQueryResult?.debug }, null, 2)}
+                        </code>
+                    </pre>
                 </AlertDescription>
             </Alert>
         </div>

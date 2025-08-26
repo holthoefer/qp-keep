@@ -3,16 +3,32 @@
 
 import { getAllUsers } from "@/lib/actions";
 import { UserManagementTable } from "@/components/admin/user-management-table";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import type { UserProfile } from "@/lib/types";
+import { Loader2 } from "lucide-react";
 
 export default function AdminPage() {
-  // This page is temporarily disabled while fixing core profile loading.
-  // const allUsers = await getAllUsers();
-  const allUsers = [];
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const allUsers = await getAllUsers();
+        setUsers(allUsers);
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUsers();
+  }, []);
 
   return (
     <div className="flex h-full flex-col">
@@ -32,10 +48,15 @@ export default function AdminPage() {
                 <CardTitle>User Management</CardTitle>
                 <CardDescription>Update roles and statuses for all users in the system.</CardDescription>
             </CardHeader>
-            {/* <UserManagementTable users={allUsers} /> */}
-             <div className="p-6 pt-0 text-center text-muted-foreground">
-                User management is temporarily disabled.
-            </div>
+            <CardContent>
+              {loading ? (
+                <div className="flex justify-center items-center p-6">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <UserManagementTable users={users} />
+              )}
+            </CardContent>
          </Card>
       </main>
     </div>
