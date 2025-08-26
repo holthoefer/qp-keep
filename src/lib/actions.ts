@@ -29,8 +29,9 @@ const noteSchema = z.object({
 });
 
 export async function saveNoteAction(formData: FormData) {
+  const noteId = formData.get('id');
   const validatedFields = noteSchema.safeParse({
-    id: formData.get('id') || undefined,
+    id: noteId || undefined,
     title: formData.get('title'),
     content: formData.get('content'),
     tags: formData.get('tags'),
@@ -40,8 +41,13 @@ export async function saveNoteAction(formData: FormData) {
     console.error(validatedFields.error);
     return { error: 'Invalid note data. Please check your inputs.' };
   }
+  
+  const dataToSave = { ...validatedFields.data };
+  if (!noteId || noteId === 'new') {
+    delete dataToSave.id;
+  }
 
-  const savedNote = await Data.saveNote(validatedFields.data);
+  const savedNote = await Data.saveNote(dataToSave);
   revalidatePath('/notes');
   redirect(`/notes?noteId=${savedNote.id}`);
 }
