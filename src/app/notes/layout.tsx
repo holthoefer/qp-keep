@@ -16,44 +16,37 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   const { user, loading: authLoading } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [profileQueryResult, setProfileQueryResult] = useState<UserProfileQueryResult | null>(null);
-  const [dataLoading, setDataLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     if (authLoading) {
-      return; // Wait for Firebase Auth to be initialized
+      return; 
     }
 
     if (!user) {
-      router.push('/'); // If no user, send to login page
+      router.push('/');
       return;
     }
 
     async function loadUserData() {
-      // We need to get the user profile from the database, not from auth.
-      // The profile contains the role and status needed for authorization.
-      const [profileResult, userNotes] = await Promise.all([
-        getUserProfile(user!.uid),
-        getNotes(user!.uid)
-      ]);
-      
+      const profileResult = await getUserProfile(user!.uid);
       setProfileQueryResult(profileResult);
       
       const profile = profileResult.profile;
 
-      // Authorization is based on database status, not email verification
       if (profile && profile.status === 'active') {
+        const userNotes = await getNotes(user!.uid);
         setNotes(userNotes);
       }
       
-      setDataLoading(false);
+      setLoading(false);
     }
 
     loadUserData();
   }, [user, authLoading, router]);
 
-  // Show a loader while authentication and data checks are in progress
-  if (authLoading || dataLoading) {
+  if (loading || authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -63,7 +56,6 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
 
   const profile = profileQueryResult?.profile;
 
-  // Final check for authorization after loading is complete
   if (!profile || profile.status !== 'active') {
     return (
         <div className="flex h-screen w-full items-center justify-center p-4">
@@ -83,7 +75,6 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // If all checks are passed, render the notes layout
   return (
     <SidebarProvider>
       <Sidebar>

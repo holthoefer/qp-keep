@@ -13,7 +13,7 @@ import type { UserProfileQueryResult } from '@/lib/types';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const [profileQueryResult, setProfileQueryResult] = useState<UserProfileQueryResult | null>(null);
-  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,13 +29,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     async function checkAdminStatus() {
       const result = await getUserProfile(user!.uid);
       setProfileQueryResult(result);
-      setCheckingStatus(false);
+      setLoading(false);
     }
 
     checkAdminStatus();
   }, [user, authLoading, router]);
   
-  if (checkingStatus || authLoading) {
+  if (loading || authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -43,12 +43,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Ensure we only check for authorization after the query result is back.
   const profile = profileQueryResult?.profile;
-  const isAuthorized = !checkingStatus && profile?.role === 'admin' && profile?.status === 'active';
+  const isAuthorized = profile && profile.role === 'admin' && profile.status === 'active';
 
   if (!isAuthorized) {
-    // This state is briefly visible during the redirect.
     return (
         <div className="flex h-screen w-full items-center justify-center p-4">
             <Alert variant="destructive" className="max-w-lg">

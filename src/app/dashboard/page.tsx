@@ -111,7 +111,7 @@ export default function DashboardPage() {
                 </Alert>
                 )}
                 
-                {user && !user.emailVerified && (
+                {user && !user.emailVerified && profile && (
                   <Alert variant="destructive">
                     <MailWarning className="h-4 w-4" />
                     <AlertTitle>Email nicht verifiziert</AlertTitle>
