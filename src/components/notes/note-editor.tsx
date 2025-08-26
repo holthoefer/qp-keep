@@ -7,33 +7,51 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { TagInput } from './tag-input';
-import { Save, Trash2, FilePlus } from 'lucide-react';
+import { Save, Trash2, FilePlus, XCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useRouter } from 'next/navigation';
 
 export function NoteEditor({ note }: { note?: Note }) {
   const [tags, setTags] = useState<string[]>(note?.tags || []);
   const [content, setContent] = useState(note?.content || '');
+  const router = useRouter();
 
   const isNewNote = !note?.id;
   const formAction = isNewNote ? saveNoteAction : saveNoteAction;
 
+  const handleCancel = () => {
+    router.back();
+  }
+
   return (
     <div className="flex h-full flex-col">
-      <form id="note-editor-form" action={formAction} className="flex flex-grow flex-col space-y-4 p-4 min-h-0">
-        <div className="flex-shrink-0">
+      <div className="flex-shrink-0 p-4 pb-0">
           <div className="flex items-center justify-between gap-4">
               <h2 className="font-headline text-2xl font-bold truncate">
                 {isNewNote ? 'Create New Note' : 'Edit Note'}
               </h2>
               <div className="flex items-center gap-2">
-                <Button type="submit">
+                 <Button variant="ghost" onClick={handleCancel}>
+                  <XCircle />
+                  Cancel
+                </Button>
+                <Button type="submit" form="note-editor-form">
                   {isNewNote ? <FilePlus /> : <Save />}
                   {isNewNote ? 'Create Note' : 'Save Changes'}
                 </Button>
+                {!isNewNote && (
+                  <form action={deleteNoteAction} className="m-0">
+                    <input type="hidden" name="id" value={note.id} />
+                    <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
+                        <Trash2 />
+                    </Button>
+                  </form>
+                )}
               </div>
             </div>
         </div>
-        
+
+      <form id="note-editor-form" action={formAction} className="flex flex-grow flex-col space-y-4 p-4 min-h-0">
         <input type="hidden" name="id" value={note?.id ?? ''} />
         <input type="hidden" name="tags" value={tags.join(',')} />
         
@@ -62,16 +80,6 @@ export function NoteEditor({ note }: { note?: Note }) {
           </ScrollArea>
         </div>
       </form>
-      {!isNewNote && (
-          <div className="p-4 pt-0">
-            <form action={deleteNoteAction} className="m-0">
-            <input type="hidden" name="id" value={note.id} />
-            <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
-                <Trash2 />
-            </Button>
-            </form>
-          </div>
-        )}
     </div>
   );
 }
