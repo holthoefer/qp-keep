@@ -25,11 +25,12 @@ const noteSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(1, 'Title is required'),
   content: z.string(),
-  tags: z.string().transform(val => val ? val.split(',').filter(Boolean) : []),
+  tags: z.string().transform(val => val ? val.split(',').map(tag => tag.trim()).filter(Boolean) : []),
 });
 
 export async function saveNoteAction(formData: FormData) {
-  const noteId = formData.get('id');
+  const noteId = formData.get('id') as string | null;
+
   const validatedFields = noteSchema.safeParse({
     id: noteId || undefined,
     title: formData.get('title'),
@@ -43,16 +44,22 @@ export async function saveNoteAction(formData: FormData) {
   }
   
   const dataToSave = { ...validatedFields.data };
-
-  // If it's a new note, we don't have an ID yet.
-  // The 'new' string comes from the form's hidden input.
-  if (!noteId || noteId === 'new') {
+  
+  if (noteId && noteId !== 'new') {
+    dataToSave.id = noteId;
+  } else {
+    // This is a new note, so we don't pass an ID.
     delete dataToSave.id;
   }
-
-  const savedNote = await Data.saveNote(dataToSave);
-  revalidatePath('/notes');
-  redirect(`/notes?noteId=${savedNote.id}`);
+  
+  try {
+    const savedNote = await Data.saveNote(dataToSave);
+    revalidatePath('/notes');
+    redirect(`/notes?noteId=${savedNote.id}`);
+  } catch (error) {
+     console.error('Failed to save note:', error);
+     return { error: 'Failed to save the note to the database.' };
+  }
 }
 
 export async function deleteNoteAction(formData: FormData) {

@@ -1,45 +1,97 @@
+import { db } from './firebase';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, Timestamp, serverTimestamp, setDoc } from 'firebase/firestore';
 import type { Note } from './types';
 
-// In a real app, this would be a database.
-// For this demo, we'll use an in-memory array to simulate a database,
-// backed by localStorage for persistence across sessions.
-const LOCAL_STORAGE_KEY = 'keep-know-notes';
+const notesCollection = collection(db, 'notes');
 
-let notes: Note[] = [];
+// Helper to convert Firestore Timestamps to ISO strings
+const mapFirestoreDocToNote = (doc: any): Note => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    title: data.title,
+    content: data.content,
+    tags: data.tags || [],
+    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+    updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
+  };
+};
 
-// Helper function to get notes from localStorage
-const loadNotesFromLocalStorage = (): Note[] => {
-  if (typeof window === 'undefined') {
-    // Return a default structure if window is not defined (e.g., during server-side rendering)
+export const getNotes = async (): Promise<Note[]> => {
+  try {
+    const q = query(notesCollection, orderBy('updatedAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+     if (querySnapshot.empty) {
+      console.log('No notes found, seeding initial data...');
+      await seedInitialData();
+      const seededSnapshot = await getDocs(q);
+      return seededSnapshot.docs.map(mapFirestoreDocToNote);
+    }
+    return querySnapshot.docs.map(mapFirestoreDocToNote);
+  } catch (error) {
+    console.error("Error getting notes: ", error);
     return [];
   }
+};
+
+export const getNote = async (id: string): Promise<Note | undefined> => {
   try {
-    const savedNotes = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (savedNotes) {
-      return JSON.parse(savedNotes);
+    const docRef = doc(db, 'notes', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return mapFirestoreDocToNote(docSnap);
+    } else {
+      console.log("No such document!");
+      return undefined;
     }
   } catch (error) {
-    console.error('Failed to load notes from localStorage:', error);
+    console.error("Error getting note: ", error);
+    return undefined;
   }
-  return [];
 };
 
-// Helper function to save notes to localStorage
-const saveNotesToLocalStorage = (notesToSave: Note[]) => {
-   if (typeof window === 'undefined') {
-    return;
-  }
+export const saveNote = async (noteData: Omit<Note, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): Promise<Note> => {
   try {
-    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(notesToSave));
+    if (noteData.id) {
+      const docRef = doc(db, 'notes', noteData.id);
+      const dataToUpdate = {
+        ...noteData,
+        updatedAt: serverTimestamp(),
+      };
+      delete dataToUpdate.id; // Don't save the id field inside the document
+      await updateDoc(docRef, dataToUpdate);
+      const updatedDoc = await getDoc(docRef);
+      return mapFirestoreDocToNote(updatedDoc);
+    } else {
+      const dataToCreate = {
+        ...noteData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      const docRef = await addDoc(notesCollection, dataToCreate);
+      const newDoc = await getDoc(docRef);
+      return mapFirestoreDocToNote(newDoc);
+    }
   } catch (error) {
-    console.error('Failed to save notes to localStorage:', error);
+    console.error("Error saving note: ", error);
+    throw new Error('Failed to save note.');
   }
 };
 
-const seedInitialData = () => {
-  const initialNotes: Note[] = [
+export const deleteNote = async (id: string): Promise<void> => {
+  try {
+    const docRef = doc(db, 'notes', id);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error("Error deleting note: ", error);
+    throw new Error('Failed to delete note.');
+  }
+};
+
+
+const seedInitialData = async () => {
+    const initialNotes: Omit<Note, 'id'>[] = [
     {
-      id: '1',
       title: 'Welcome to Keep-Know',
       content: 'This is your first note! You can edit it, delete it, or create new ones. Try out the AI-powered tag suggestion feature by adding some content and clicking "Suggest Tags".',
       tags: ['welcome', 'getting-started'],
@@ -47,7 +99,6 @@ const seedInitialData = () => {
       updatedAt: new Date().toISOString(),
     },
     {
-      id: '2',
       title: 'Meeting Recap: Q3 Planning',
       content: 'Discussed the Q3 product roadmap. Key decisions: prioritize the new dashboard feature (Project Phoenix) and allocate more resources to marketing for the upcoming launch. User feedback integration is crucial. Follow up with Alex about the design mockups.',
       tags: ['work', 'meeting', 'planning', 'q3'],
@@ -55,7 +106,6 @@ const seedInitialData = () => {
       updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
     },
     {
-      id: '3',
       title: 'Grocery List',
       content: 'Milk, Eggs, Bread, Cheese, Coffee beans, Apples, Bananas, Spinach.',
       tags: ['personal', 'shopping'],
@@ -63,73 +113,18 @@ const seedInitialData = () => {
       updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
     },
   ];
-  notes = initialNotes;
-  saveNotesToLocalStorage(notes);
-};
 
+  const batchPromises = initialNotes.map(note => {
+     const dataToCreate = {
+        title: note.title,
+        content: note.content,
+        tags: note.tags,
+        createdAt: Timestamp.fromDate(new Date(note.createdAt)),
+        updatedAt: Timestamp.fromDate(new Date(note.updatedAt)),
+      };
+    return addDoc(notesCollection, dataToCreate);
+  });
 
-// Initialize notes
-const loadedNotes = loadNotesFromLocalStorage();
-if (loadedNotes.length > 0) {
-  notes = loadedNotes;
-} else if (typeof window !== 'undefined') {
-  // Seed only on client side if no notes are found
-  seedInitialData();
-}
-
-
-export const getNotes = async (): Promise<Note[]> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 100));
-  const notesFromStorage = loadNotesFromLocalStorage();
-  if (notesFromStorage.length === 0 && typeof window !== 'undefined') {
-    seedInitialData();
-    notes = loadNotesFromLocalStorage();
-  } else {
-    notes = notesFromStorage;
-  }
-  return [...notes].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-};
-
-export const getNote = async (id: string): Promise<Note | undefined> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 50));
-  const notesFromStorage = loadNotesFromLocalStorage();
-  notes = notesFromStorage;
-  return notes.find(note => note.id === id);
-};
-
-export const saveNote = async (noteData: Omit<Note, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): Promise<Note> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 200));
-  const notesFromStorage = loadNotesFromLocalStorage();
-  notes = notesFromStorage;
-  
-  if (noteData.id) {
-    const index = notes.findIndex(n => n.id === noteData.id);
-    if (index !== -1) {
-      notes[index] = { ...notes[index], ...noteData, updatedAt: new Date().toISOString() };
-      saveNotesToLocalStorage(notes);
-      return notes[index];
-    }
-  }
-  
-  // This is a new note
-  const newNote: Note = {
-    ...noteData,
-    id: (Date.now() + Math.random()).toString(36), // More unique ID
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  notes.unshift(newNote);
-  saveNotesToLocalStorage(notes);
-  return newNote;
-};
-
-export const deleteNote = async (id: string): Promise<void> => {
-    // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 200));
-  const notesFromStorage = loadNotesFromLocalStorage();
-  notes = notesFromStorage.filter(note => note.id !== id);
-  saveNotesToLocalStorage(notes);
+  await Promise.all(batchPromises);
+  console.log('Initial data seeded to Firestore.');
 };
