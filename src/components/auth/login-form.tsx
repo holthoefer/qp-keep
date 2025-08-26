@@ -33,7 +33,7 @@ export function LoginForm() {
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full">
-            Sign In
+            Sign In & View Notes
           </Button>
         </CardFooter>
       </Card>
