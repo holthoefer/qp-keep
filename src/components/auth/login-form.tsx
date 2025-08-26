@@ -58,6 +58,7 @@ export function LoginForm() {
       
       const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL;
       
+      // Use the user's UID as the document ID
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, {
         uid: user.uid,

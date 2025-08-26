@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { User } from 'firebase/auth';
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -60,6 +61,16 @@ export default function DashboardPage() {
   const isAdmin = profile?.role === 'admin';
   const isActive = profile?.status === 'active';
   const isPending = profile?.status === 'pending_approval';
+
+  const getDebugData = (authUser: User | null, dbProfile: UserProfile | null) => {
+    const authData = authUser ? {
+        uid: authUser.uid,
+        email: authUser.email,
+        emailVerified: authUser.emailVerified
+    } : null;
+    
+    return JSON.stringify({ auth_user: authData, db_profile: dbProfile }, null, 2);
+  }
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
@@ -113,6 +124,19 @@ export default function DashboardPage() {
             </CardContent>
             </Card>
         </div>
+        
+        {/* Kontrollfeld */}
+        <Card>
+            <CardHeader>
+                <CardTitle>Debug Kontrollfeld</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <pre className="whitespace-pre-wrap break-all text-xs bg-muted p-4 rounded-md">
+                    {getDebugData(user, profile)}
+                </pre>
+            </CardContent>
+        </Card>
+
       </div>
     </main>
   );

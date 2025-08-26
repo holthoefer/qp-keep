@@ -64,7 +64,7 @@ export async function deleteNoteAction(formData: FormData) {
     return { error: 'Note ID is missing.' };
   }
   await Data.deleteNote(id);
-  revalidatePath('/notes');
+revalidatePath('/notes');
   revalidatePath('/admin');
   redirect('/notes');
 }

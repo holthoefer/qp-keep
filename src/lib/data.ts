@@ -109,17 +109,17 @@ export const deleteNote = async (id: string): Promise<void> => {
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     if (!userId) return null;
     try {
-        const q = query(usersCollection, where("uid", "==", userId));
-        const querySnapshot = await getDocs(q);
+        // This is the most direct way to get a document by its ID.
+        // The document ID in our 'users' collection is the user's UID.
+        const docRef = doc(db, 'users', userId);
+        const docSnap = await getDoc(docRef);
 
-        if (querySnapshot.empty) {
-            console.warn(`No user profile found for UID: ${userId}`);
+        if (docSnap.exists()) {
+            return mapFirestoreDocToUserProfile(docSnap);
+        } else {
+            console.warn(`No user profile document found for ID (UID): ${userId}`);
             return null;
         }
-        
-        // Should only be one document, so we take the first.
-        const userDoc = querySnapshot.docs[0];
-        return mapFirestoreDocToUserProfile(userDoc);
 
     } catch (error) {
         console.error("Error getting user profile for UID:", userId, error);
@@ -140,6 +140,7 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>): Promise<void> => {
     try {
+        // The document ID is the UID
         const docRef = doc(db, 'users', uid);
         await updateDoc(docRef, data);
     } catch (error) {
