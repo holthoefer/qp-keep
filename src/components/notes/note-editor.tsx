@@ -30,14 +30,6 @@ export function NoteEditor({ note }: { note?: Note }) {
                   {isNewNote ? <FilePlus /> : <Save />}
                   {isNewNote ? 'Create Note' : 'Save Changes'}
                 </Button>
-                {!isNewNote && (
-                   <form action={deleteNoteAction} className="m-0">
-                    <input type="hidden" name="id" value={note.id} />
-                    <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
-                      <Trash2 />
-                    </Button>
-                  </form>
-                )}
               </div>
             </div>
         </div>
@@ -70,6 +62,16 @@ export function NoteEditor({ note }: { note?: Note }) {
           </ScrollArea>
         </div>
       </form>
+      {!isNewNote && (
+          <div className="p-4 pt-0">
+            <form action={deleteNoteAction} className="m-0">
+            <input type="hidden" name="id" value={note.id} />
+            <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
+                <Trash2 />
+            </Button>
+            </form>
+          </div>
+        )}
     </div>
   );
 }
