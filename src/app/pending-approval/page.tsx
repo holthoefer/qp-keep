@@ -1,16 +1,6 @@
 
-'use client';
-
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-
-// This page is now obsolete. We redirect any traffic here to the new dashboard.
+// This file is no longer used in the simplified template.
+// It can be safely removed.
 export default function PendingApprovalPage() {
-    const router = useRouter();
-
-    useEffect(() => {
-        router.replace('/dashboard');
-    }, [router]);
-
-    return null;
+    return <div>Pending Approval Page - No longer in use</div>;
 }

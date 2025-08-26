@@ -2,9 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,9 +18,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-
-const ADMIN_EMAIL = "holthofer@gmail.com";
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -29,7 +25,6 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignupLoading, setIsSignupLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
 
   const handleLogin = async () => {
@@ -37,8 +32,7 @@ export function LoginForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The auth state change will be caught by the parent page,
-      // which will then render the AuthRedirector.
+      // Auth state change is handled by the parent component (page.tsx)
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
         setError("Ungültige E-Mail oder Passwort. Bitte versuchen Sie es erneut.");
@@ -56,18 +50,6 @@ export function LoginForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL;
-      
-      // Use the user's UID as the document ID
-      const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, {
-        uid: user.uid,
-        email: user.email,
-        role: isAdmin ? 'admin' : 'user',
-        status: isAdmin ? 'active' : 'pending_approval',
-        createdAt: serverTimestamp(),
-      });
-      
       await sendEmailVerification(user);
 
       toast({ 
@@ -76,8 +58,7 @@ export function LoginForm() {
         duration: 10000,
       });
 
-      // The auth state change will be caught by the parent page,
-      // which will render the AuthRedirector to send the user to the dashboard.
+      // Auth state change is handled by the parent component (page.tsx)
     } catch (err: any) {
         console.error("Signup Error:", err);
         if (err.code === 'auth/email-already-in-use') {
@@ -96,7 +77,7 @@ export function LoginForm() {
     <Card>
       <CardHeader className="text-center">
         <CardTitle className="font-headline">Willkommen</CardTitle>
-        <CardDescription>Melden Sie sich an oder erstellen Sie ein Konto, um fortzufahren.</CardDescription>
+        <CardDescription>Melden Sie sich an oder erstellen Sie ein Konto.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
