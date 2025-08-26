@@ -109,11 +109,18 @@ export const createUserProfile = async (userProfile: Omit<UserProfile, 'createdA
 
 export const getProfile = async (userId: string): Promise<UserProfile | null> => {
     const userDocRef = doc(db, 'users', userId);
-    const userDocSnap = await getDoc(userDocRef);
-    if (userDocSnap.exists()) {
-        return userDocSnap.data() as UserProfile;
+    try {
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+            return userDocSnap.data() as UserProfile;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching profile for", userId, error);
+        // Depending on Firestore rules, this might throw if a user tries to fetch another's profile.
+        // Returning null is a safe default.
+        return null;
     }
-    return null;
 }
 
 export const getAllUsers = async (): Promise<UserProfile[]> => {
