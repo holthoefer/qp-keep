@@ -18,7 +18,6 @@ export function NoteEditor({ note }: { note?: Note }) {
   const router = useRouter();
 
   const isNewNote = !note?.id;
-  const formAction = saveNoteAction;
 
   const handleCancel = () => {
     router.back();
@@ -26,34 +25,33 @@ export function NoteEditor({ note }: { note?: Note }) {
 
   return (
     <div className="flex h-full flex-col">
-       <form id="note-editor-form" action={formAction} className="m-0 flex h-full flex-col">
-          <div className="flex-shrink-0 p-4 pb-0">
-              <div className="flex items-center justify-between gap-4">
-                  <h2 className="font-headline text-2xl font-bold truncate">
-                    {isNewNote ? 'Create New Note' : 'Edit Note'}
-                  </h2>
-                  <div className="flex items-center gap-2">
-                     <Button variant="ghost" type="button" onClick={handleCancel}>
-                      <XCircle />
-                      Cancel
-                    </Button>
-                    <Button type="submit">
-                      {isNewNote ? <FilePlus /> : <Save />}
-                      {isNewNote ? 'Create Note' : 'Save Changes'}
-                    </Button>
-                    {!isNewNote && (
-                       <form action={deleteNoteAction} className="m-0">
-                         <input type="hidden" name="id" value={note.id} />
-                         <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
-                             <Trash2 />
-                         </Button>
-                       </form>
-                    )}
-                  </div>
+        <div className="flex-shrink-0 p-4 pb-0">
+            <div className="flex items-center justify-between gap-4">
+                <h2 className="font-headline text-2xl font-bold truncate">
+                  {isNewNote ? 'Create New Note' : 'Edit Note'}
+                </h2>
+                <div className="flex items-center gap-2">
+                   <Button variant="ghost" type="button" onClick={handleCancel}>
+                    <XCircle />
+                    Cancel
+                  </Button>
+                  <Button type="submit" form="note-editor-form">
+                    {isNewNote ? <FilePlus /> : <Save />}
+                    {isNewNote ? 'Create Note' : 'Save Changes'}
+                  </Button>
+                  {!isNewNote && (
+                     <form action={deleteNoteAction} className="m-0">
+                       <input type="hidden" name="id" value={note.id} />
+                       <Button variant="destructive" size="icon" type="submit" aria-label="Delete note">
+                           <Trash2 />
+                       </Button>
+                     </form>
+                  )}
                 </div>
-            </div>
-
-            <div className="flex flex-grow flex-col space-y-4 p-4 min-h-0">
+              </div>
+          </div>
+       <form id="note-editor-form" action={saveNoteAction} className="m-0 flex h-full flex-col flex-grow min-h-0">
+            <div className="flex flex-grow flex-col space-y-4 p-4 pt-0 min-h-0">
                 <input type="hidden" name="id" value={note?.id ?? ''} />
                 <input type="hidden" name="tags" value={tags.join(',')} />
                 
