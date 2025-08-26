@@ -3,12 +3,12 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { addNote, getNotes, deleteNote, type Note } from '@/lib/data';
+import { addNote, getNotes, deleteNote, type Note, getProfile } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, Shield } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -27,28 +27,50 @@ export default function NotesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (authLoading) return; // Wait until auth state is determined
+    if (authLoading) return;
     if (!user) {
-      router.push('/'); // Redirect to login if not authenticated
+      router.push('/');
       return;
     }
 
-    setLoadingNotes(true);
-    const unsubscribe = getNotes(user.uid, 
-      (newNotes) => {
-        setNotes(newNotes);
-        setError(null);
-        setLoadingNotes(false);
-      }, 
-      (err) => {
-        console.error(err);
-        setError(`Fehler beim Laden der Notizen: ${err.message}. Bitte überprüfen Sie Ihre Firestore-Regeln und die Browser-Konsole für weitere Details.`);
-        setLoadingNotes(false);
-      }
-    );
-    return () => unsubscribe();
+    const fetchProfileAndNotes = async () => {
+        setLoadingNotes(true);
+        // Fetch user profile to check for admin role
+        try {
+            const profile = await getProfile(user.uid);
+            if (profile && profile.role === 'admin') {
+                setIsAdmin(true);
+            }
+        } catch (err) {
+            console.error("Error fetching profile:", err);
+        }
+
+        // Subscribe to notes
+        const unsubscribe = getNotes(user.uid, 
+          (newNotes) => {
+            setNotes(newNotes);
+            setError(null);
+            setLoadingNotes(false);
+          }, 
+          (err) => {
+            console.error(err);
+            setError(`Fehler beim Laden der Notizen: ${err.message}. Bitte überprüfen Sie Ihre Firestore-Regeln und die Browser-Konsole für weitere Details.`);
+            setLoadingNotes(false);
+          }
+        );
+        return unsubscribe;
+    };
+
+    const unsubscribePromise = fetchProfileAndNotes();
+
+    return () => {
+      unsubscribePromise.then(unsubscribe => {
+        if (unsubscribe) unsubscribe();
+      });
+    };
   }, [user, authLoading, router]);
 
   const handleLogout = async () => {
@@ -130,6 +152,12 @@ export default function NotesPage() {
           </h1>
         </div>
         <div className="flex items-center gap-4">
+            {isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin
+                </Button>
+            )}
           <p className="text-sm text-muted-foreground hidden sm:block">{user?.email}</p>
           <Button onClick={handleLogout} variant="secondary">
             Ausloggen
