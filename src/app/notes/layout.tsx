@@ -14,35 +14,47 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   const [notes, setNotes] = useState<Note[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const router = useRouter();
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading) {
+      return;
+    }
     if (!user) {
       router.push('/');
       return;
     }
 
     async function fetchData() {
+      setIsCheckingProfile(true);
       const profile = await getUserProfile(user!.uid);
+      
       if (profile) {
+        // Redirect based on role and status FIRST
+        if (profile.role === 'admin') {
+          router.push('/admin');
+          return; 
+        }
         if (profile.status !== 'active') {
           router.push('/pending-approval');
           return;
         }
+
         setUserProfile(profile);
         const userNotes = await getNotes(user!.uid);
         setNotes(userNotes);
+
       } else {
-        // Profile might still be creating, or there's an issue.
-        // For now, redirect to a waiting page.
+        // Profile doesn't exist yet, probably pending creation. Redirect.
         router.push('/pending-approval');
       }
+      setIsCheckingProfile(false);
     }
 
     fetchData();
   }, [user, loading, router]);
   
-  if (loading || !user || !userProfile) {
+  if (loading || isCheckingProfile || !userProfile) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -50,6 +62,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  // This content will only be rendered for 'active' 'user' roles.
   return (
     <SidebarProvider>
       <Sidebar>
