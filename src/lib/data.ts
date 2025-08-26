@@ -7,31 +7,34 @@ const usersCollection = collection(db, 'users');
 
 // Helper to convert Firestore Timestamps to ISO strings in any object
 const mapTimestamps = (data: any) => {
+  if (!data) return data;
   const newData: { [key: string]: any } = {};
   for (const key in data) {
-    if (data[key] instanceof Timestamp) {
-      newData[key] = data[key].toDate().toISOString();
-    } else {
-      newData[key] = data[key];
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+        if (data[key] instanceof Timestamp) {
+            newData[key] = data[key].toDate().toISOString();
+        } else {
+            newData[key] = data[key];
+        }
     }
   }
   return newData;
 };
 
-const mapFirestoreDocToNote = (doc: any): Note => {
-  const data = doc.data();
+const mapFirestoreDocToNote = (docSnap: any): Note => {
+  const data = docSnap.data();
   const mappedData = mapTimestamps(data);
   return {
-    id: doc.id,
+    id: docSnap.id,
     ...mappedData,
   } as Note;
 };
 
-const mapFirestoreDocToUserProfile = (doc: any): UserProfile => {
-    const data = doc.data();
+const mapFirestoreDocToUserProfile = (docSnap: any): UserProfile => {
+    const data = docSnap.data();
     const mappedData = mapTimestamps(data);
     return {
-      id: doc.id,
+      id: docSnap.id,
       ...mappedData,
     } as UserProfile;
 }
@@ -104,15 +107,18 @@ export const deleteNote = async (id: string): Promise<void> => {
 // --- User Profile Functions ---
 
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    if (!userId) return null;
     try {
         const docRef = doc(db, 'users', userId);
         const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
             return mapFirestoreDocToUserProfile(docSnap);
         }
+        console.warn(`No user profile found for UID: ${userId}`);
         return null;
     } catch (error) {
-        console.error("Error getting user profile:", error);
+        console.error("Error getting user profile for UID:", userId, error);
         return null;
     }
 };

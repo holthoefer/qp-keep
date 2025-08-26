@@ -84,6 +84,7 @@ export async function getAiTags(noteContent: string): Promise<{ tags?: string[];
 
 // User Profile Actions
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+    if (!userId) return null;
     return Data.getUserProfile(userId);
 }
 
