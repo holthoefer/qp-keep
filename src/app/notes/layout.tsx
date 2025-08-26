@@ -27,16 +27,17 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     // Since this layout is only for 'user' roles, we check for that.
     // Admins are routed to /admin by the AuthRedirector.
     async function loadUserData() {
-      const profile = await getUserProfile(user.uid);
-      if (profile && profile.role === 'user' && profile.status === 'active') {
+      const profile = await getUserProfile(user!.uid);
+      if (profile && (profile.role === 'user' || profile.role === 'admin') && profile.status === 'active') {
         setUserProfile(profile);
-        const userNotes = await getNotes(user.uid);
+        const userNotes = await getNotes(user!.uid);
         setNotes(userNotes);
-        setDataLoading(false);
       } else {
         // If not an active user (or admin, who shouldn't be here), redirect.
+        // This might happen if status changes while they are logged in.
         router.push('/');
       }
+      setDataLoading(false);
     }
 
     loadUserData();

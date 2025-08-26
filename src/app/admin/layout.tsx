@@ -24,13 +24,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     async function checkAdmin() {
-      setDataLoading(true);
       const profile = await getUserProfile(user!.uid);
       
       if (profile && profile.role === 'admin') {
         setIsAuthorized(true);
       } else {
-        setIsAuthorized(false);
+        // If not admin, redirect away. Maybe to notes page or login.
         router.push('/notes'); 
       }
       setDataLoading(false);
@@ -48,6 +47,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (!isAuthorized) {
+    // This state should ideally not be reached due to the redirect.
+    // But as a fallback, show an access denied message.
     return (
         <div className="flex h-screen w-full items-center justify-center p-4">
             <Alert variant="destructive" className="max-w-lg">

@@ -36,15 +36,13 @@ export function LoginForm() {
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The auth state listener in the layout will handle the redirect.
-      router.push('/notes'); 
+      // The auth state listener on the page will trigger the AuthRedirector.
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
         setError("Invalid email or password. Please try again.");
       } else {
         setError("An unexpected error occurred. Please try again.");
       }
-    } finally {
       setIsLoginLoading(false);
     }
   };
@@ -70,13 +68,12 @@ export function LoginForm() {
       if (isAdmin) {
          toast({
             title: "Admin Account Created",
-            description: "Welcome! Redirecting to your notes...",
+            description: "Welcome! You will be redirected shortly...",
          });
-         // This is a reliable redirect after the admin user is created.
-         router.push('/notes');
+         // The AuthRedirector will handle the redirect.
       } else {
         await sendEmailVerification(user);
-        await signOut(auth);
+        await signOut(auth); // Sign out user so they have to log in after verification
         toast({ 
           title: "Account Created & Verification Sent", 
           description: "Please check your inbox. Your account is now pending administrator approval.",
@@ -122,11 +119,11 @@ export function LoginForm() {
       </CardContent>
       <CardFooter className="flex-col space-y-2">
         <Button onClick={handleLogin} className="w-full" disabled={isLoading}>
-          {isLoginLoading && <Loader2 className="animate-spin" />}
+          {isLoginLoading && <Loader2 className="animate-spin mr-2" />}
           Sign In
         </Button>
         <Button onClick={handleSignup} className="w-full" variant="secondary" disabled={isLoading}>
-          {isSignupLoading && <Loader2 className="animate-spin" />}
+          {isSignupLoading && <Loader2 className="animate-spin mr-2" />}
           Create Account
         </Button>
       </CardFooter>
