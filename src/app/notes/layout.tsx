@@ -17,26 +17,30 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
 
   useEffect(() => {
-    if (authLoading) return; // Wait for Firebase Auth to be initialized
+    if (authLoading) {
+      return; // Wait for Firebase Auth to be initialized
+    }
 
     if (!user) {
       router.push('/'); // If no user, send to login page
       return;
     }
 
-    // Since this layout is only for 'user' roles, we check for that.
-    // Admins are routed to /admin by the AuthRedirector.
     async function loadUserData() {
-      const profile = await getUserProfile(user!.uid);
-      if (profile && (profile.role === 'user' || profile.role === 'admin') && profile.status === 'active') {
-        setUserProfile(profile);
-        const userNotes = await getNotes(user!.uid);
-        setNotes(userNotes);
-      } else {
-        // If not an active user (or admin, who shouldn't be here), redirect.
-        // This might happen if status changes while they are logged in.
-        router.push('/');
+      const [profile, userNotes] = await Promise.all([
+        getUserProfile(user!.uid),
+        getNotes(user!.uid)
+      ]);
+      
+      // Basic protection: if user is not active, they shouldn't be here.
+      // The AuthRedirector should handle this, but this is a fallback.
+      if (!profile || profile.status !== 'active') {
+          router.push('/pending-approval');
+          return;
       }
+      
+      setUserProfile(profile);
+      setNotes(userNotes);
       setDataLoading(false);
     }
 

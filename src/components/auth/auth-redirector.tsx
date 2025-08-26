@@ -11,11 +11,13 @@ export function AuthRedirector({ user }: { user: User }) {
 
   useEffect(() => {
     async function checkProfileAndRedirect() {
+      // This should not happen, but as a safeguard.
       if (!user) {
         router.push('/');
         return;
       }
 
+      // Fetch the user's profile from Firestore.
       const profile = await getUserProfile(user.uid);
 
       if (profile) {
@@ -24,11 +26,12 @@ export function AuthRedirector({ user }: { user: User }) {
         } else if (profile.status === 'active') {
           router.push('/notes');
         } else {
+          // Handles 'pending_approval' or 'suspended'
           router.push('/pending-approval');
         }
       } else {
-        // No profile found in Firestore, should not happen with correct signup flow,
-        // but as a fallback, we direct to pending.
+        // This can happen if the Firestore document creation failed or is delayed.
+        // Directing to pending-approval is a safe fallback. The user can try logging in again later.
         router.push('/pending-approval');
       }
     }
@@ -36,6 +39,7 @@ export function AuthRedirector({ user }: { user: User }) {
     checkProfileAndRedirect();
   }, [user, router]);
 
+  // Display a full-screen loader while the profile is being checked and redirection is happening.
   return (
     <div className="flex h-screen w-full items-center justify-center">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
