@@ -26,7 +26,7 @@ import {
   DropdownMenuLabel, 
   DropdownMenuSeparator 
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function NoteList({ notes }: { notes: Note[] }) {
   const searchParams = useSearchParams();
@@ -44,6 +44,7 @@ export function NoteList({ notes }: { notes: Note[] }) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
+                    <AvatarImage src="https://picsum.photos/40/40" alt="User Avatar" data-ai-hint="person" />
                     <AvatarFallback>
                       <User className="h-5 w-5" />
                     </AvatarFallback>
