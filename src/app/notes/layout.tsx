@@ -18,37 +18,45 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (loading) {
-      return;
+      return; // Wait for Firebase auth to be ready
     }
     if (!user) {
-      router.push('/');
+      router.push('/'); // Not logged in, go to login page
       return;
     }
 
     async function fetchData() {
       setIsCheckingProfile(true);
-      const profile = await getUserProfile(user!.uid);
-      
-      if (profile) {
-        // Redirect based on role and status FIRST
-        if (profile.role === 'admin') {
-          router.push('/admin');
-          return; 
-        }
-        if (profile.status !== 'active') {
+      try {
+        const profile = await getUserProfile(user!.uid);
+        
+        if (profile) {
+          // Profile exists, check role and status
+          if (profile.role === 'admin') {
+            setUserProfile(profile);
+            const userNotes = await getNotes(user!.uid);
+            setNotes(userNotes);
+          } else if (profile.status === 'active') {
+            setUserProfile(profile);
+            const userNotes = await getNotes(user!.uid);
+            setNotes(userNotes);
+          } else {
+            // User is pending or suspended
+            router.push('/pending-approval');
+          }
+        } else {
+          // Profile doesn't exist in Firestore yet.
+          // This can happen for a brief moment after signup.
+          // Redirecting to pending approval is a safe default.
           router.push('/pending-approval');
-          return;
         }
-
-        setUserProfile(profile);
-        const userNotes = await getNotes(user!.uid);
-        setNotes(userNotes);
-
-      } else {
-        // Profile doesn't exist yet, probably pending creation. Redirect.
-        router.push('/pending-approval');
+      } catch (error) {
+          console.error("Failed to fetch user data:", error);
+          // Handle error case, maybe redirect to an error page or login
+          router.push('/');
+      } finally {
+        setIsCheckingProfile(false);
       }
-      setIsCheckingProfile(false);
     }
 
     fetchData();
@@ -62,7 +70,7 @@ export default function NotesLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // This content will only be rendered for 'active' 'user' roles.
+  // This content will only be rendered for 'active' users (admin or user).
   return (
     <SidebarProvider>
       <Sidebar>

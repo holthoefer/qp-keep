@@ -18,9 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
-import type { UserProfile } from "@/lib/types";
-
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 const ADMIN_EMAIL = "holthofer@gmail.com";
 
@@ -37,35 +35,15 @@ export function LoginForm() {
     setIsLoginLoading(true);
     setError(null);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      if (!user.emailVerified && user.email?.toLowerCase() !== ADMIN_EMAIL) {
-        setError("Please verify your email address before logging in.");
-        setIsLoginLoading(false);
-        return;
-      }
-      
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      // If the user is the admin and doesn't have a profile yet, create it.
-      // This is a robust way to ensure the admin user is always set up correctly.
-      if (!userDoc.exists() && user.email?.toLowerCase() === ADMIN_EMAIL) {
-          await setDoc(userDocRef, {
-            uid: user.uid,
-            email: user.email,
-            role: 'admin',
-            status: 'active',
-            createdAt: serverTimestamp(),
-          });
-      }
-      
-      // Let the layout handle the redirection.
+      await signInWithEmailAndPassword(auth, email, password);
+      // Let the layout handle redirection.
       router.push('/notes');
-
     } catch (err: any) {
-      setError(err.message);
+       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
+        setError("Invalid email or password. Please try again or create an account.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setIsLoginLoading(false);
     }
@@ -80,7 +58,7 @@ export function LoginForm() {
       
       const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL;
       
-      // Create user profile in Firestore
+      // Create user profile in Firestore. This is the critical step.
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, {
         uid: user.uid,
@@ -90,7 +68,14 @@ export function LoginForm() {
         createdAt: serverTimestamp(),
       });
       
-      if (!isAdmin) {
+      if (isAdmin) {
+         toast({
+            title: "Admin Account Created",
+            description: "Welcome! You have been registered as an administrator.",
+         });
+         // For the admin, just log them in and redirect.
+         router.push('/notes');
+      } else {
         await sendEmailVerification(user);
         toast({ 
           title: "Verification Email Sent", 
@@ -98,9 +83,6 @@ export function LoginForm() {
           duration: 10000,
         });
         router.push('/pending-approval');
-      } else {
-         // For the admin, no verification is needed, just log them in.
-         router.push('/notes');
       }
 
     } catch (err: any) {
