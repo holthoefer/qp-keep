@@ -1,23 +1,47 @@
 
 'use client';
 
+import { useEffect, useState } from 'react';
 import { LoginForm } from '@/components/auth/login-form';
 import { KeepKnowLogo } from '@/components/icons';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, LogOut } from 'lucide-react';
+import { Loader2, LogOut, ShieldAlert } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { getProfile, type UserProfile } from '@/lib/data';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (user) {
+      setProfileLoading(true);
+      getProfile(user.uid)
+        .then(userProfile => {
+          setProfile(userProfile);
+        })
+        .catch(console.error)
+        .finally(() => {
+          setProfileLoading(false);
+        });
+    } else {
+      // No user logged in, so no profile to load.
+      setProfileLoading(false);
+    }
+  }, [user, authLoading]);
 
   const handleLogout = async () => {
     await signOut(auth);
-    // After sign-out, the useAuth hook will trigger a re-render.
-    // A forced refresh ensures the state is clean.
     router.refresh(); 
   };
 
@@ -25,8 +49,8 @@ export default function HomePage() {
     router.push('/notes');
   }
 
-  // State 1: Loading authentication status
-  if (loading) {
+  // State 1: Loading authentication status or profile
+  if (authLoading || profileLoading) {
     return (
       <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -49,10 +73,24 @@ export default function HomePage() {
           
             <div className="space-y-4">
                 <p className="font-medium">{user.email}</p>
-                <p className="text-sm text-muted-foreground">E-Mail verifiziert: {user.emailVerified ? 'Ja' : 'Nein'}</p>
-                <Button onClick={goToNotes} className="w-full">
+                <Button 
+                  onClick={goToNotes} 
+                  className="w-full"
+                  disabled={profile?.status === 'inactive'}
+                >
                     Zur Notizenseite
                 </Button>
+
+                {profile?.status === 'inactive' && (
+                  <Alert variant="destructive" className="text-left">
+                    <ShieldAlert className="h-4 w-4" />
+                    <AlertTitle>Konto inaktiv</AlertTitle>
+                    <AlertDescription>
+                      Ihr Konto wurde von einem Administrator gesperrt. Sie können nicht auf Ihre Notizen zugreifen.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <Button onClick={handleLogout} variant="secondary" className="w-full">
                     <LogOut className="mr-2 h-4 w-4" />
                     Ausloggen
