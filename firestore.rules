@@ -1,22 +1,39 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /notes/{noteId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow read, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+
+    // Helper functions
+    function isUserAuthenticated() {
+      return request.auth != null;
     }
+    function isUserProfileOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    function isUserAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Rules for collections
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if isUserAuthenticated();
+      allow write: if isUserAdmin() || isUserProfileOwner(userId);
     }
+
+    match /notes/{document=**} {
+      allow read, write: if isUserAuthenticated();
+    }
+    
+    match /control-plans/{document=**} {
+      allow read, write: if isUserAuthenticated();
+    }
+
     match /controlplan/{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isUserAuthenticated();
     }
+
     match /lenkungsplan/{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isUserAuthenticated();
     }
   }
 }
