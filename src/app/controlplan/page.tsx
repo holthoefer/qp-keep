@@ -27,6 +27,17 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -69,6 +80,7 @@ export default function ControlPlanPage() {
   const { toast } = useToast();
   const isAdmin = roles.includes('admin');
   const [isSeeding, setIsSeeding] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -164,16 +176,17 @@ export default function ControlPlanPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!isAdmin) return;
-    if (window.confirm('Are you sure you want to delete this item?')) {
-        try {
-            await deleteControlPlanItem(id);
-            toast({ title: 'Item Deleted' });
-        } catch (err) {
-            console.error(err);
-            toast({ title: 'Error deleting item', variant: 'destructive' });
-        }
+  const handleDelete = async (id: string | null) => {
+    if (!isAdmin || !id) return;
+    
+    try {
+        await deleteControlPlanItem(id);
+        toast({ title: 'Item Deleted' });
+    } catch (err) {
+        console.error(err);
+        toast({ title: 'Error deleting item', variant: 'destructive' });
+    } finally {
+        setItemToDelete(null);
     }
   }
 
@@ -292,6 +305,22 @@ export default function ControlPlanPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+          <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the control plan item.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setItemToDelete(null)}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDelete(itemToDelete)}>
+                    Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+           </AlertDialog>
           <div className="rounded-lg border">
             <Table>
               <TableHeader>
@@ -334,7 +363,7 @@ export default function ControlPlanPage() {
                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}>
                                 <Edit className="h-4 w-4" />
                            </Button>
-                           <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                           <Button variant="ghost" size="icon" onClick={() => setItemToDelete(item.id)}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
                            </Button>
                         </TableCell>
@@ -350,5 +379,3 @@ export default function ControlPlanPage() {
     </div>
   );
 }
-
-    
