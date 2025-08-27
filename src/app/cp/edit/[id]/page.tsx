@@ -18,6 +18,7 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
   const [initialData, setInitialData] = useState<ControlPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { id } = params;
 
   useEffect(() => {
     if (authLoading) return;
@@ -29,7 +30,7 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
     const fetchPlan = async () => {
         try {
             setLoading(true);
-            const plan = await getControlPlan(params.id);
+            const plan = await getControlPlan(id);
             if (plan) {
                 setInitialData(plan);
             } else {
@@ -47,7 +48,7 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
     };
 
     fetchPlan();
-  }, [params.id, router, toast, user, authLoading]);
+  }, [id, router, toast, user, authLoading]);
 
   const handleFormSubmit = async (data: ControlPlan) => {
     if (!user) {
