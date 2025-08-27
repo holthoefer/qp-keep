@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Database } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -44,6 +44,7 @@ import {
     updateControlPlanItem,
     deleteControlPlanItem,
     type ControlPlanItem,
+    seedDatabaseWithExampleData,
 } from '@/lib/data';
 
 type ControlPlanItemFormData = Omit<ControlPlanItem, 'id' | 'createdAt'>;
@@ -63,6 +64,7 @@ export default function ControlPlanPage() {
   });
   const { toast } = useToast();
   const isAdmin = roles.includes('admin');
+  const [isSeeding, setIsSeeding] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -164,6 +166,28 @@ export default function ControlPlanPage() {
     }
   }
 
+  const handleSeedDatabase = async () => {
+    if (!isAdmin) return;
+    setIsSeeding(true);
+    try {
+      await seedDatabaseWithExampleData();
+      toast({
+        title: "Datenbank erfolgreich befüllt",
+        description: "Zwei Beispiel-Control-Plans wurden der Datenbank hinzugefügt.",
+      });
+    } catch (error: any) {
+       toast({
+        title: "Fehler beim Befüllen der Datenbank",
+        description: error.message,
+        variant: "destructive",
+      });
+      console.error(error);
+    } finally {
+      setIsSeeding(false);
+    }
+  }
+
+
   if (loading || authLoading) {
     return null; // AuthProvider shows LoadingScreen
   }
@@ -190,49 +214,57 @@ export default function ControlPlanPage() {
         <div className="mx-auto w-full max-w-6xl">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-headline text-2xl font-semibold">Tasks</h2>
-            {isAdmin && (
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button onClick={openNewDialog}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add Task
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{editingItem ? 'Edit Task' : 'Add New Task'}</DialogTitle>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="task" className="text-right">Task</Label>
-                                <Input id="task" value={formData.task} onChange={(e) => handleFormChange(e, 'task')} className="col-span-3" />
+            <div className="flex items-center gap-2">
+                {isAdmin && (
+                    <Button variant="destructive" size="sm" onClick={handleSeedDatabase} disabled={isSeeding}>
+                        {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+                        Seed Advanced CP
+                    </Button>
+                )}
+                {isAdmin && (
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button onClick={openNewDialog}>
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add Task
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>{editingItem ? 'Edit Task' : 'Add New Task'}</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="task" className="text-right">Task</Label>
+                                    <Input id="task" value={formData.task} onChange={(e) => handleFormChange(e, 'task')} className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="responsible" className="text-right">Responsible</Label>
+                                    <Input id="responsible" value={formData.responsible} onChange={(e) => handleFormChange(e, 'responsible')} className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="status" className="text-right">Status</Label>
+                                    <Select value={formData.status} onValueChange={(value) => handleFormChange(value, 'status')}>
+                                        <SelectTrigger className="col-span-3">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="pending">Pending</SelectItem>
+                                            <SelectItem value="in_progress">In Progress</SelectItem>
+                                            <SelectItem value="completed">Completed</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="responsible" className="text-right">Responsible</Label>
-                                <Input id="responsible" value={formData.responsible} onChange={(e) => handleFormChange(e, 'responsible')} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="status" className="text-right">Status</Label>
-                                <Select value={formData.status} onValueChange={(value) => handleFormChange(value, 'status')}>
-                                    <SelectTrigger className="col-span-3">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="in_progress">In Progress</SelectItem>
-                                        <SelectItem value="completed">Completed</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <DialogClose asChild>
-                              <Button variant="outline">Cancel</Button>
-                            </DialogClose>
-                            <Button onClick={handleSave}>Save</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            )}
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                <Button variant="outline">Cancel</Button>
+                                </DialogClose>
+                                <Button onClick={handleSave}>Save</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                )}
+            </div>
           </div>
           {error && (
             <Alert variant="destructive" className="mb-4">
@@ -295,3 +327,5 @@ export default function ControlPlanPage() {
     </div>
   );
 }
+
+    

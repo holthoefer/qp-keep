@@ -42,6 +42,11 @@ export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'>
         });
     } catch (error) {
         console.error("Error adding note with tags:", error);
+        toast({
+            title: "Fehler",
+            description: `Notiz konnte nicht gespeichert werden, AI-Tagging fehlgeschlagen. Notiz wird ohne Tags gespeichert.`,
+            variant: "destructive"
+        });
         await addDoc(collection(db, 'notes'), {
             ...note,
             tags: [],
@@ -260,7 +265,7 @@ export async function listStorageFiles(path: string): Promise<StorageFile[]> {
 }
 
 export async function seedDatabaseWithExampleData() {
-    const examplePlans: Omit<ControlPlan, 'id'>[] = [
+    const examplePlans: Omit<ControlPlan, 'id' | 'lastChangedBy'>[] = [
         {
             planNumber: 'CP-EX-001',
             partNumber: 'PN-DEMO-A',
@@ -269,7 +274,6 @@ export async function seedDatabaseWithExampleData() {
             version: 2,
             revisionDate: new Date().toISOString(),
             keyContact: 'Max Mustermann',
-            lastChangedBy: auth.currentUser?.uid || 'system',
             processSteps: [],
         },
         {
@@ -280,20 +284,24 @@ export async function seedDatabaseWithExampleData() {
             version: 1,
             revisionDate: new Date().toISOString(),
             keyContact: 'Erika Musterfrau',
-            lastChangedBy: auth.currentUser?.uid || 'system',
             processSteps: [],
         },
     ];
     
     const batch = writeBatch(db);
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+        throw new Error("User is not authenticated. Cannot seed data.");
+    }
 
     examplePlans.forEach(planData => {
         const docRef = doc(collection(db, 'control-plans'));
-        const dataToSave = {
+        const dataToSave: ControlPlan = {
             ...planData,
             id: docRef.id,
             revisionDate: new Date().toISOString(),
             createdAt: new Date().toISOString(),
+            lastChangedBy: userId,
         };
         const cleanedData = removeUndefinedValues(dataToSave);
         batch.set(docRef, cleanedData);
@@ -301,3 +309,5 @@ export async function seedDatabaseWithExampleData() {
 
     await batch.commit();
 }
+
+    
