@@ -269,6 +269,7 @@ export async function seedDatabaseWithExampleData() {
             version: 2,
             revisionDate: new Date().toISOString(),
             keyContact: 'Max Mustermann',
+            lastChangedBy: auth.currentUser?.uid || 'system',
             processSteps: [],
         },
         {
@@ -279,6 +280,7 @@ export async function seedDatabaseWithExampleData() {
             version: 1,
             revisionDate: new Date().toISOString(),
             keyContact: 'Erika Musterfrau',
+            lastChangedBy: auth.currentUser?.uid || 'system',
             processSteps: [],
         },
     ];
