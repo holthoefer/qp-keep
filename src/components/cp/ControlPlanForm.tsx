@@ -136,9 +136,8 @@ const formSchema = z.object({
 type ControlPlanFormValues = z.infer<typeof formSchema>;
 
 type ControlPlanFormProps = {
-  onSubmit: (data: ControlPlan | Omit<ControlPlan, 'id'>) => void;
+  onSubmit: (data: ControlPlan) => Promise<void>;
   initialData?: ControlPlan | null;
-  onClose: () => void;
 };
 
 // Helper function to convert nulls/empty strings to undefined for number fields
@@ -178,7 +177,7 @@ const getDefaultCharacteristic = (itemNumber: string = '1'): Omit<Characteristic
 });
 
 
-export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanFormProps) {
+export function ControlPlanForm({ onSubmit, initialData }: ControlPlanFormProps) {
   const { roles } = useAuth();
   const isAdmin = roles.includes('admin');
   const formatDateForInput = (date?: string | null) => date ? new Date(date).toISOString().split('T')[0] : '';
@@ -309,17 +308,30 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
         });
   }, [fields, form.watch('processSteps')]);
   
-  const executeSave = (values: ControlPlanFormValues) => {
-    const dataToSubmit: ControlPlan | Omit<ControlPlan, 'id'> = {
-        ...values,
-        id: initialData?.id, 
-        // Ensure required fields for a full control plan have defaults if not provided in the simplified form
-        status: values.status || 'Draft',
-        version: values.version || 1,
-        revisionDate: values.revisionDate || new Date().toISOString().split('T')[0],
-        processSteps: values.processSteps || [],
+  const executeSave = async (values: ControlPlanFormValues) => {
+    const dataToSubmit: ControlPlan = {
+      ...values,
+      id: initialData?.id || '',
+      status: values.status || 'Draft',
+      version: values.version || 1,
+      revisionDate: values.revisionDate || new Date().toISOString().split('T')[0],
+      processSteps: values.processSteps || [],
     };
-    onSubmit(dataToSubmit);
+    
+    try {
+        await onSubmit(dataToSubmit);
+        toast({
+            title: 'Control Plan Updated',
+            description: `Plan for ${dataToSubmit.partName} has been saved.`,
+        });
+        router.push('/cp');
+    } catch (error: any) {
+         toast({
+            title: 'Error Saving Plan',
+            description: error.message,
+            variant: 'destructive',
+        });
+    }
   }
   
   const handleExportCsv = () => {
@@ -380,7 +392,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
     if (form.formState.isDirty) {
         setIsBackAlertOpen(true);
     } else {
-        onClose();
+        router.push('/cp');
     }
   };
 
@@ -406,7 +418,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                      <AlertDialogCancel>Stay on page</AlertDialogCancel>
-                     <AlertDialogAction onClick={onClose}>Discard and Go Back</AlertDialogAction>
+                     <AlertDialogAction onClick={() => router.push('/cp')}>Discard and Go Back</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -704,9 +716,9 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
 
 
     return (
-        <AccordionItem value={`ps-item-${processStepIndex}`} className="border-b-0">
-             <Card className="bg-muted/50 overflow-hidden">
-                <AccordionTrigger className="p-4 hover:bg-accent/10 group cursor-pointer">
+        <AccordionItem value={`ps-item-${processStepIndex}`} className="border rounded-md bg-muted/50 overflow-hidden">
+             <Card className="bg-muted/50 overflow-hidden border-none shadow-none">
+                <AccordionTrigger className="p-4 hover:bg-accent/10 group cursor-pointer text-left">
                     <div className="flex flex-1 items-center justify-between">
                          <div className="flex items-center gap-4 flex-1">
                             <div className='text-left'>
@@ -714,7 +726,6 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                                 <p className="text-sm text-muted-foreground">{processName}</p>
                             </div>
                         </div>
-                        <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200" />
                     </div>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -914,7 +925,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
     
     return (
         <AccordionItem value={`char-item-${characteristicIndex}`} className="border rounded-md bg-background overflow-hidden">
-            <AccordionTrigger className="p-3 hover:bg-muted/50 group cursor-pointer">
+            <AccordionTrigger className="p-3 hover:bg-muted/50 group cursor-pointer text-left">
                  <div className="flex flex-1 items-center justify-between">
                     <div className="flex items-center gap-3 flex-1 overflow-hidden">
                         <div className='text-left overflow-hidden'>
@@ -925,9 +936,6 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                             </p>
                             <p className="text-sm text-muted-foreground truncate">{formatSpec()}</p>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-1 pr-2">
-                        <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200" />
                     </div>
                 </div>
             </AccordionTrigger>
@@ -1344,7 +1352,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
     const handleUpload = (file: File) => {
         // Use planNumber for new plans, fallback to entityId for existing ones
         const idForPath = planNumber || entityId;
-        if (!idForPath || String(idForPath).includes('temp')) {
+        if (!idForPath) {
              setUploadError(`${entityName} hat keine gültige ID oder Plan-Nummer. Bitte zuerst den Control Plan speichern.`);
              return;
         }

@@ -1,102 +1,44 @@
 
-'use client';
+'use server';
 
-import { useEffect, useState, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { getControlPlan, saveControlPlan } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { ControlPlanForm } from '@/components/cp/ControlPlanForm';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import type { ControlPlan } from '@/types';
-import { useAuth } from '@/hooks/use-auth-context';
+import { auth } from '@/lib/firebase';
 
-export default function EditControlPlanPage({ params: paramsPromise }: { params: { id: string } }) {
-  const router = useRouter();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  
-  // Use React.use() to unwrap the params promise
-  const params = use(paramsPromise);
-  const [initialData, setInitialData] = useState<ControlPlan | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!params.id) {
-        setError("No control plan ID provided.");
-        setLoading(false);
-        return;
-    }
-    
-    getControlPlan(params.id)
-      .then((plan) => {
-        if (plan) {
-          setInitialData(plan);
-        } else {
-          setError('Control Plan not found.');
-          toast({
-            title: 'Error',
-            description: 'Control Plan not found.',
-            variant: 'destructive',
-          });
-           router.push('/cp');
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching control plan:', err);
-        setError('Failed to fetch control plan.');
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch control plan.',
-          variant: 'destructive',
-        });
-        router.push('/cp');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [params.id, toast, router]);
+// This is now a server component that fetches data and then passes it to the client component.
+export default async function EditControlPlanPage({ params }: { params: { id: string } }) {
+  const plan = await getControlPlan(params.id);
+
+  if (!plan) {
+    redirect('/cp');
+  }
 
   const handleFormSubmit = async (data: ControlPlan) => {
+    'use server';
+    const user = auth.currentUser;
     if (!user) {
-        toast({ title: 'Not authenticated', variant: 'destructive' });
-        return;
+        // This case should ideally be handled by middleware or page-level checks
+        throw new Error('Not authenticated');
     }
     try {
       await saveControlPlan(data, user.uid);
-      toast({
-        title: 'Control Plan Updated',
-        description: `Plan for ${data.partName} has been saved.`,
-      });
-      router.push('/cp');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving plan:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save the control plan.',
-        variant: 'destructive',
-      });
+      // In a server action, you might re-throw or return an error state
+      throw new Error(error.message || 'Failed to save the control plan.');
     }
+     // After saving, redirect on the client-side from within the form component
   };
   
-  const handleClose = () => {
-    router.push('/cp');
-  };
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-  
-  if (error || !initialData) {
-    // Error state is handled via toasts and redirects inside useEffect
-    return <LoadingScreen />;
-  }
-
   return (
     <ControlPlanForm
       onSubmit={handleFormSubmit}
-      initialData={initialData}
-      onClose={handleClose}
+      initialData={plan}
     />
   );
 }
