@@ -158,12 +158,22 @@ export interface ControlPlanItem {
     partNumber: string;
     partName: string;
     version: number;
-    responsible: string;
     status: ControlPlanStatus;
     createdAt: Timestamp;
+    revisionDate?: string;
     planDescription?: string;
     keyContact?: string;
-    revisionDate?: string;
+    supplierPlant?: string;
+    supplierCode?: string;
+    coreTeam?: string;
+    plantApprovalDate?: string;
+    otherApproval?: string;
+    originalFirstDate?: string;
+    customerEngineeringApprovalDate?: string;
+    customerQualityApprovalDate?: string;
+    otherApprovalDate?: string;
+    generalInformation?: string;
+    imageUrl?: string;
 }
 
 
@@ -172,5 +182,3 @@ export interface StorageFile {
   name: string;
   thumbnailUrl?: string;
 }
-
-    

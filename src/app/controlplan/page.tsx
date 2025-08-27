@@ -36,7 +36,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -83,14 +82,24 @@ export default function ControlPlanPage() {
   const [editingItem, setEditingItem] = useState<ControlPlanItem | null>(null);
   const [formData, setFormData] = useState<ControlPlanItemFormData>({
     partName: '',
-    responsible: '',
     status: 'Draft',
     planNumber: '',
     partNumber: '',
     version: 1,
+    revisionDate: new Date().toISOString().split('T')[0],
     planDescription: '',
     keyContact: '',
-    revisionDate: new Date().toISOString().split('T')[0],
+    supplierPlant: '',
+    supplierCode: '',
+    coreTeam: '',
+    plantApprovalDate: '',
+    otherApproval: '',
+    originalFirstDate: '',
+    customerEngineeringApprovalDate: '',
+    customerQualityApprovalDate: '',
+    otherApprovalDate: '',
+    generalInformation: '',
+    imageUrl: '',
   });
   const { toast } = useToast();
   const isAdmin = roles.includes('admin');
@@ -171,14 +180,24 @@ export default function ControlPlanPage() {
     setEditingItem(item);
     setFormData({
         partName: item.partName,
-        responsible: item.responsible,
         status: item.status,
         planNumber: item.planNumber,
         partNumber: item.partNumber,
         version: item.version,
+        revisionDate: formatDateForInput(item.revisionDate),
         planDescription: item.planDescription || '',
         keyContact: item.keyContact || '',
-        revisionDate: formatDateForInput(item.revisionDate),
+        supplierPlant: item.supplierPlant || '',
+        supplierCode: item.supplierCode || '',
+        coreTeam: item.coreTeam || '',
+        plantApprovalDate: formatDateForInput(item.plantApprovalDate) || '',
+        otherApproval: item.otherApproval || '',
+        originalFirstDate: formatDateForInput(item.originalFirstDate) || '',
+        customerEngineeringApprovalDate: formatDateForInput(item.customerEngineeringApprovalDate) || '',
+        customerQualityApprovalDate: formatDateForInput(item.customerQualityApprovalDate) || '',
+        otherApprovalDate: formatDateForInput(item.otherApprovalDate) || '',
+        generalInformation: item.generalInformation || '',
+        imageUrl: item.imageUrl || '',
     });
     setIsDialogOpen(true);
   };
@@ -187,14 +206,24 @@ export default function ControlPlanPage() {
     setEditingItem(null);
     setFormData({
         partName: '',
-        responsible: '',
         status: 'Draft',
         planNumber: `CP-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3,'0')}`,
         partNumber: '',
         version: 1,
+        revisionDate: new Date().toISOString().split('T')[0],
         planDescription: '',
         keyContact: '',
-        revisionDate: new Date().toISOString().split('T')[0],
+        supplierPlant: '',
+        supplierCode: '',
+        coreTeam: '',
+        plantApprovalDate: '',
+        otherApproval: '',
+        originalFirstDate: new Date().toISOString().split('T')[0],
+        customerEngineeringApprovalDate: '',
+        customerQualityApprovalDate: '',
+        otherApprovalDate: '',
+        generalInformation: '',
+        imageUrl: '',
     });
     setIsDialogOpen(true);
   };
@@ -247,12 +276,12 @@ export default function ControlPlanPage() {
                                 <PlusCircle className="mr-2 h-4 w-4" /> Neuer Control Plan
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-2xl">
+                        <DialogContent className="sm:max-w-4xl">
                             <DialogHeader>
                                 <DialogTitle>{editingItem ? 'Edit Control Plan' : 'Neuen Control Plan anlegen'}</DialogTitle>
                             </DialogHeader>
-                            <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
-                                <div className="grid md:grid-cols-2 gap-4">
+                            <div className="grid gap-6 py-4 max-h-[70vh] overflow-y-auto pr-4">
+                                <div className="grid md:grid-cols-3 gap-4">
                                      <div className="space-y-2">
                                         <Label htmlFor="planNumber">Plan-Nummer</Label>
                                         <Input 
@@ -272,12 +301,20 @@ export default function ControlPlanPage() {
                                         <Input id="partNumber" value={formData.partNumber} onChange={(e) => handleFormChange(e, 'partNumber')} />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="responsible">Verantwortlich</Label>
-                                        <Input id="responsible" value={formData.responsible} onChange={(e) => handleFormChange(e, 'responsible')} />
+                                        <Label htmlFor="supplierPlant">Supplier/Plant</Label>
+                                        <Input id="supplierPlant" value={formData.supplierPlant || ''} onChange={(e) => handleFormChange(e, 'supplierPlant')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="supplierCode">Supplier Code</Label>
+                                        <Input id="supplierCode" value={formData.supplierCode || ''} onChange={(e) => handleFormChange(e, 'supplierCode')} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="keyContact">Key Contact</Label>
                                         <Input id="keyContact" value={formData.keyContact || ''} onChange={(e) => handleFormChange(e, 'keyContact')} />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-3">
+                                        <Label htmlFor="coreTeam">Core Team</Label>
+                                        <Input id="coreTeam" value={formData.coreTeam || ''} onChange={(e) => handleFormChange(e, 'coreTeam')} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="status">Status</Label>
@@ -296,10 +333,49 @@ export default function ControlPlanPage() {
                                         <Label htmlFor="revisionDate">Revision Date</Label>
                                         <Input id="revisionDate" type="date" value={formData.revisionDate || ''} onChange={(e) => handleFormChange(e, 'revisionDate')} />
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="originalFirstDate">Original First Date</Label>
+                                        <Input id="originalFirstDate" type="date" value={formData.originalFirstDate || ''} onChange={(e) => handleFormChange(e, 'originalFirstDate')} />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="planDescription">Plan Description</Label>
-                                    <Textarea id="planDescription" value={formData.planDescription || ''} onChange={(e) => handleFormChange(e, 'planDescription')} />
+                                <div className="space-y-4">
+                                    <Label>Approval Dates</Label>
+                                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 rounded-md border p-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="plantApprovalDate">Plant Approval</Label>
+                                            <Input id="plantApprovalDate" type="date" value={formData.plantApprovalDate || ''} onChange={(e) => handleFormChange(e, 'plantApprovalDate')} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="customerEngineeringApprovalDate">Cust. Eng. Approval</Label>
+                                            <Input id="customerEngineeringApprovalDate" type="date" value={formData.customerEngineeringApprovalDate || ''} onChange={(e) => handleFormChange(e, 'customerEngineeringApprovalDate')} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="customerQualityApprovalDate">Cust. Quality Approval</Label>
+                                            <Input id="customerQualityApprovalDate" type="date" value={formData.customerQualityApprovalDate || ''} onChange={(e) => handleFormChange(e, 'customerQualityApprovalDate')} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="otherApprovalDate">Other Approval</Label>
+                                            <Input id="otherApprovalDate" type="date" value={formData.otherApprovalDate || ''} onChange={(e) => handleFormChange(e, 'otherApprovalDate')} />
+                                        </div>
+                                         <div className="space-y-2 md:col-span-2 lg:col-span-4">
+                                            <Label htmlFor="otherApproval">Other Approval Text</Label>
+                                            <Input id="otherApproval" value={formData.otherApproval || ''} onChange={(e) => handleFormChange(e, 'otherApproval')} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="planDescription">Plan Description</Label>
+                                        <Textarea id="planDescription" value={formData.planDescription || ''} onChange={(e) => handleFormChange(e, 'planDescription')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="generalInformation">General Information</Label>
+                                        <Textarea id="generalInformation" value={formData.generalInformation || ''} onChange={(e) => handleFormChange(e, 'generalInformation')} />
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label htmlFor="imageUrl">Image URL</Label>
+                                        <Input id="imageUrl" value={formData.imageUrl || ''} onChange={(e) => handleFormChange(e, 'imageUrl')} />
+                                    </div>
                                 </div>
                             </div>
                             <DialogFooter>
@@ -318,7 +394,7 @@ export default function ControlPlanPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
+          <AlertDialog>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
