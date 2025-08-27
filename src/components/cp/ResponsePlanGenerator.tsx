@@ -254,7 +254,7 @@ export function ResponsePlanGenerator({ controlPlan, preselectedSample, onGenera
       )}
       <CardContent className={cn("space-y-6", preselectedSample && "p-0 pt-4")}>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-4">
             {!preselectedSample && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <FormField
@@ -379,12 +379,12 @@ export function ResponsePlanGenerator({ controlPlan, preselectedSample, onGenera
             )}
             
             {!preselectedSample && (
-                <Button type="submit" disabled={isGenerateDisabled} className="bg-accent hover:bg-accent/90">
+                <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isGenerateDisabled} className="bg-accent hover:bg-accent/90">
                 <Wand2 className="mr-2 h-4 w-4" />
                 {isLoading ? 'Generating...' : 'Generate Action Plan'}
                 </Button>
             )}
-          </form>
+          </div>
         </Form>
       </CardContent>
     </Card>
