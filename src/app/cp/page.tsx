@@ -27,6 +27,7 @@ import {
   Settings
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -49,10 +50,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
-  Sheet,
-  SheetContent,
-} from '@/components/ui/sheet';
-import {
   Table,
   TableBody,
   TableCell,
@@ -60,7 +57,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ControlPlanForm } from '@/components/cp/ControlPlanForm';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -74,7 +70,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { getControlPlans, saveControlPlan, deleteControlPlan as deletePlanFromDb, getDb, listStorageFiles } from '@/lib/data';
+import { getControlPlans, deleteControlPlan as deletePlanFromDb, getDb, listStorageFiles } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { DashboardClient } from '@/components/cp/DashboardClient';
@@ -642,12 +638,11 @@ function ControlPlanRow({
 export default function ControlPlansPage() {
   const { user, roles, loading: authLoading } = useAuth();
   const isAdmin = roles.includes('admin');
+  const router = useRouter();
   const [plans, setPlans] = React.useState<ControlPlan[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [search, setSearch] = React.useState('');
   const [statusFilters, setStatusFilters] = React.useState<ControlPlanStatus[]>([]);
-  const [isSheetOpen, setIsSheetOpen] = React.useState(false);
-  const [editingPlan, setEditingPlan] = React.useState<ControlPlan | null>(null);
   const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalImageUrl, setModalImageUrl] = React.useState('');
@@ -720,20 +715,13 @@ export default function ControlPlansPage() {
   }, [plans, search, statusFilters]);
 
   const handleOpenNew = () => {
-    setEditingPlan(null);
-    setIsSheetOpen(true);
+    router.push('/cp/new');
   };
 
   const handleOpenEdit = (plan: ControlPlan) => {
-    setEditingPlan(plan);
-    setIsSheetOpen(true);
+    router.push(`/cp/edit/${plan.id}`);
   };
 
-  const handleSheetClose = () => {
-      setEditingPlan(null);
-      setIsSheetOpen(false);
-  }
-  
   const handleImageClick = (url: string, alt: string) => {
     setModalImageUrl(url);
     setModalImageAlt(alt);
@@ -762,8 +750,9 @@ export default function ControlPlansPage() {
         otherApprovalDate: '',
     };
     
-    setEditingPlan(duplicatedPlan as ControlPlan);
-    setIsSheetOpen(true);
+    // Store the duplicated plan in session storage and redirect
+    sessionStorage.setItem('duplicatedPlan', JSON.stringify(duplicatedPlan));
+    router.push('/cp/new');
 
     toast({
         title: 'Plan Duplicated',
@@ -787,27 +776,6 @@ export default function ControlPlansPage() {
             variant: 'destructive',
         });
     }
-  };
-
-  const handleFormSubmit = async (data: ControlPlan) => {
-     try {
-        await saveControlPlan(data, user?.uid || 'unknown');
-        handleSheetClose();
-        await fetchPlans();
-        
-        toast({
-            title: `Control Plan ${data.id ? 'Updated' : 'Created'}`,
-            description: `Plan for ${data.partName} has been saved.`,
-        });
-
-     } catch (error) {
-        console.error("Error saving plan:", error);
-        toast({
-            title: 'Error',
-            description: 'Failed to save the control plan.',
-            variant: 'destructive',
-        });
-     }
   };
 
   const handleStatusFilterChange = (status: ControlPlanStatus) => {
@@ -1073,7 +1041,7 @@ export default function ControlPlansPage() {
                         plan={plan}
                         isAdmin={isAdmin}
                         allFiles={storageFiles}
-                        onEdit={handleOpenEdit}
+                        onEdit={() => handleOpenEdit(plan)}
                         onDelete={handleDeletePlan}
                         onDuplicate={handleDuplicatePlan}
                         onHistory={handleOpenHistory}
@@ -1097,18 +1065,6 @@ export default function ControlPlansPage() {
            </div>
         </CardContent>
       </Card>
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-full max-w-full sm:max-w-4xl h-full p-0 flex flex-col" hideCloseButton={true}>
-          <ControlPlanForm
-            key={editingPlan ? editingPlan.id : 'new'}
-            onSubmit={handleFormSubmit}
-            initialData={editingPlan}
-            onClose={handleSheetClose}
-          />
-        </SheetContent>
-      </Sheet>
     </DashboardClient>
   );
 }
-
-    

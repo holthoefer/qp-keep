@@ -109,10 +109,18 @@ export const getUserRoles = async (uid: string): Promise<string[]> => {
     const userDocRef = doc(db, 'users', uid);
     const docSnap = await getDoc(userDocRef);
     if (docSnap.exists()) {
-        return docSnap.data()?.roles || ['user'];
+        const data = docSnap.data();
+        // Handle both `role` (string) and `roles` (array) for backward compatibility
+        if (data.roles && Array.isArray(data.roles)) {
+            return data.roles;
+        }
+        if (data.role && typeof data.role === 'string') {
+            return [data.role];
+        }
     }
     return ['user'];
 };
+
 
 export const getProfile = async (userId: string): Promise<UserProfile | null> => {
     const userDocRef = doc(db, 'users', userId);
@@ -168,15 +176,28 @@ export async function getControlPlans(): Promise<ControlPlan[]> {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as ControlPlan));
 }
 
-export async function saveControlPlan(plan: ControlPlan, userId: string): Promise<string> {
-    const docRef = plan.id ? doc(db, 'control-plans', plan.id) : doc(collection(db, 'control-plans'));
+export async function getControlPlan(id: string): Promise<ControlPlan | null> {
+    const docRef = doc(db, 'control-plans', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as ControlPlan;
+    }
+    return null;
+}
+
+
+export async function saveControlPlan(plan: Omit<ControlPlan, 'id'>, userId: string): Promise<string>;
+export async function saveControlPlan(plan: ControlPlan, userId: string): Promise<string>;
+export async function saveControlPlan(plan: ControlPlan | Omit<ControlPlan, 'id'>, userId: string): Promise<string> {
+    const isNew = !('id' in plan) || !plan.id;
+    const docRef = isNew ? doc(collection(db, 'control-plans')) : doc(db, 'control-plans', plan.id);
     
     const dataToSave = {
         ...plan,
         id: docRef.id,
         lastChangedBy: userId,
-        revisionDate: new Date().toISOString(), // Always update revision date on save
-        createdAt: plan.createdAt || new Date().toISOString()
+        revisionDate: new Date().toISOString(),
+        createdAt: isNew ? new Date().toISOString() : plan.createdAt,
     };
 
     await setDoc(docRef, dataToSave, { merge: true });
@@ -203,29 +224,35 @@ export async function listStorageFiles(path: string): Promise<StorageFile[]> {
     const files: StorageFile[] = [];
 
     for (const itemRef of res.items) {
-        const url = await getDownloadURL(itemRef);
-        const isThumbnail = itemRef.name.includes('_200x200.');
-        
-        if (!isThumbnail) {
-            const originalName = itemRef.name;
-            const extensionIndex = originalName.lastIndexOf('.');
-            const nameWithoutExt = originalName.substring(0, extensionIndex);
-            const extension = originalName.substring(extensionIndex);
-            const thumbnailName = `${nameWithoutExt}_200x200${extension}`;
+        try {
+            const url = await getDownloadURL(itemRef);
+            const isThumbnail = itemRef.name.includes('_200x200.');
             
-            const thumbRef = res.items.find(i => i.name === thumbnailName);
-            let thumbnailUrl: string | undefined = undefined;
-            if (thumbRef) {
-                try {
-                    thumbnailUrl = await getDownloadURL(thumbRef);
-                } catch (e) {
-                    // Thumbnail might not exist
+            if (!isThumbnail) {
+                const originalName = itemRef.name;
+                const extensionIndex = originalName.lastIndexOf('.');
+                const nameWithoutExt = originalName.substring(0, extensionIndex);
+                const extension = originalName.substring(extensionIndex);
+                const thumbnailName = `${nameWithoutExt}_200x200${extension}`;
+                
+                // Find corresponding thumbnail in the full list
+                const thumbRef = res.items.find(i => i.name === thumbnailName);
+                let thumbnailUrl: string | undefined = undefined;
+                if (thumbRef) {
+                    try {
+                        thumbnailUrl = await getDownloadURL(thumbRef);
+                    } catch (e) {
+                         console.warn(`Could not get thumbnail URL for ${thumbnailName}`, e);
+                    }
                 }
-            }
 
-            files.push({ url, name: itemRef.name, thumbnailUrl });
+                files.push({ url, name: itemRef.name, thumbnailUrl });
+            }
+        } catch (error) {
+            console.error(`Failed to get download URL for ${itemRef.fullPath}`, error);
         }
     }
 
     return files;
 }
+

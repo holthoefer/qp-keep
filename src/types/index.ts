@@ -1,4 +1,7 @@
 
+
+import { Timestamp } from 'firebase/firestore';
+
 export type ControlPlanStatus = 'Draft' | 'For Review' | 'Approved' | 'Active' | 'Inactive' | 'Rejected';
 export type CharType = 'P' | 'L' | 'A';
 
@@ -121,12 +124,34 @@ export interface DNA {
   lastCheckTimestamp?: string;
 }
 
-export interface AppUser {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  roles: string[];
+export interface Note {
+    id: string;
+    userId: string;
+    userEmail: string;
+    title: string;
+    content: string;
+    tags?: string[];
+    createdAt: Timestamp;
+}
+
+export interface UserProfile {
+    uid: string;
+    email: string;
+    displayName?: string | null;
+    photoURL?: string | null;
+    role: 'user' | 'admin';
+    status: 'active' | 'inactive';
+    createdAt: Timestamp;
+    roles?: string[];
+}
+
+
+export interface ControlPlanItem {
+    id: string;
+    task: string;
+    responsible: string;
+    status: 'pending' | 'in_progress' | 'completed';
+    createdAt: Timestamp;
 }
 
 

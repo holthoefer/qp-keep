@@ -129,6 +129,8 @@ const formSchema = z.object({
   otherApprovalDate: z.string().optional().nullable(),
   generalInformation: z.string().optional().nullable(),
   imageUrl: z.string().optional().nullable(),
+  createdAt: z.string().optional(),
+  lastChangedBy: z.string().optional(),
 });
 
 type ControlPlanFormValues = z.infer<typeof formSchema>;
@@ -408,18 +410,18 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                 variant: "destructive"
             })
         })}
-        className="flex flex-col h-full"
+        className="flex flex-col h-full bg-muted/20"
       >
-        <div className="flex-shrink-0 px-4 flex justify-between items-center sticky top-0 bg-background z-10 py-3 border-b">
+        <header className="flex-shrink-0 px-4 flex justify-between items-center sticky top-0 bg-background z-10 py-3 border-b">
             <div className="flex items-center gap-1">
                 <Button type="button" variant="ghost" size="icon" onClick={handleBack} className="flex-shrink-0">
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div className='truncate'>
-                    <SheetTitle className="text-lg">{initialData ? 'Edit Control Plan' : 'Create New Control Plan'}</SheetTitle>
-                    <SheetDescription className='truncate text-xs'>
-                        {initialData ? `${initialData.planNumber}` : "Fill in the details"}
-                    </SheetDescription>
+                    <h1 className="text-lg font-semibold">{initialData ? 'Edit Control Plan' : 'Create New Control Plan'}</h1>
+                    <p className='truncate text-xs text-muted-foreground'>
+                        {initialData ? `Editing ${initialData.planNumber}` : "Fill in the details to create a new plan"}
+                    </p>
                 </div>
             </div>
             <div className="flex items-center gap-2">
@@ -428,9 +430,9 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                     Save
                 </Button>
             </div>
-        </div>
+        </header>
 
-        <div className="flex-grow overflow-y-auto p-4 md:p-6">
+        <main className="flex-grow overflow-y-auto p-4 md:p-6">
             <Tabs defaultValue="general" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="general">General</TabsTrigger>
@@ -655,13 +657,13 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                 <ResponsePlanGenerator controlPlan={form.getValues()} />
               </TabsContent>
             </Tabs>
-        </div>
-        <CardFooter className="flex-shrink-0 px-6 py-4 border-t gap-2">
+        </main>
+        <footer className="flex-shrink-0 px-6 py-4 border-t gap-2 bg-background flex items-center">
             <Button type="button" variant="outline" size="sm" onClick={handleExportCsv} disabled={!initialData}>
                 <FileDown className="mr-2 h-4 w-4" />
                 CSV-Export
             </Button>
-        </CardFooter>
+        </footer>
       </form>
     </Form>
     </>
