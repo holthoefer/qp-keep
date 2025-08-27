@@ -927,46 +927,48 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                         </div>
                     </div>
                     <div className="flex items-center gap-1 pr-2">
-                         <AlertDialog>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button type="button" variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
-                                        <MoreVertical className="h-5 w-5"/>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                     <DropdownMenuItem onSelect={onDuplicate}>
-                                        <CopyPlus className="mr-2 h-4 w-4" />
-                                        <span>Duplicate</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            <span>Delete</span>
-                                        </DropdownMenuItem>
-                                    </AlertDialogTrigger>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                             <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently delete this characteristic.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => removeCharacteristic(characteristicIndex)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
                         <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200" />
                     </div>
                 </div>
             </AccordionTrigger>
              <AccordionContent>
                 <div className="px-4 pb-4">
+                 <div className="flex justify-end -mt-2 mb-2">
+                    <AlertDialog>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button type="button" variant="ghost" size="icon">
+                                    <MoreVertical className="h-5 w-5"/>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onSelect={onDuplicate}>
+                                <CopyPlus className="mr-2 h-4 w-4" />
+                                <span>Duplicate</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Delete</span>
+                                </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete this characteristic.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => removeCharacteristic(characteristicIndex)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                 </div>
                  <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-2 gap-y-4 items-start pt-2 border-t">
                 {/* Row 1 */}
                 <FormField
@@ -1473,3 +1475,6 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
     );
 };
 
+
+
+    
