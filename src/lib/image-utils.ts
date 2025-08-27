@@ -2,25 +2,32 @@
 import type { StorageFile } from "@/types";
 
 export const findThumbnailUrl = (originalUrl?: string | null, allFiles?: StorageFile[]): string => {
-    if (!originalUrl) return '/placeholder.svg';
+    // Return a placeholder if no original URL is provided.
+    if (!originalUrl) {
+        return '/placeholder.svg';
+    }
 
-    // If the original URL is already a thumbnail, return it
+    // If the provided URL is already a thumbnail, just return it.
     if (originalUrl.includes('_200x200.')) {
         return originalUrl;
     }
 
-    // If allFiles is not provided, construct the expected thumbnail URL
+    // If we don't have a list of files to search through, we can't find a thumbnail.
+    // Return the original URL as a fallback.
     if (!allFiles || allFiles.length === 0) {
-        const urlParts = originalUrl.split('?');
-        const path = decodeURIComponent(urlParts[0]);
-        const extensionIndex = path.lastIndexOf('.');
-        if (extensionIndex === -1) return originalUrl;
-        const pathWithoutExtension = path.substring(0, extensionIndex);
-        const extension = path.substring(extensionIndex);
-        return `${pathWithoutExtension}_200x200${extension}?${urlParts[1]}`;
+        return originalUrl;
     }
 
-    // Otherwise, find the thumbnail in the provided list
-    const foundFile = allFiles.find(file => file.url === originalUrl);
-    return foundFile?.thumbnailUrl || originalUrl;
+    try {
+        // Find the file object in the list that corresponds to the original URL.
+        const originalFile = allFiles.find(file => file.url === originalUrl);
+
+        // If we found the file and it has a thumbnail URL, return it.
+        // Otherwise, fall back to the original URL.
+        return originalFile?.thumbnailUrl || originalUrl;
+    } catch (e) {
+        console.error("Error finding thumbnail URL:", e);
+        // In case of any error, always fall back to the original URL.
+        return originalUrl;
+    }
 };
