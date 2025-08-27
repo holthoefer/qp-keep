@@ -2,7 +2,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { getControlPlan, saveControlPlan } from '@/lib/data';
+import { getControlPlan } from '@/lib/server-data';
+import { saveControlPlan } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { ControlPlanForm } from '@/components/cp/ControlPlanForm';
 import { LoadingScreen } from '@/components/LoadingScreen';

@@ -23,9 +23,10 @@ import { ref, listAll, getDownloadURL } from "firebase/storage";
 import { suggestTags } from '@/ai/flows/suggest-tags';
 import type { User } from 'firebase/auth';
 import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile } from '@/types';
+import { getControlPlan } from './server-data';
 
 
-export { getAppStorage, auth };
+export { getAppStorage, auth, getControlPlan };
 
 // Note Management
 export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'> & { userEmail: string }) => {
@@ -210,14 +211,6 @@ export async function getControlPlans(): Promise<ControlPlan[]> {
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as ControlPlan));
 }
 
-export async function getControlPlan(id: string): Promise<ControlPlan | null> {
-    const docRef = doc(db, 'control-plans', id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() } as ControlPlan;
-    }
-    return null;
-}
 
 // Helper to remove undefined values from an object, which Firestore doesn't support
 const removeUndefinedValues = (obj: any): any => {
