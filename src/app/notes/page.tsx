@@ -83,7 +83,7 @@ export default function NotesPage() {
     } catch (e) {
       console.error("Error saving note: ", e);
       const errorMessage = e instanceof Error ? e.message : String(e);
-      setError(`Fehler beim Speichern der Notiz: ${errorMessage}`);
+      // No need to set local error state, toast is enough
       toast({
         title: "Fehler",
         description: `Notiz konnte nicht gespeichert werden. ${errorMessage}`,
