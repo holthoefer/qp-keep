@@ -625,7 +625,7 @@ function ControlPlanRow({
         </TableCell>
         <TableCell>{plan.version}</TableCell>
         <TableCell>
-          {format(new Date(plan.revisionDate), 'dd.MM.yyyy')}
+          {plan.revisionDate ? format(new Date(plan.revisionDate), 'dd.MM.yyyy') : '-'}
         </TableCell>
         <TableCell className="text-right">
             {plan.keyContact}
@@ -963,7 +963,7 @@ export default function ControlPlansPage() {
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Last Revision Date:</span>
-                        <span className="font-medium">{format(new Date(historyPlan.revisionDate), 'PPP')}</span>
+                        <span className="font-medium">{historyPlan.revisionDate ? format(new Date(historyPlan.revisionDate), 'PPP') : 'N/A'}</span>
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Original Creation Date:</span>
