@@ -606,6 +606,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                             fieldName="imageUrl"
                             entityName="ControlPlan"
                             entityId={form.getValues('id')}
+                            planNumber={form.getValues('planNumber')}
                             onImageClick={handleImageClick}
                             storageFiles={storageFiles}
                         />
@@ -637,6 +638,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                                 form={form}
                                 processStepIndex={field.originalIndex}
                                 controlPlanId={form.getValues('id')}
+                                planNumber={form.getValues('planNumber')}
                                 onImageClick={handleImageClick}
                                 storageFiles={storageFiles}
                                 onDuplicate={() => {
@@ -682,7 +684,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
 }
 
 
-const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, onImageClick, onDuplicate, storageFiles }: { form: any, processStepIndex: number, controlPlanId?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void, storageFiles: StorageFile[] }) => {
+const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumber, onImageClick, onDuplicate, storageFiles }: { form: any, processStepIndex: number, controlPlanId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void, storageFiles: StorageFile[] }) => {
     const { fields, append, remove: removeCharacteristic, insert: insertCharacteristic } = useFieldArray({
         control: form.control,
         name: `processSteps.${processStepIndex}.characteristics`,
@@ -818,6 +820,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, onImageCl
                             fieldName={`processSteps.${processStepIndex}.imageUrl`}
                             entityName="ProcessStep"
                             entityId={processStepId}
+                            planNumber={planNumber}
                             onImageClick={onImageClick}
                             storageFiles={storageFiles}
                            />
@@ -843,6 +846,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, onImageCl
                                     processStepIndex={processStepIndex}
                                     characteristicIndex={characteristicIndex}
                                     controlPlanId={controlPlanId}
+                                    planNumber={planNumber}
                                     onImageClick={onImageClick}
                                     storageFiles={storageFiles}
                                     onDuplicate={() => {
@@ -869,7 +873,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, onImageCl
     );
 };
 
-const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, controlPlanId, onImageClick, onDuplicate, storageFiles }: { form: any, processStepIndex: number, characteristicIndex: number, controlPlanId?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void, storageFiles: StorageFile[] }) => {
+const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, controlPlanId, planNumber, onImageClick, onDuplicate, storageFiles }: { form: any, processStepIndex: number, characteristicIndex: number, controlPlanId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void, storageFiles: StorageFile[] }) => {
     const characteristicId = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.id`) || `temp-char-${characteristicIndex}`;
     const itemNumber = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.itemNumber`);
     const description = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.DesciptionSpec`);
@@ -1315,6 +1319,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                         fieldName={`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.imageUrl`}
                         entityName="Characteristic"
                         entityId={characteristicId}
+                        planNumber={planNumber}
                         onImageClick={onImageClick}
                         storageFiles={storageFiles}
                     />
@@ -1326,7 +1331,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
     );
 }
 
-const ImageUploader = ({ form, fieldName, entityName, entityId, onImageClick, storageFiles }: { form: any, fieldName: string, entityName: string, entityId?: string, onImageClick: (url: string, alt: string) => void, storageFiles: StorageFile[] }) => {
+const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onImageClick, storageFiles }: { form: any, fieldName: string, entityName: string, entityId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, storageFiles: StorageFile[] }) => {
     const imageUrl = form.watch(fieldName);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = React.useState(false);
@@ -1335,11 +1340,13 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, onImageClick, st
     const { toast } = useToast();
 
     const handleUpload = (file: File) => {
-        const id = entityId || form.getValues('id');
-        if (!id || String(id).includes('temp')) {
-            setUploadError(`${entityName} wurde noch nicht gespeichert. Bitte zuerst den Control Plan speichern.`);
-            return;
+        // Use planNumber for new plans, fallback to entityId for existing ones
+        const idForPath = planNumber || entityId;
+        if (!idForPath || String(idForPath).includes('temp')) {
+             setUploadError(`${entityName} hat keine gültige ID oder Plan-Nummer. Bitte zuerst den Control Plan speichern.`);
+             return;
         }
+
         if (!file.type.startsWith('image/')) {
             setUploadError("Ungültiger Dateityp. Bitte nur Bilder hochladen.");
             return;
@@ -1360,7 +1367,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, onImageClick, st
             return;
         }
 
-        const storageRef = ref(storage, `uploads/${entityName.toLowerCase()}s/${id}/${Date.now()}_${file.name}`);
+        const storageRef = ref(storage, `uploads/${entityName.toLowerCase()}s/${idForPath}/${Date.now()}_${file.name}`);
         const uploadTask = uploadBytesResumable(storageRef, file);
 
         uploadTask.on(
