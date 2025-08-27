@@ -1,44 +1,26 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check for admin role from custom claims
-    function isAdmin() {
-      return request.auth.token.admin == true;
-    }
-    
-    // Helper function to check if a user document exists
-    function userDocExists(userId) {
-      return exists(/databases/$(database)/documents/users/$(userId));
-    }
-    
-    // Helper function to get user role from the users collection
-    function isUserRole(userId, role) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.role == role;
-    }
-
-    // Users can only manage their own profile, but admins can manage all
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId || isAdmin();
+      allow write: if request.auth.uid == userId || request.auth.token.admin == true;
     }
-    
-    // Notes can be created by any authenticated user.
-    // Only the user who created a note or an admin can manage it.
-    match /notes/{noteId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+
+    match /notes/{document=**} {
+      allow read, write: if request.auth != null;
     }
-    
-    // Old, simple control plan tasks
+
+    // Simple Control Plan (Tasks) - This one works
     match /controlplan/{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // New, advanced control plans
+    // Advanced Control Plan - Corrected Rule
     match /control-plans/{document=**} {
-       allow read, write: if request.auth != null;
+      allow read, write: if request.auth != null;
     }
   }
 }

@@ -130,31 +130,7 @@ export const getControlPlanItems = (
 };
 
 export const addControlPlanItem = async (item: Omit<ControlPlanItem, 'id' | 'createdAt'>) => {
-    // This is the original, working functionality
     await addDoc(collection(db, 'controlplan'), { ...item, createdAt: serverTimestamp() });
-
-    // This is the test code to debug the 'control-plans' collection issue.
-    // It attempts to write a dummy record to the other collection.
-    try {
-        const testCPDocRef = doc(collection(db, 'control-plans'));
-        const testCPData = {
-            id: testCPDocRef.id,
-            planNumber: `TEST-${Date.now()}`,
-            partName: 'Test from AddTask',
-            partNumber: 'TEST-PN',
-            status: 'Draft',
-            version: 1,
-            revisionDate: new Date().toISOString(),
-            processSteps: [],
-            lastChangedBy: auth.currentUser?.uid || 'unknown',
-            createdAt: new Date().toISOString(),
-        };
-        await setDoc(testCPDocRef, testCPData);
-    } catch (error) {
-        console.error("Error writing test data to 'control-plans':", error);
-        // We throw the error so the UI can catch it and display a message
-        throw new Error(`Failed to write test Control Plan. Permissions for 'control-plans' may still be incorrect. Original error: ${error}`);
-    }
 };
 
 export const updateControlPlanItem = async (id: string, data: Partial<Omit<ControlPlanItem, 'id' | 'createdAt'>>) => {
