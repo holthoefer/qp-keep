@@ -24,7 +24,8 @@ import {
   ImageIcon,
   Printer,
   Loader2,
-  Settings
+  Settings,
+  ArrowLeft
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -70,7 +71,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { getControlPlans, deleteControlPlan as deletePlanFromDb, getDb, listStorageFiles } from '@/lib/data';
+import { getControlPlans, deleteControlPlan as deletePlanFromDb, listStorageFiles } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { DashboardClient } from '@/components/cp/DashboardClient';
@@ -680,10 +681,6 @@ export default function ControlPlansPage() {
 
 
   const fetchPlans = React.useCallback(async () => {
-    if (!getDb()) {
-      setIsLoading(false);
-      return;
-    }
     setIsLoading(true);
     setIsExampleData(false);
     try {
@@ -984,6 +981,10 @@ export default function ControlPlansPage() {
                   </CardDescription>
               </div>
                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Zurück zu den Notizen
+                  </Button>
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                           <Button variant="outline" size="sm">

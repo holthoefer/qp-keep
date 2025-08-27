@@ -202,8 +202,6 @@ export const deleteLenkungsplanItem = async (id: string) => {
 
 
 // New Control Plan (Advanced)
-export const getDb = () => db;
-
 export async function getControlPlans(): Promise<ControlPlan[]> {
   const q = query(collection(db, 'control-plans'), orderBy('planNumber'));
   const snapshot = await getDocs(q);
