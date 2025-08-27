@@ -282,3 +282,44 @@ export async function listStorageFiles(path: string): Promise<StorageFile[]> {
 
     return files;
 }
+
+export async function seedDatabaseWithExampleData() {
+    const examplePlans: Omit<ControlPlan, 'id'>[] = [
+        {
+            planNumber: 'CP-EX-001',
+            partNumber: 'PN-DEMO-A',
+            partName: 'Example Gear',
+            status: 'Active',
+            version: 2,
+            revisionDate: new Date().toISOString(),
+            keyContact: 'Max Mustermann',
+            processSteps: [],
+        },
+        {
+            planNumber: 'CP-EX-002',
+            partNumber: 'PN-DEMO-B',
+            partName: 'Example Shaft',
+            status: 'Draft',
+            version: 1,
+            revisionDate: new Date().toISOString(),
+            keyContact: 'Erika Musterfrau',
+            processSteps: [],
+        },
+    ];
+    
+    const batch = writeBatch(db);
+
+    examplePlans.forEach(planData => {
+        const docRef = doc(collection(db, 'control-plans'));
+        const dataToSave = {
+            ...planData,
+            id: docRef.id,
+            revisionDate: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+        };
+        const cleanedData = removeUndefinedValues(dataToSave);
+        batch.set(docRef, cleanedData);
+    });
+
+    await batch.commit();
+}
