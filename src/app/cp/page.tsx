@@ -978,7 +978,7 @@ export default function ControlPlansPage() {
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                  <CardTitle className="text-xl">Control Plan Overview</CardTitle>
+                  <CardTitle className="text-xl">CP Overview</CardTitle>
                   <CardDescription>
                     Manage and track all quality control plans.
                   </CardDescription>
