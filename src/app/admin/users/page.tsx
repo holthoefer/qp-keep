@@ -159,23 +159,24 @@ export default function UserManagementPage() {
                                         </Select>
                                     </TableCell>
                                     <TableCell>
-                                         <Select
-                                            value={u.status}
-                                            onValueChange={(value: 'active' | 'inactive') => handleStatusChange(u.uid, value)}
-                                            disabled={u.uid === user?.uid}
-                                        >
-                                            <SelectTrigger className="w-[120px]">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="active">
-                                                    <Badge className="bg-green-500 hover:bg-green-600">Active</Badge>
-                                                </SelectItem>
-                                                <SelectItem value="inactive">
-                                                    <Badge variant="destructive">Inactive</Badge>
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex items-center">
+                                            <Badge variant={u.status === 'active' ? 'default' : 'destructive'} className={u.status === 'active' ? 'bg-green-500 hover:bg-green-600' : ''}>
+                                                {u.status === 'active' ? 'Active' : 'Inactive'}
+                                            </Badge>
+                                            <Select
+                                                value={u.status}
+                                                onValueChange={(value: 'active' | 'inactive') => handleStatusChange(u.uid, value)}
+                                                disabled={u.uid === user?.uid}
+                                            >
+                                                <SelectTrigger className="w-[100px] ml-2 h-8">
+                                                    <SelectValue placeholder="Status ändern" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="active">Active</SelectItem>
+                                                    <SelectItem value="inactive">Inactive</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </TableCell>
                                     <TableCell>{u.createdAt?.toDate().toLocaleDateString('de-DE')}</TableCell>
                                 </TableRow>
