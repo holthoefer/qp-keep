@@ -12,11 +12,12 @@ import {
     createUserWithEmailAndPassword,
     sendPasswordResetEmail,
 } from 'firebase/auth';
-import { auth, saveOrUpdateUserProfile } from '@/lib/data';
+import { auth, saveOrUpdateUserProfile, getProfile, type UserProfile } from '@/lib/data';
 import { LoadingScreen } from '@/components/LoadingScreen';
 
 interface AuthContextType {
     user: User | null;
+    profile: UserProfile | null;
     roles: string[];
     loading: boolean;
     loginWithGoogle: () => Promise<void>;
@@ -30,6 +31,7 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = React.useState<User | null>(null);
+    const [profile, setProfile] = React.useState<UserProfile | null>(null);
     const [roles, setRoles] = React.useState<string[]>([]);
     const [loading, setLoading] = React.useState(true);
     
@@ -37,17 +39,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setLoading(true);
             if (currentUser) {
-                setUser(currentUser);
                 await saveOrUpdateUserProfile(currentUser);
-                // Force refresh the token to get the latest custom claims.
-                const idTokenResult = await currentUser.getIdTokenResult(true);
-                const userRoles = ['user'];
-                if (idTokenResult.claims.admin) {
-                    userRoles.push('admin');
+                const userProfile = await getProfile(currentUser.uid);
+                setUser(currentUser);
+                setProfile(userProfile);
+
+                const userRoles: string[] = userProfile?.role ? [userProfile.role] : ['user'];
+                if (userProfile?.role === 'admin' && !userRoles.includes('admin')) {
+                     userRoles.push('admin');
                 }
                 setRoles(userRoles);
+
             } else {
                 setUser(null);
+                setProfile(null);
                 setRoles([]);
             }
             setLoading(false);
@@ -79,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const value = {
         user,
+        profile,
         roles,
         loading, 
         loginWithGoogle,

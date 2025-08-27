@@ -15,28 +15,17 @@ export default function AdminLayout({
 }) {
   const { user, roles, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    if (authLoading) return;
-    
-    if (!user) {
-      router.replace('/');
-      return;
-    }
-    
-    if (roles.includes('admin')) {
-      setIsAuthorized(true);
-    } else {
-      setIsAuthorized(false);
-    }
-    setIsLoading(false);
-  }, [user, roles, authLoading, router]);
 
-  if (isLoading || authLoading) {
+  if (authLoading) {
     return <LoadingScreen />;
   }
+
+  if (!user) {
+    router.replace('/');
+    return <LoadingScreen />;
+  }
+
+  const isAuthorized = roles.includes('admin');
 
   if (!isAuthorized) {
     return (

@@ -93,6 +93,7 @@ export const saveOrUpdateUserProfile = async (user: User) => {
 
     if (!docSnap.exists()) {
         await setDoc(userRef, {
+            uid: user.uid,
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,

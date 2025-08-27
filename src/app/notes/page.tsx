@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 
 
 export default function NotesPage() {
-  const { user, roles, loading: authLoading, logout } = useAuth();
+  const { user, profile, roles, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState('');
@@ -28,27 +28,13 @@ export default function NotesPage() {
   const { toast } = useToast();
   const isAdmin = roles.includes('admin');
   const [isSeeding, setIsSeeding] = useState(false);
-  const [userStatus, setUserStatus] = useState<'active' | 'inactive'>('active');
-
+  
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
       router.push('/');
       return;
     }
-
-    const fetchUserStatus = async () => {
-        try {
-            const userProfile = await getProfile(user.uid);
-            if (userProfile) {
-                setUserStatus(userProfile.status);
-            }
-        } catch (err) {
-            console.error("Error fetching profile status:", err);
-        }
-    };
-    
-    fetchUserStatus();
 
     const unsubscribe = getNotes(user.uid, isAdmin,
       (newNotes) => {
@@ -149,7 +135,7 @@ export default function NotesPage() {
     }
   }
 
-  const isFormDisabled = isSaving || userStatus === 'inactive';
+  const isFormDisabled = isSaving || profile?.status === 'inactive';
 
   if (authLoading || !user) {
     return null; // AuthProvider shows LoadingScreen
@@ -199,7 +185,7 @@ export default function NotesPage() {
               <CardTitle className="font-headline">Neue Notiz erstellen</CardTitle>
             </CardHeader>
             <CardContent>
-              {userStatus === 'inactive' ? (
+              {profile?.status === 'inactive' ? (
                 <Alert variant="destructive">
                   <ShieldAlert className="h-4 w-4" />
                   <AlertTitle>Konto inaktiv</AlertTitle>
@@ -276,7 +262,7 @@ export default function NotesPage() {
                             size="icon" 
                             onClick={() => handleDeleteNote(note.id)}
                             // Admins cannot delete other users' notes from this view.
-                            disabled={userStatus === 'inactive' || (isAdmin && note.userId !== user.uid)}
+                            disabled={profile?.status === 'inactive' || (isAdmin && note.userId !== user.uid)}
                         >
                             <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
