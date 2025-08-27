@@ -2,7 +2,14 @@
 
 import { Timestamp } from 'firebase/firestore';
 
-export type ControlPlanStatus = 'Draft' | 'For Review' | 'Approved' | 'Active' | 'Inactive' | 'Rejected';
+export enum ControlPlanStatus {
+  Draft = 'Draft',
+  ForReview = 'For Review',
+  Approved = 'Approved',
+  Active = 'Active',
+  Inactive = 'Inactive',
+  Rejected = 'Rejected',
+}
 export type CharType = 'P' | 'L' | 'A';
 
 export interface Characteristic {
@@ -148,9 +155,12 @@ export interface UserProfile {
 
 export interface ControlPlanItem {
     id: string;
-    task: string;
+    planNumber: string;
+    partNumber: string;
+    partName: string;
+    version: number;
     responsible: string;
-    status: 'pending' | 'in_progress' | 'completed';
+    status: ControlPlanStatus;
     createdAt: Timestamp;
 }
 
@@ -160,3 +170,5 @@ export interface StorageFile {
   name: string;
   thumbnailUrl?: string;
 }
+
+    
