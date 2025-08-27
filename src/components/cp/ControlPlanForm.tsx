@@ -714,25 +714,30 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                                 <p className="text-sm text-muted-foreground">{processName}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-1 pr-2">
+                        <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200" />
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                    <div className="p-4 pt-0">
+                        <div className="flex justify-end -mt-2 mb-2">
                              <AlertDialog>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button type="button" variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
+                                        <Button type="button" variant="ghost" size="icon">
                                             <MoreVertical className="h-5 w-5"/>
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                    <DropdownMenuContent align="end">
                                         <DropdownMenuItem onSelect={onDuplicate}>
                                             <CopyPlus className="mr-2 h-4 w-4" />
                                             <span>Duplicate</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <AlertDialogTrigger asChild>
-                                            <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                                            <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive px-2 py-1.5 h-auto text-sm">
                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                 <span>Delete</span>
-                                            </DropdownMenuItem>
+                                            </Button>
                                         </AlertDialogTrigger>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -749,12 +754,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
-                             <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200" />
                         </div>
-                    </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                    <div className="p-4 pt-0">
                         <div className="space-y-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <FormField
@@ -1472,3 +1472,4 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
         </Card>
     );
 };
+
