@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
-import { addNote, getNotes, deleteNote, type Note, getProfile, type UserProfile, seedDatabaseWithExampleData } from '@/lib/data';
+import { addNote, getNotes, deleteNote, type Note, seedDatabaseWithExampleData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
+import type { UserProfile } from '@/types';
+
 
 export default function NotesPage() {
   const { user, roles, loading: authLoading, logout } = useAuth();
@@ -25,10 +27,9 @@ export default function NotesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const isAdmin = roles.includes('admin');
   const [isSeeding, setIsSeeding] = useState(false);
-
+  const [userStatus, setUserStatus] = useState<'active' | 'inactive'>('active');
 
   useEffect(() => {
     if (authLoading) return;
@@ -37,41 +38,36 @@ export default function NotesPage() {
       return;
     }
 
-    const fetchProfileAndNotes = async () => {
-        setLoadingNotes(true);
+    // This effect handles fetching the user's active/inactive status separately
+    // as it's not part of the auth token.
+    const fetchUserStatus = async () => {
         try {
             const userProfile = await getProfile(user.uid);
-            setProfile(userProfile);
+            if (userProfile) {
+                setUserStatus(userProfile.status);
+            }
         } catch (err) {
-            console.error("Error fetching profile:", err);
-            setError("Fehler beim Laden des Benutzerprofils.");
-            setLoadingNotes(false);
-            return; // Stop if profile fails to load
+            console.error("Error fetching profile status:", err);
         }
-
-        // Subscribe to notes
-        const unsubscribe = getNotes(user.uid, isAdmin,
-          (newNotes) => {
-            setNotes(newNotes);
-            setError(null);
-            setLoadingNotes(false);
-          }, 
-          (err) => {
-            console.error(err);
-            setError(`Fehler beim Laden der Notizen: ${err.message}. Bitte überprüfen Sie Ihre Firestore-Regeln und die Browser-Konsole für weitere Details.`);
-            setLoadingNotes(false);
-          }
-        );
-        return unsubscribe;
     };
+    
+    fetchUserStatus();
 
-    const unsubscribePromise = fetchProfileAndNotes();
-
-    return () => {
-      unsubscribePromise.then(unsubscribe => {
-        if (unsubscribe) unsubscribe();
-      });
-    };
+    // Subscribe to notes
+    const unsubscribe = getNotes(user.uid, isAdmin,
+      (newNotes) => {
+        setNotes(newNotes);
+        setError(null);
+        setLoadingNotes(false);
+      }, 
+      (err) => {
+        console.error(err);
+        setError(`Fehler beim Laden der Notizen: ${err.message}. Bitte überprüfen Sie Ihre Firestore-Regeln und die Browser-Konsole für weitere Details.`);
+        setLoadingNotes(false);
+      }
+    );
+    return unsubscribe;
+    
   }, [user, authLoading, router, isAdmin]);
 
   const handleLogout = async () => {
@@ -157,7 +153,7 @@ export default function NotesPage() {
     }
   }
 
-  const isFormDisabled = isSaving || profile?.status === 'inactive';
+  const isFormDisabled = isSaving || userStatus === 'inactive';
 
   if (authLoading || !user) {
     return null; // AuthProvider shows LoadingScreen
@@ -207,7 +203,7 @@ export default function NotesPage() {
               <CardTitle className="font-headline">Neue Notiz erstellen</CardTitle>
             </CardHeader>
             <CardContent>
-              {profile?.status === 'inactive' ? (
+              {userStatus === 'inactive' ? (
                 <Alert variant="destructive">
                   <ShieldAlert className="h-4 w-4" />
                   <AlertTitle>Konto inaktiv</AlertTitle>
@@ -284,7 +280,7 @@ export default function NotesPage() {
                             size="icon" 
                             onClick={() => handleDeleteNote(note.id)}
                             // Admins cannot delete other users' notes from this view.
-                            disabled={profile?.status === 'inactive' || (isAdmin && note.userId !== user.uid)}
+                            disabled={userStatus === 'inactive' || (isAdmin && note.userId !== user.uid)}
                         >
                             <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -309,3 +305,5 @@ export default function NotesPage() {
     </div>
   );
 }
+
+    
