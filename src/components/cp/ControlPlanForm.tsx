@@ -706,10 +706,10 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
     return (
         <AccordionItem value={`ps-item-${processStepIndex}`} className="border-b-0">
              <Card className="bg-muted/50 overflow-hidden">
-                <AccordionTrigger asChild>
-                    <div className="flex flex-1 items-center justify-between cursor-pointer p-4 hover:bg-accent/10 group">
+                <AccordionTrigger className="p-4 hover:bg-accent/10 group cursor-pointer" asChild>
+                    <div className="flex flex-1 items-center justify-between">
                          <div className="flex items-center gap-4 flex-1">
-                            <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180 no-rotate" />
+                            <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 no-rotate" />
                             <div className='text-left'>
                                 <p className="font-semibold">{processNumber || 'New Process Step'}</p>
                                 <p className="text-sm text-muted-foreground">{processName}</p>
@@ -917,7 +917,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
             <AccordionTrigger asChild>
                  <div className="flex flex-1 items-center justify-between cursor-pointer p-3 hover:bg-muted/50 group">
                     <div className="flex items-center gap-3 flex-1 overflow-hidden">
-                        <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180 no-rotate" />
+                        <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 no-rotate" />
                         <div className='text-left overflow-hidden'>
                             <p className="font-semibold truncate">
                                 <span className="font-bold">{itemNumber || 'New'}.</span>{' '}
