@@ -10,18 +10,21 @@ import { LoadingScreen } from '@/components/LoadingScreen';
 import type { ControlPlan } from '@/types';
 import { useAuth } from '@/hooks/use-auth-context';
 
-export default function EditControlPlanPage({ params }: { params: { id: string } }) {
+export default function EditControlPlanPage({ params: paramsPromise }: { params: { id: string } }) {
   const router = useRouter();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Use React.use() to unwrap the params promise
+  const params = use(paramsPromise);
   const [initialData, setInitialData] = useState<ControlPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!params.id) {
-        setLoading(false);
         setError("No control plan ID provided.");
+        setLoading(false);
         return;
     }
     
