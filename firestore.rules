@@ -1,32 +1,45 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper function to check if a user is an admin
+    function isAdmin(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role == 'admin';
+    }
+
+    // Users can read their own profile and admins can read any profile
     match /users/{userId} {
-      allow create, read, update: if request.auth.uid == userId;
-      allow list, write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin(request.auth.uid));
+      allow write: if request.auth != null && request.auth.uid == userId;
+      allow list: if request.auth != null && isAdmin(request.auth.uid);
     }
+    
+    // Notes can be created by any authenticated user.
+    // Users can read/delete their own notes.
+    // Admins can read/delete any note.
     match /notes/{noteId} {
-      allow read: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' || request.auth.uid == resource.data.userId;
-      allow update, delete: if request.auth.uid == resource.data.userId;
-      allow create: if request.auth.uid == request.resource.data.userId 
-                      && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+      allow create: if request.auth != null;
+      allow read, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin(request.auth.uid));
+      allow list: if request.auth != null; // Admin list is filtered in the backend query
     }
-    match /controlplan/{itemId} {
-      // Admins can perform any action.
-      allow read, write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-      
-      // Regular users can only read the control plan.
-      allow list, get: if request.auth.uid != null;
+
+    // Control Plans can be read by any authenticated user.
+    // They can only be created, updated, or deleted by admins.
+    match /control-plans/{planId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && isAdmin(request.auth.uid);
     }
-    match /lenkungsplan/{itemId} {
-      // Admins can perform any action.
-      allow read, write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-      
-      // Regular users can only read the control plan.
-      allow list, get: if request.auth.uid != null;
+
+    // Simple controlplan collection (legacy)
+    match /controlplan/{planId} {
+       allow read: if request.auth != null;
+       allow write: if request.auth != null && isAdmin(request.auth.uid);
     }
-     match /control-plans/{planId} {
-      allow read, write: if request.auth != null;
+
+    // Simple lenkungsplan collection (legacy)
+    match /lenkungsplan/{planId} {
+       allow read: if request.auth != null;
+       allow write: if request.auth != null && isAdmin(request.auth.uid);
     }
   }
 }
