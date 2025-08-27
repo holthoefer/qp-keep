@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -253,13 +253,27 @@ export default function ControlPlanPage() {
         <div className="flex items-center gap-2">
           <KeepKnowLogo className="h-8 w-8 text-primary" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
-            Control Plan
+            Control Plan (Legacy)
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
-            Back to Notes
-          </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                Notizen
+            </Button>
+             <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
+                <Target className="mr-2 h-4 w-4" />
+                CP
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                <Book className="mr-2 h-4 w-4" />
+                Lenkungsplan
+            </Button>
+            {isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin
+                </Button>
+            )}
           <Button onClick={handleLogout} variant="secondary">
             Logout
           </Button>
@@ -487,5 +501,7 @@ export default function ControlPlanPage() {
     </div>
   );
 }
+
+    
 
     
