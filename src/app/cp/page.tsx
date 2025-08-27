@@ -926,7 +926,7 @@ export default function ControlPlansPage() {
         document.body.removeChild(link);
         
         toast({ title: "CSV Export erfolgreich", description: `${plan.planNumber}.csv wird heruntergeladen.` });
-    } catch (error: any) {
+    } catch (error: any) => {
         toast({ title: "Fehler beim CSV-Export", description: error.message || "Unbekannter Fehler", variant: "destructive" });
     }
   }
@@ -1001,6 +1001,10 @@ export default function ControlPlansPage() {
                           ))}
                       </DropdownMenuContent>
                   </DropdownMenu>
+                  <Button variant="outline" size="sm" onClick={handleOpenNew}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Neuer Control Plan
+                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -1009,12 +1013,6 @@ export default function ControlPlansPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        {isAdmin && (
-                            <DropdownMenuItem onSelect={handleOpenNew}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                New Control Plan
-                            </DropdownMenuItem>
-                        )}
                         <DropdownMenuItem asChild>
                           <Link href="/prd/control-plan">
                             <FileText className="mr-2 h-4 w-4" />
@@ -1051,7 +1049,7 @@ export default function ControlPlansPage() {
                  <TableHead className="text-right">Key Contact</TableHead>
                </TableRow>
              </TableHeader>
-             {isLoading || authLoading ? (
+             {isLoading ? (
                <TableBody>
                   {Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i}>
