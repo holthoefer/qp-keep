@@ -12,7 +12,7 @@ import {
     createUserWithEmailAndPassword,
     sendPasswordResetEmail,
 } from 'firebase/auth';
-import { auth, saveOrUpdateUserProfile, getUserRoles } from '@/lib/data';
+import { auth, saveOrUpdateUserProfile } from '@/lib/data';
 import { LoadingScreen } from '@/components/LoadingScreen';
 
 interface AuthContextType {
@@ -39,7 +39,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (currentUser) {
                 setUser(currentUser);
                 await saveOrUpdateUserProfile(currentUser);
-                const userRoles = await getUserRoles(currentUser.uid);
+                // Force refresh the token to get the latest custom claims.
+                const idTokenResult = await currentUser.getIdTokenResult(true);
+                const userRoles = ['user'];
+                if (idTokenResult.claims.admin) {
+                    userRoles.push('admin');
+                }
                 setRoles(userRoles);
             } else {
                 setUser(null);

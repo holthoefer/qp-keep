@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 
 export default function NotesPage() {
-  const { user, loading: authLoading, logout } = useAuth();
+  const { user, roles, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState('');
@@ -26,7 +26,7 @@ export default function NotesPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = roles.includes('admin');
   const [isSeeding, setIsSeeding] = useState(false);
 
 
@@ -39,10 +39,8 @@ export default function NotesPage() {
 
     const fetchProfileAndNotes = async () => {
         setLoadingNotes(true);
-        let userProfile: UserProfile | null = null;
-        
         try {
-            userProfile = await getProfile(user.uid);
+            const userProfile = await getProfile(user.uid);
             setProfile(userProfile);
         } catch (err) {
             console.error("Error fetching profile:", err);
@@ -51,10 +49,8 @@ export default function NotesPage() {
             return; // Stop if profile fails to load
         }
 
-        const isAdminUser = userProfile?.role === 'admin';
-
         // Subscribe to notes
-        const unsubscribe = getNotes(user.uid, isAdminUser,
+        const unsubscribe = getNotes(user.uid, isAdmin,
           (newNotes) => {
             setNotes(newNotes);
             setError(null);
@@ -76,7 +72,7 @@ export default function NotesPage() {
         if (unsubscribe) unsubscribe();
       });
     };
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, isAdmin]);
 
   const handleLogout = async () => {
     await logout();

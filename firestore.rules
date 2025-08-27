@@ -4,33 +4,29 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Allow logged-in users to read/write their own notes
+    // Allow read access to notes for the user who created them, or for any admin.
     match /notes/{noteId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow read: if request.auth.uid == resource.data.userId || request.auth.token.admin == true;
+      allow write: if request.auth.uid == resource.data.userId;
+      allow delete: if request.auth.uid == resource.data.userId;
     }
 
-    // Allow admin users to read all notes
-    match /notes/{noteId} {
-        allow read: if request.auth != null && request.auth.token.admin == true;
-    }
-
-    // Users can read their own profile
+    // Allow users to manage their own profiles.
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      // Admins can read/write any user profile
-      allow read, write: if request.auth != null && request.auth.token.admin == true;
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
     }
     
-    // TEMPORARY RULE: Allow any authenticated user to write to control-plans to bypass seeding issue.
-    // This allows us to create the initial documents. We can tighten this later.
+    // New rules for control-plans - only admins can write
     match /control-plans/{planId} {
-       allow read, write: if request.auth != null;
+        allow read: if request.auth != null;
+        allow write: if request.auth.token.admin == true;
     }
-
-    // Control Plan Items (Simple)
+    
+    // Legacy rules for the simple controlplan
     match /controlplan/{itemId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+        allow read: if request.auth != null;
+        allow write: if request.auth.token.admin == true;
     }
   }
 }

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { db, auth as clientAuth, getAppStorage } from './firebase';
+import { db, auth, getAppStorage } from './firebase';
 import {
   collection,
   query,
@@ -25,9 +25,7 @@ import type { User } from 'firebase/auth';
 import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile } from '@/types';
 
 
-export const auth = clientAuth;
-
-export { getAppStorage };
+export { getAppStorage, auth };
 
 // Note Management
 export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'> & { userEmail: string }) => {
@@ -104,29 +102,6 @@ export const saveOrUpdateUserProfile = async (user: User) => {
         });
     }
 };
-
-export const getUserRoles = async (uid: string): Promise<string[]> => {
-    const user = auth.currentUser;
-    if (user) {
-        // Force refresh the token to get the latest custom claims.
-        const idTokenResult = await user.getIdTokenResult(true);
-        if (idTokenResult.claims.admin) {
-            return ['admin', 'user'];
-        }
-    }
-    
-    // Fallback to checking the document if token doesn't have the claim
-    const userDocRef = doc(db, 'users', uid);
-    const docSnap = await getDoc(userDocRef);
-    if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.role && data.role === 'admin') {
-            return ['admin', 'user'];
-        }
-    }
-    return ['user'];
-};
-
 
 export const getProfile = async (userId: string): Promise<UserProfile | null> => {
     const userDocRef = doc(db, 'users', userId);
