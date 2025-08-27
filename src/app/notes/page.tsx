@@ -83,7 +83,6 @@ export default function NotesPage() {
     } catch (e) {
       console.error("Error saving note: ", e);
       const errorMessage = e instanceof Error ? e.message : String(e);
-      // No need to set local error state, toast is enough
       toast({
         title: "Fehler",
         description: `Notiz konnte nicht gespeichert werden. ${errorMessage}`,
@@ -105,10 +104,9 @@ export default function NotesPage() {
     } catch (e) {
       console.error("Error deleting note: ", e);
       const errorMessage = e instanceof Error ? e.message : String(e);
-      setError(`Fehler beim Löschen der Notiz: ${errorMessage}`);
       toast({
         title: "Fehler",
-        description: "Notiz konnte nicht gelöscht werden.",
+        description: `Notiz konnte nicht gelöscht werden. ${errorMessage}`,
         variant: "destructive"
       })
     }
