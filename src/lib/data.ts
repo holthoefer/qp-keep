@@ -159,6 +159,48 @@ export const deleteControlPlanItem = async (id: string) => {
     await deleteDoc(doc(db, 'controlplan', id));
 };
 
+
+// Lenkungsplan
+export const getLenkungsplanItems = (
+    onSuccess: (items: ControlPlanItem[]) => void,
+    onError: (error: Error) => void
+) => {
+    const q = query(collection(db, 'lenkungsplan'), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, (snapshot) => {
+        const items: ControlPlanItem[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ControlPlanItem));
+        onSuccess(items);
+    }, onError);
+};
+
+export const addLenkungsplanItem = async (item: Omit<ControlPlanItem, 'id' | 'createdAt'>) => {
+    if (!item.planNumber) {
+        throw new Error("Plan Number ist ein Pflichtfeld.");
+    }
+    const docRef = doc(db, 'lenkungsplan', item.planNumber);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        throw new Error(`Ein Lenkungsplan mit der Nummer ${item.planNumber} existiert bereits.`);
+    }
+    
+    const newItem: ControlPlanItem = {
+        ...item,
+        id: item.planNumber,
+        createdAt: serverTimestamp() as Timestamp,
+    };
+    
+    await setDoc(docRef, newItem);
+};
+
+export const updateLenkungsplanItem = async (id: string, data: Partial<Omit<ControlPlanItem, 'id' | 'createdAt' | 'planNumber'>>) => {
+    await updateDoc(doc(db, 'lenkungsplan', id), data);
+};
+
+export const deleteLenkungsplanItem = async (id: string) => {
+    await deleteDoc(doc(db, 'lenkungsplan', id));
+};
+
+
 // New Control Plan (Advanced)
 export const getDb = () => db;
 
@@ -268,3 +310,4 @@ export async function listStorageFiles(path: string): Promise<StorageFile[]> {
 
     return files;
 }
+

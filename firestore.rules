@@ -3,35 +3,26 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Default deny all
-    match /{document=**} {
-      allow read, write: if false;
-    }
 
-    // USERS: 
-    // - Authenticated users can read their own profile
-    // - Authenticated users can create their own profile
-    // - Admins can read and write any user profile
     match /users/{userId} {
-      allow read, create: if request.auth != null && request.auth.uid == userId;
-      allow read, write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
     }
 
-    // NOTES:
-    // - Authenticated users can create notes
-    // - Authenticated users can read/write/delete their own notes
-    // - Admins can read/delete any note
     match /notes/{noteId} {
-        allow create: if request.auth != null;
-        allow read, write, delete: if request.auth.uid == resource.data.userId;
-        allow read, delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read, write: if request.auth != null;
+    }
+
+    match /control-plans/{planId}/{document=**} {
+      allow read, write: if request.auth != null;
     }
     
-    // CONTROLPLAN (old, simple version)
-    // - Any authenticated user can read/write
-    match /controlplan/{taskId} {
-       allow read, write: if request.auth != null;
+    match /controlplan/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    match /lenkungsplan/{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
