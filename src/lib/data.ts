@@ -33,26 +33,20 @@ export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'>
     if (userProfile?.status !== 'active') {
         throw new Error('Ihr Konto ist inaktiv. Sie können keine neuen Notizen erstellen.');
     }
+    
+    let tags: string[] = [];
     try {
-        const { tags } = await suggestTags({ noteContent: `${note.title}\n${note.content}` });
-        await addDoc(collection(db, 'notes'), {
-            ...note,
-            tags: tags || [],
-            createdAt: serverTimestamp(),
-        });
+        const result = await suggestTags({ noteContent: `${note.title}\n${note.content}` });
+        tags = result.tags || [];
     } catch (error) {
-        console.error("Error adding note with tags:", error);
-        toast({
-            title: "Fehler",
-            description: `Notiz konnte nicht gespeichert werden, AI-Tagging fehlgeschlagen. Notiz wird ohne Tags gespeichert.`,
-            variant: "destructive"
-        });
-        await addDoc(collection(db, 'notes'), {
-            ...note,
-            tags: [],
-            createdAt: serverTimestamp(),
-        });
+        console.error("Error generating tags, saving note without them.", error);
     }
+
+    await addDoc(collection(db, 'notes'), {
+        ...note,
+        tags: tags,
+        createdAt: serverTimestamp(),
+    });
 };
 
 export const getNotes = (
@@ -85,13 +79,6 @@ export const deleteNote = async (noteId: string) => {
 }
 
 // User Profile Management
-export const createUserProfile = async (userProfile: Omit<UserProfile, 'createdAt'>) => {
-    await setDoc(doc(db, 'users', userProfile.uid), {
-        ...userProfile,
-        createdAt: serverTimestamp(),
-    });
-};
-
 export const saveOrUpdateUserProfile = async (user: User) => {
     const userRef = doc(db, 'users', user.uid);
     const docSnap = await getDoc(userRef);
@@ -309,5 +296,3 @@ export async function seedDatabaseWithExampleData() {
 
     await batch.commit();
 }
-
-    
