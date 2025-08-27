@@ -672,13 +672,19 @@ export default function ControlPlansPage() {
       ]);
       setPlans(plansFromDb);
       setStorageFiles(allFiles);
-    } catch (error) {
-      console.error("Error fetching control plans:", error);
-      toast({
-        title: 'Error',
-        description: 'Could not fetch control plans from the database.',
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+        // Specifically check for permission errors which might indicate the collection doesn't exist yet.
+        if (error.code === 'permission-denied') {
+            console.warn("Could not fetch control plans, the 'control-plans' collection might not exist yet. This is expected on a fresh setup.");
+            setPlans([]); // Set to empty array to allow the page to render.
+        } else {
+            console.error("Error fetching control plans:", error);
+            toast({
+                title: 'Error',
+                description: 'Could not fetch control plans from the database.',
+                variant: 'destructive',
+            });
+        }
     } finally {
       setIsLoading(false);
     }

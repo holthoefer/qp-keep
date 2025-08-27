@@ -98,7 +98,8 @@ export const saveOrUpdateUserProfile = async (user: User) => {
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
-            roles: ['user'], // Default role
+            role: 'user', // Default role
+            status: 'active', // Default status
             createdAt: serverTimestamp()
         });
     }
