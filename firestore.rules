@@ -1,36 +1,43 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
-      // User can create their own profile, and read/update it.
-      allow create, read, update: if request.auth.uid == userId;
-      // Admins can list and write to any user profile.
-      allow list, write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
     }
 
+    // Allow users to read/write their own notes
     match /notes/{noteId} {
-      // Admins can read any note. Users can only read their own notes.
-      allow read: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' || request.auth.uid == resource.data.userId;
-      // Users can only update/delete their own notes.
-      allow update, delete: if request.auth.uid == resource.data.userId;
-      // User can only create a note if their account is active.
-      allow create: if request.auth.uid == request.resource.data.userId
-                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
+    // Admins can read all notes
+    match /notes/{noteId} {
+      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Users can manage their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Admins can manage all user profiles
+    match /users/{userId} {
+      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Control Plan items (simple)
     match /controlplan/{itemId} {
-      // Admins can perform any action.
-      allow read, write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-      // Regular users can only read (list, get) the control plan.
-      allow list, get: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
-
+    
+    // Control Plans (advanced)
     match /control-plans/{planId} {
-        // Any authenticated user can read plans
-        allow read: if request.auth != null;
-        // Only admins can write to plans
-        allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow read: if request.auth != null;
+      // Admins can create, update, and delete.
+      allow create, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
   }
 }
