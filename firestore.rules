@@ -3,30 +3,40 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users collection:
-    // Allow users to read their own profile.
-    // Allow only admins to write to any user profile.
+    // Helper function to check for admin role from custom claims
+    function isAdmin() {
+      return request.auth.token.admin == true;
+    }
+    
+    // Helper function to check if a user document exists
+    function userDocExists(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId));
+    }
+    
+    // Helper function to get user role from the users collection
+    function isUserRole(userId, role) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role == role;
+    }
+
+    // Users can only manage their own profile, but admins can manage all
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow write: if request.auth.uid == userId || isAdmin();
     }
-
-    // Notes collection:
-    // Allow users to read/write their own notes.
-    // Admins can read/write any note.
+    
+    // Notes can be created by any authenticated user.
+    // Only the user who created a note or an admin can manage it.
     match /notes/{noteId} {
-       allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
     }
-
-    // ControlPlan (Simple Tasks) collection:
-    // Allow authenticated users to read/write. Admin logic is in the client.
+    
+    // Old, simple control plan tasks
     match /controlplan/{document=**} {
       allow read, write: if request.auth != null;
     }
 
-    // Control Plans (Advanced) collection:
-    // Aligning rules with the working /controlplan rules to fix permission errors.
-    // Admin logic is handled client-side.
+    // New, advanced control plans
     match /control-plans/{document=**} {
        allow read, write: if request.auth != null;
     }

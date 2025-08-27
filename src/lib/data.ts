@@ -130,7 +130,31 @@ export const getControlPlanItems = (
 };
 
 export const addControlPlanItem = async (item: Omit<ControlPlanItem, 'id' | 'createdAt'>) => {
+    // This is the original, working functionality
     await addDoc(collection(db, 'controlplan'), { ...item, createdAt: serverTimestamp() });
+
+    // This is the test code to debug the 'control-plans' collection issue.
+    // It attempts to write a dummy record to the other collection.
+    try {
+        const testCPDocRef = doc(collection(db, 'control-plans'));
+        const testCPData = {
+            id: testCPDocRef.id,
+            planNumber: `TEST-${Date.now()}`,
+            partName: 'Test from AddTask',
+            partNumber: 'TEST-PN',
+            status: 'Draft',
+            version: 1,
+            revisionDate: new Date().toISOString(),
+            processSteps: [],
+            lastChangedBy: auth.currentUser?.uid || 'unknown',
+            createdAt: new Date().toISOString(),
+        };
+        await setDoc(testCPDocRef, testCPData);
+    } catch (error) {
+        console.error("Error writing test data to 'control-plans':", error);
+        // We throw the error so the UI can catch it and display a message
+        throw new Error(`Failed to write test Control Plan. Permissions for 'control-plans' may still be incorrect. Original error: ${error}`);
+    }
 };
 
 export const updateControlPlanItem = async (id: string, data: Partial<Omit<ControlPlanItem, 'id' | 'createdAt'>>) => {
@@ -252,47 +276,48 @@ export async function listStorageFiles(path: string): Promise<StorageFile[]> {
 }
 
 export async function seedDatabaseWithExampleData() {
-    const examplePlans: Omit<ControlPlan, 'id' | 'lastChangedBy'>[] = [
-        {
-            planNumber: 'CP-EX-001',
-            partNumber: 'PN-DEMO-A',
-            partName: 'Example Gear',
-            status: 'Active',
-            version: 2,
-            revisionDate: new Date().toISOString(),
-            keyContact: 'Max Mustermann',
-            processSteps: [],
-        },
-        {
-            planNumber: 'CP-EX-002',
-            partNumber: 'PN-DEMO-B',
-            partName: 'Example Shaft',
-            status: 'Draft',
-            version: 1,
-            revisionDate: new Date().toISOString(),
-            keyContact: 'Erika Musterfrau',
-            processSteps: [],
-        },
+    const examplePlans: Omit<ControlPlan, 'id' | 'lastChangedBy' | 'createdAt'>[] = [
+      {
+        planNumber: 'CP-EX-001',
+        partNumber: 'PN-DEMO-A',
+        partName: 'Example Gear',
+        status: 'Active',
+        version: 2,
+        revisionDate: new Date().toISOString(),
+        keyContact: 'Max Mustermann',
+        processSteps: [],
+      },
+      {
+        planNumber: 'CP-EX-002',
+        partNumber: 'PN-DEMO-B',
+        partName: 'Example Shaft',
+        status: 'Draft',
+        version: 1,
+        revisionDate: new Date().toISOString(),
+        keyContact: 'Erika Musterfrau',
+        processSteps: [],
+      },
     ];
-    
+  
     const batch = writeBatch(db);
     const userId = auth.currentUser?.uid;
+  
     if (!userId) {
-        throw new Error("User is not authenticated. Cannot seed data.");
+      throw new Error('User is not authenticated. Cannot seed data.');
     }
-
-    examplePlans.forEach(planData => {
-        const docRef = doc(collection(db, 'control-plans'));
-        const dataToSave: ControlPlan = {
-            ...planData,
-            id: docRef.id,
-            revisionDate: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-            lastChangedBy: userId,
-        };
-        const cleanedData = removeUndefinedValues(dataToSave);
-        batch.set(docRef, cleanedData);
+  
+    examplePlans.forEach((planData) => {
+      const docRef = doc(collection(db, 'control-plans'));
+      const dataToSave: ControlPlan = {
+        ...planData,
+        id: docRef.id,
+        revisionDate: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        lastChangedBy: userId,
+      };
+      const cleanedData = removeUndefinedValues(dataToSave);
+      batch.set(docRef, cleanedData);
     });
-
+  
     await batch.commit();
 }
