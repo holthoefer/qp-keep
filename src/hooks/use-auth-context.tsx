@@ -44,9 +44,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(currentUser);
                 setProfile(userProfile);
 
-                const userRoles: string[] = userProfile?.role ? [userProfile.role] : ['user'];
-                if (userProfile?.role === 'admin' && !userRoles.includes('admin')) {
-                     userRoles.push('admin');
+                const userRoles: string[] = [];
+                if (userProfile?.role) {
+                    userRoles.push(userProfile.role);
                 }
                 setRoles(userRoles);
 
