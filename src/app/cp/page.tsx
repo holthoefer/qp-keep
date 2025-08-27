@@ -926,7 +926,7 @@ export default function ControlPlansPage() {
         document.body.removeChild(link);
         
         toast({ title: "CSV Export erfolgreich", description: `${plan.planNumber}.csv wird heruntergeladen.` });
-    } catch (error: any) => {
+    } catch (error: any) {
         toast({ title: "Fehler beim CSV-Export", description: error.message || "Unbekannter Fehler", variant: "destructive" });
     }
   }
@@ -1110,3 +1110,5 @@ export default function ControlPlansPage() {
     </DashboardClient>
   );
 }
+
+    
