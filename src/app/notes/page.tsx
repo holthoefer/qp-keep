@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
-import { addNote, getNotes, deleteNote, type Note, seedDatabaseWithExampleData } from '@/lib/data';
+import { addNote, getNotes, deleteNote, type Note, seedDatabaseWithExampleData, getProfile } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import type { UserProfile } from '@/types';
 
 
 export default function NotesPage() {
@@ -38,8 +37,6 @@ export default function NotesPage() {
       return;
     }
 
-    // This effect handles fetching the user's active/inactive status separately
-    // as it's not part of the auth token.
     const fetchUserStatus = async () => {
         try {
             const userProfile = await getProfile(user.uid);
@@ -53,7 +50,6 @@ export default function NotesPage() {
     
     fetchUserStatus();
 
-    // Subscribe to notes
     const unsubscribe = getNotes(user.uid, isAdmin,
       (newNotes) => {
         setNotes(newNotes);
@@ -305,5 +301,3 @@ export default function NotesPage() {
     </div>
   );
 }
-
-    
