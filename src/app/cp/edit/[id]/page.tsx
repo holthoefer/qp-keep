@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { saveControlPlan, getControlPlan } from '@/lib/data';
@@ -11,14 +12,14 @@ import type { ControlPlan } from '@/types';
 import { useAuth } from '@/hooks/use-auth-context';
 
 
-export default function EditControlPlanPage({ params }: { params: { id: string } }) {
+export default function EditControlPlanPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [initialData, setInitialData] = useState<ControlPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { id } = params;
+  const { id } = React.use(params);
 
   useEffect(() => {
     if (authLoading) return;
