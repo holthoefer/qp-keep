@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield, ShieldAlert, UserCircle } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -160,6 +160,10 @@ export default function NotesPage() {
           </h1>
         </div>
         <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={() => router.push('/controlplan')}>
+                <ListChecks className="mr-2 h-4 w-4" />
+                Control Plan
+            </Button>
             {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                     <Shield className="mr-2 h-4 w-4" />

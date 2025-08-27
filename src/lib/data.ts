@@ -15,7 +15,8 @@ import {
   getDocs,
   getDoc,
   setDoc,
-  Timestamp
+  Timestamp,
+  orderBy,
 } from 'firebase/firestore';
 import { suggestTags } from '@/ai/flows/suggest-tags';
 
@@ -35,6 +36,14 @@ export interface UserProfile {
     role: 'admin' | 'user';
     status: 'active' | 'inactive';
     createdAt?: Timestamp;
+}
+
+export interface ControlPlanItem {
+    id: string;
+    task: string;
+    responsible: string;
+    status: 'pending' | 'in_progress' | 'completed';
+    createdAt: Timestamp;
 }
 
 
@@ -73,10 +82,10 @@ export const getNotes = (
   let q;
   if (isAdmin) {
     // Admin query: Get all notes
-    q = query(collection(db, 'notes'));
+    q = query(collection(db, 'notes'), orderBy('createdAt', 'desc'));
   } else {
     // Regular user query: Get only their notes
-    q = query(collection(db, 'notes'), where('userId', '==', userId));
+    q = query(collection(db, 'notes'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   }
   
   const unsubscribe = onSnapshot(q, 
@@ -85,13 +94,6 @@ export const getNotes = (
       querySnapshot.forEach((doc) => {
         notes.push({ id: doc.id, ...doc.data() } as Note);
       });
-      // Sort notes on the client-side by creation date (newest first)
-      notes.sort((a, b) => {
-        const dateA = a.createdAt?.toDate() ?? new Date(0);
-        const dateB = b.createdAt?.toDate() ?? new Date(0);
-        return dateB.getTime() - dateA.getTime();
-      });
-
       onSuccess(notes);
     }, 
     (error) => {
@@ -149,4 +151,44 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 export const updateUser = async (userId: string, data: Partial<UserProfile>) => {
     const userDocRef = doc(db, 'users', userId);
     await updateDoc(userDocRef, data);
+};
+
+// --- Control Plan Functions ---
+
+export const getControlPlanItems = (
+    onSuccess: (items: ControlPlanItem[]) => void,
+    onError: (error: Error) => void
+) => {
+    const q = query(collection(db, 'controlplan'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q,
+        (querySnapshot) => {
+            const items: ControlPlanItem[] = [];
+            querySnapshot.forEach((doc) => {
+                items.push({ id: doc.id, ...doc.data() } as ControlPlanItem);
+            });
+            onSuccess(items);
+        },
+        (error) => {
+            console.error("Firestore getControlPlanItems error:", error);
+            onError(error);
+        }
+    );
+    return unsubscribe;
+};
+
+export const addControlPlanItem = async (item: Omit<ControlPlanItem, 'id' | 'createdAt'>) => {
+    await addDoc(collection(db, 'controlplan'), {
+        ...item,
+        createdAt: serverTimestamp(),
+    });
+};
+
+export const updateControlPlanItem = async (id: string, data: Partial<Omit<ControlPlanItem, 'id' | 'createdAt'>>) => {
+    const itemRef = doc(db, 'controlplan', id);
+    await updateDoc(itemRef, data);
+};
+
+export const deleteControlPlanItem = async (id: string) => {
+    const itemRef = doc(db, 'controlplan', id);
+    await deleteDoc(itemRef);
 };
