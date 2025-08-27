@@ -36,7 +36,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,8 +54,23 @@ import {
     type ControlPlanItem,
 } from '@/lib/data';
 import { ControlPlanStatus } from '@/types';
+import { Textarea } from '@/components/ui/textarea';
 
 type ControlPlanItemFormData = Omit<ControlPlanItem, 'id' | 'createdAt'>;
+
+const formatDateForInput = (date?: string | Date | null): string => {
+  if (!date) return '';
+  try {
+    const d = new Date(date);
+    // Check if the date is valid
+    if (isNaN(d.getTime())) return '';
+    // Format to YYYY-MM-DD
+    return d.toISOString().split('T')[0];
+  } catch (e) {
+    return '';
+  }
+};
+
 
 export default function ControlPlanPage() {
   const { user, roles, loading: authLoading, logout } = useAuth();
@@ -73,6 +87,9 @@ export default function ControlPlanPage() {
     planNumber: '',
     partNumber: '',
     version: 1,
+    planDescription: '',
+    keyContact: '',
+    revisionDate: new Date().toISOString().split('T')[0],
   });
   const { toast } = useToast();
   const isAdmin = roles.includes('admin');
@@ -121,7 +138,7 @@ export default function ControlPlanPage() {
     router.push('/');
   };
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement> | string | number, field: keyof ControlPlanItemFormData) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string | number, field: keyof ControlPlanItemFormData) => {
     const value = typeof e === 'object' ? e.target.value : e;
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -158,6 +175,9 @@ export default function ControlPlanPage() {
         planNumber: item.planNumber,
         partNumber: item.partNumber,
         version: item.version,
+        planDescription: item.planDescription || '',
+        keyContact: item.keyContact || '',
+        revisionDate: formatDateForInput(item.revisionDate),
     });
     setIsDialogOpen(true);
   };
@@ -171,6 +191,9 @@ export default function ControlPlanPage() {
         planNumber: `CP-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3,'0')}`,
         partNumber: '',
         version: 1,
+        planDescription: '',
+        keyContact: '',
+        revisionDate: new Date().toISOString().split('T')[0],
     });
     setIsDialogOpen(true);
   };
@@ -223,48 +246,59 @@ export default function ControlPlanPage() {
                                 <PlusCircle className="mr-2 h-4 w-4" /> Neuer Control Plan
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="sm:max-w-2xl">
                             <DialogHeader>
                                 <DialogTitle>{editingItem ? 'Edit Control Plan' : 'Neuen Control Plan anlegen'}</DialogTitle>
                             </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="planNumber" className="text-right">Plan-Nummer</Label>
-                                    <Input 
-                                      id="planNumber" 
-                                      value={formData.planNumber} 
-                                      onChange={(e) => handleFormChange(e, 'planNumber')} 
-                                      className="col-span-3"
-                                      readOnly={!!editingItem} // Make read-only when editing
-                                      disabled={!!editingItem}
-                                    />
+                            <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-4">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                     <div className="space-y-2">
+                                        <Label htmlFor="planNumber">Plan-Nummer</Label>
+                                        <Input 
+                                          id="planNumber" 
+                                          value={formData.planNumber} 
+                                          onChange={(e) => handleFormChange(e, 'planNumber')} 
+                                          readOnly={!!editingItem}
+                                          disabled={!!editingItem}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="partName">Teile-Name</Label>
+                                        <Input id="partName" value={formData.partName} onChange={(e) => handleFormChange(e, 'partName')} />
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label htmlFor="partNumber">Teile-Nummer</Label>
+                                        <Input id="partNumber" value={formData.partNumber} onChange={(e) => handleFormChange(e, 'partNumber')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="responsible">Verantwortlich</Label>
+                                        <Input id="responsible" value={formData.responsible} onChange={(e) => handleFormChange(e, 'responsible')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="keyContact">Key Contact</Label>
+                                        <Input id="keyContact" value={formData.keyContact || ''} onChange={(e) => handleFormChange(e, 'keyContact')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="status">Status</Label>
+                                        <Select value={formData.status} onValueChange={(value: ControlPlanStatus) => handleFormChange(value, 'status')}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                 {Object.values(ControlPlanStatus).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="version">Version</Label>
+                                        <Input id="version" type="number" value={formData.version} onChange={(e) => handleFormChange(Number(e.target.value), 'version')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="revisionDate">Revision Date</Label>
+                                        <Input id="revisionDate" type="date" value={formData.revisionDate || ''} onChange={(e) => handleFormChange(e, 'revisionDate')} />
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="partName" className="text-right">Teile-Name</Label>
-                                    <Input id="partName" value={formData.partName} onChange={(e) => handleFormChange(e, 'partName')} className="col-span-3" />
-                                </div>
-                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="partNumber" className="text-right">Teile-Nummer</Label>
-                                    <Input id="partNumber" value={formData.partNumber} onChange={(e) => handleFormChange(e, 'partNumber')} className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="responsible" className="text-right">Verantwortlich</Label>
-                                    <Input id="responsible" value={formData.responsible} onChange={(e) => handleFormChange(e, 'responsible')} className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="version" className="text-right">Version</Label>
-                                    <Input id="version" type="number" value={formData.version} onChange={(e) => handleFormChange(Number(e.target.value), 'version')} className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="status" className="text-right">Status</Label>
-                                    <Select value={formData.status} onValueChange={(value: ControlPlanStatus) => handleFormChange(value, 'status')}>
-                                        <SelectTrigger className="col-span-3">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                             {Object.values(ControlPlanStatus).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
+                                <div className="space-y-2">
+                                    <Label htmlFor="planDescription">Plan Description</Label>
+                                    <Textarea id="planDescription" value={formData.planDescription || ''} onChange={(e) => handleFormChange(e, 'planDescription')} />
                                 </div>
                             </div>
                             <DialogFooter>
@@ -375,3 +409,5 @@ export default function ControlPlanPage() {
     </div>
   );
 }
+
+    

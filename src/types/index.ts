@@ -1,5 +1,4 @@
 
-
 import { Timestamp } from 'firebase/firestore';
 
 export enum ControlPlanStatus {
@@ -162,6 +161,9 @@ export interface ControlPlanItem {
     responsible: string;
     status: ControlPlanStatus;
     createdAt: Timestamp;
+    planDescription?: string;
+    keyContact?: string;
+    revisionDate?: string;
 }
 
 
