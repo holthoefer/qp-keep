@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
-import { addNote, getNotes, deleteNote, type Note, seedDatabaseWithExampleData, getProfile } from '@/lib/data';
+import { addNote, getNotes, deleteNote, type Note, seedDatabaseWithExampleData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
