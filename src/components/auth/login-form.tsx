@@ -2,8 +2,6 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,7 +16,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { createUserProfile } from "@/lib/data";
+import { useAuth } from "@/hooks/use-auth-context";
+
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -27,13 +26,15 @@ export function LoginForm() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignupLoading, setIsSignupLoading] = useState(false);
   const { toast } = useToast();
+  const { loginWithEmail, signupWithEmail } = useAuth();
+
 
   const handleLogin = async () => {
     setIsLoginLoading(true);
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // Auth state change is handled by the parent component (page.tsx)
+      await loginWithEmail(email, password);
+      // Auth state change is handled by the AuthProvider
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
         setError("Ungültige E-Mail oder Passwort. Bitte versuchen Sie es erneut.");
@@ -48,26 +49,15 @@ export function LoginForm() {
     setIsSignupLoading(true);
     setError(null);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      await signupWithEmail(email, password);
       
-      // Create the user profile document in Firestore
-      await createUserProfile({
-        uid: user.uid,
-        email: user.email!,
-        role: 'user', // Default role
-        status: 'active', // Default status
-      });
-      
-      await sendEmailVerification(user);
-
       toast({ 
         title: "Konto erstellt", 
         description: "Bitte überprüfen Sie Ihren Posteingang, um Ihre E-Mail zu bestätigen.",
         duration: 10000,
       });
 
-      // Auth state change is handled by the parent component (page.tsx)
+      // Auth state change is handled by the AuthProvider
     } catch (err: any) {
         console.error("Signup Error:", err);
         if (err.code === 'auth/email-already-in-use') {

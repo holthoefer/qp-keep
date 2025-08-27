@@ -3,12 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import { getAllUsers, updateUser, type UserProfile } from '@/lib/data';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 import {
   Table,
@@ -30,7 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function UserManagementPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -90,16 +88,12 @@ export default function UserManagementPage() {
   };
   
   const handleLogout = async () => {
-    await signOut(auth);
+    await logout();
     router.push('/');
   };
 
   if (authLoading) {
-    return (
-        <div className="flex h-screen w-full items-center justify-center bg-background">
-            <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        </div>
-    );
+    return null; // AuthProvider shows loading screen
   }
 
   return (

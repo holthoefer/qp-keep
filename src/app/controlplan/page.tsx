@@ -2,12 +2,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { Loader2, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import {
   Table,
@@ -51,10 +49,9 @@ import {
 type ControlPlanItemFormData = Omit<ControlPlanItem, 'id' | 'createdAt'>;
 
 export default function ControlPlanPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, roles, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [items, setItems] = useState<ControlPlanItem[]>([]);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -65,7 +62,7 @@ export default function ControlPlanPage() {
     status: 'pending',
   });
   const { toast } = useToast();
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = roles.includes('admin');
 
   useEffect(() => {
     if (authLoading) return;
@@ -77,9 +74,6 @@ export default function ControlPlanPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const userProfile = await getProfile(user.uid);
-        setProfile(userProfile);
-
         const unsubscribe = getControlPlanItems(
           (newItems) => {
             setItems(newItems);
@@ -90,11 +84,11 @@ export default function ControlPlanPage() {
             setError(`Error loading items: ${err.message}`);
           }
         );
+        setLoading(false);
         return unsubscribe;
       } catch (err) {
         console.error(err);
-        setError('Failed to load user profile or data.');
-      } finally {
+        setError('Failed to load data.');
         setLoading(false);
       }
     };
@@ -109,7 +103,7 @@ export default function ControlPlanPage() {
   }, [user, authLoading, router]);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await logout();
     router.push('/');
   };
 
@@ -171,11 +165,7 @@ export default function ControlPlanPage() {
   }
 
   if (loading || authLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
+    return null; // AuthProvider shows LoadingScreen
   }
 
   return (

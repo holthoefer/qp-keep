@@ -3,55 +3,40 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth-context';
 import { getProfile } from '@/lib/data';
 import { Loader2, ShieldX } from 'lucide-react';
-import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, roles, loading: authLoading } = useAuth();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   useEffect(() => {
-    if (authLoading) {
-      return;
-    }
+    if (authLoading) return;
+    
     if (!user) {
       router.replace('/');
       return;
     }
-
-    getProfile(user.uid)
-      .then((profile) => {
-        if (profile?.role === 'admin') {
-          setIsAuthorized(true);
-        } else {
-          setIsAuthorized(false);
-        }
-      })
-      .catch((err) => {
-        console.error("Authorization check failed", err);
-        setIsAuthorized(false);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, [user, authLoading, router]);
+    
+    if (roles.includes('admin')) {
+      setIsAuthorized(true);
+    } else {
+      setIsAuthorized(false);
+    }
+    setIsLoading(false);
+  }, [user, roles, authLoading, router]);
 
   if (isLoading || authLoading) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Überprüfe Berechtigung...</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!isAuthorized) {

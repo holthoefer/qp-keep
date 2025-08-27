@@ -2,23 +2,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth-context';
 import { addNote, getNotes, deleteNote, type Note, getProfile, type UserProfile } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 
 export default function NotesPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState('');
@@ -79,7 +77,7 @@ export default function NotesPage() {
   }, [user, authLoading, router]);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await logout();
     router.push('/');
   };
   
@@ -143,11 +141,7 @@ export default function NotesPage() {
   const isFormDisabled = isSaving || profile?.status === 'inactive';
 
   if (authLoading || !user) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
+    return null; // AuthProvider shows LoadingScreen
   }
 
   return (
@@ -160,6 +154,10 @@ export default function NotesPage() {
           </h1>
         </div>
         <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
+                <Target className="mr-2 h-4 w-4" />
+                CP
+            </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/controlplan')}>
                 <ListChecks className="mr-2 h-4 w-4" />
                 Control Plan

@@ -4,17 +4,15 @@
 import { useEffect, useState } from 'react';
 import { LoginForm } from '@/components/auth/login-form';
 import { KeepKnowLogo } from '@/components/icons';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth-context';
 import { Loader2, LogOut, ShieldAlert } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { getProfile, type UserProfile } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function HomePage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -41,7 +39,7 @@ export default function HomePage() {
   }, [user, authLoading]);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await logout();
     router.refresh(); 
   };
 
@@ -49,16 +47,12 @@ export default function HomePage() {
     router.push('/notes');
   }
 
-  // State 1: Loading authentication status or profile
-  if (authLoading || profileLoading) {
-    return (
-      <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </main>
-    );
+  // State 1: AuthProvider handles the main loading state
+  if (authLoading) {
+    return null; // The AuthProvider will show a loading screen
   }
 
-  // State 2: User is logged in
+  // State 2: User is logged in, but we might still be fetching their specific profile data
   if (user) {
     return (
       <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
@@ -71,31 +65,37 @@ export default function HomePage() {
                 <p className="text-muted-foreground">Sie sind erfolgreich angemeldet.</p>
             </div>
           
-            <div className="space-y-4">
-                <p className="font-medium">{user.email}</p>
-                <Button 
-                  onClick={goToNotes} 
-                  className="w-full"
-                  disabled={profile?.status === 'inactive'}
-                >
-                    Zur Notizenseite
-                </Button>
+            {profileLoading ? (
+                 <div className="flex justify-center items-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                 </div>
+            ) : (
+                <div className="space-y-4">
+                    <p className="font-medium">{user.email}</p>
+                    <Button 
+                    onClick={goToNotes} 
+                    className="w-full"
+                    disabled={profile?.status === 'inactive'}
+                    >
+                        Zur Notizenseite
+                    </Button>
 
-                {profile?.status === 'inactive' && (
-                  <Alert variant="destructive" className="text-left">
-                    <ShieldAlert className="h-4 w-4" />
-                    <AlertTitle>Konto inaktiv</AlertTitle>
-                    <AlertDescription>
-                      Ihr Konto wurde von einem Administrator gesperrt. Sie können nicht auf Ihre Notizen zugreifen.
-                    </AlertDescription>
-                  </Alert>
-                )}
+                    {profile?.status === 'inactive' && (
+                    <Alert variant="destructive" className="text-left">
+                        <ShieldAlert className="h-4 w-4" />
+                        <AlertTitle>Konto inaktiv</AlertTitle>
+                        <AlertDescription>
+                        Ihr Konto wurde von einem Administrator gesperrt. Sie können nicht auf Ihre Notizen zugreifen.
+                        </AlertDescription>
+                    </Alert>
+                    )}
 
-                <Button onClick={handleLogout} variant="secondary" className="w-full">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Ausloggen
-                </Button>
-            </div>
+                    <Button onClick={handleLogout} variant="secondary" className="w-full">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Ausloggen
+                    </Button>
+                </div>
+            )}
         </div>
       </main>
     );
