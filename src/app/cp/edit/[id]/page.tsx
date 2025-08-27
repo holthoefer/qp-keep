@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { getControlPlan, saveControlPlan } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +36,7 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
             description: 'Control Plan not found.',
             variant: 'destructive',
           });
+           router.push('/cp');
         }
       })
       .catch((err) => {
@@ -46,11 +47,12 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
           description: 'Failed to fetch control plan.',
           variant: 'destructive',
         });
+        router.push('/cp');
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [params.id, toast]);
+  }, [params.id, toast, router]);
 
   const handleFormSubmit = async (data: ControlPlan) => {
     if (!user) {
@@ -83,7 +85,7 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
   }
   
   if (error || !initialData) {
-    router.push('/cp');
+    // Error state is handled via toasts and redirects inside useEffect
     return <LoadingScreen />;
   }
 
