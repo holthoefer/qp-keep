@@ -179,8 +179,8 @@ const getDefaultCharacteristic = (itemNumber: string = '1'): Omit<Characteristic
 
 
 export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanFormProps) {
-  const { user } = useAuth();
-  const isAdmin = user?.roles.includes('admin');
+  const { roles } = useAuth();
+  const isAdmin = roles.includes('admin');
   const formatDateForInput = (date?: string | null) => date ? new Date(date).toISOString().split('T')[0] : '';
   const [isBackAlertOpen, setIsBackAlertOpen] = useState(false);
   const [openProcessAccordions, setOpenProcessAccordions] = useState<string[]>([]);
