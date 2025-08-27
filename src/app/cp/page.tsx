@@ -635,6 +635,31 @@ function ControlPlanRow({
   );
 }
 
+const getExamplePlans = (): ControlPlan[] => [
+    {
+        id: 'example-1',
+        planNumber: 'CP-EX-001',
+        partNumber: 'PN-DEMO-A',
+        partName: 'Beispiel-Getriebe',
+        status: 'Active',
+        version: 2,
+        revisionDate: new Date().toISOString(),
+        keyContact: 'Max Mustermann',
+        processSteps: [],
+    },
+    {
+        id: 'example-2',
+        planNumber: 'CP-EX-002',
+        partNumber: 'PN-DEMO-B',
+        partName: 'Beispiel-Welle',
+        status: 'Draft',
+        version: 1,
+        revisionDate: new Date().toISOString(),
+        keyContact: 'Erika Musterfrau',
+        processSteps: [],
+    },
+];
+
 export default function ControlPlansPage() {
   const { user, roles, loading: authLoading } = useAuth();
   const isAdmin = roles.includes('admin');
@@ -651,27 +676,34 @@ export default function ControlPlansPage() {
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
   const [isGeneratingDoc, setIsGeneratingDoc] = React.useState(false);
   const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
+  const [isExampleData, setIsExampleData] = React.useState(false);
 
 
   const fetchPlans = React.useCallback(async () => {
-    // Prevent fetching on server
     if (!getDb()) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
+    setIsExampleData(false);
     try {
       const [plansFromDb, allFiles] = await Promise.all([
           getControlPlans(),
           listStorageFiles('uploads/')
       ]);
-      setPlans(plansFromDb);
+      
+      if (plansFromDb.length === 0) {
+        setPlans(getExamplePlans());
+        setIsExampleData(true);
+      } else {
+        setPlans(plansFromDb);
+      }
       setStorageFiles(allFiles);
     } catch (error: any) {
-        // Specifically check for permission errors which might indicate the collection doesn't exist yet.
         if (error.code === 'permission-denied') {
-            console.warn("Could not fetch control plans, the 'control-plans' collection might not exist yet. This is expected on a fresh setup.");
-            setPlans([]); // Set to empty array to allow the page to render.
+            console.warn("Could not fetch control plans. This is expected if the collection doesn't exist or rules are new. Displaying example data.");
+            setPlans(getExamplePlans());
+            setIsExampleData(true);
         } else {
             console.error("Error fetching control plans:", error);
             toast({
@@ -719,6 +751,10 @@ export default function ControlPlansPage() {
   };
 
   const handleOpenEdit = (plan: ControlPlan) => {
+     if (isExampleData) {
+        toast({ title: 'Beispieldaten', description: 'Dies ist ein Beispieldatensatz. Bitte legen Sie einen neuen Plan an, um ihn zu bearbeiten.' });
+        return;
+    }
     router.push(`/cp/edit/${plan.id}`);
   };
 
@@ -761,6 +797,10 @@ export default function ControlPlansPage() {
   };
 
   const handleDeletePlan = async (planId: string) => {
+    if (isExampleData) {
+      toast({ title: 'Beispieldaten', description: 'Beispieldaten können nicht gelöscht werden.' });
+      return;
+    }
     try {
         await deletePlanFromDb(planId);
         await fetchPlans();
@@ -1068,5 +1108,3 @@ export default function ControlPlansPage() {
     </DashboardClient>
   );
 }
-
-

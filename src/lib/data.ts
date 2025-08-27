@@ -106,16 +106,22 @@ export const saveOrUpdateUserProfile = async (user: User) => {
 };
 
 export const getUserRoles = async (uid: string): Promise<string[]> => {
+    const user = auth.currentUser;
+    if (user) {
+        // Force refresh the token to get the latest custom claims.
+        const idTokenResult = await user.getIdTokenResult(true);
+        if (idTokenResult.claims.admin) {
+            return ['admin', 'user'];
+        }
+    }
+    
+    // Fallback to checking the document if token doesn't have the claim
     const userDocRef = doc(db, 'users', uid);
     const docSnap = await getDoc(userDocRef);
     if (docSnap.exists()) {
         const data = docSnap.data();
-        // Handle both `role` (string) and `roles` (array) for backward compatibility
-        if (data.roles && Array.isArray(data.roles)) {
-            return data.roles;
-        }
-        if (data.role && typeof data.role === 'string') {
-            return [data.role];
+        if (data.role && data.role === 'admin') {
+            return ['admin', 'user'];
         }
     }
     return ['user'];
@@ -187,9 +193,13 @@ export async function getControlPlan(id: string): Promise<ControlPlan | null> {
 
 // Helper to remove undefined values from an object, which Firestore doesn't support
 const removeUndefinedValues = (obj: any): any => {
+    if (obj === undefined) {
+        return null; // Convert top-level undefined to null
+    }
     if (Array.isArray(obj)) {
         return obj.map(removeUndefinedValues);
-    } else if (obj !== null && typeof obj === 'object') {
+    }
+    if (obj !== null && typeof obj === 'object' && !(obj instanceof Timestamp)) {
         return Object.keys(obj).reduce((acc, key) => {
             const value = obj[key];
             if (value !== undefined) {
@@ -212,7 +222,7 @@ export async function saveControlPlan(plan: ControlPlan | Omit<ControlPlan, 'id'
         id: docRef.id,
         lastChangedBy: userId,
         revisionDate: new Date().toISOString(),
-        createdAt: isNew ? new Date().toISOString() : plan.createdAt,
+        createdAt: isNew ? new Date().toISOString() : (plan as ControlPlan).createdAt,
     };
     
     const cleanedData = removeUndefinedValues(dataToSave);
