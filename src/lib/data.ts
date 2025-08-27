@@ -130,10 +130,28 @@ export const getControlPlanItems = (
 };
 
 export const addControlPlanItem = async (item: Omit<ControlPlanItem, 'id' | 'createdAt'>) => {
-    await addDoc(collection(db, 'controlplan'), { ...item, createdAt: serverTimestamp() });
+    if (!item.planNumber) {
+        throw new Error("Plan Number ist ein Pflichtfeld.");
+    }
+    const docRef = doc(db, 'controlplan', item.planNumber);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        throw new Error(`Ein Control Plan mit der Nummer ${item.planNumber} existiert bereits.`);
+    }
+    
+    // The new ID is the planNumber
+    const newItem: ControlPlanItem = {
+        ...item,
+        id: item.planNumber,
+        createdAt: serverTimestamp() as Timestamp,
+    };
+    
+    await setDoc(docRef, newItem);
 };
 
-export const updateControlPlanItem = async (id: string, data: Partial<Omit<ControlPlanItem, 'id' | 'createdAt'>>) => {
+export const updateControlPlanItem = async (id: string, data: Partial<Omit<ControlPlanItem, 'id' | 'createdAt' | 'planNumber'>>) => {
+    // The document ID is the planNumber and should not be changed.
     await updateDoc(doc(db, 'controlplan', id), data);
 };
 

@@ -36,7 +36,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,8 +47,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import {
-    getProfile,
-    type UserProfile,
     getControlPlanItems,
     addControlPlanItem,
     updateControlPlanItem,
@@ -134,7 +131,10 @@ export default function ControlPlanPage() {
 
     try {
       if (editingItem) {
-        await updateControlPlanItem(editingItem.id, formData);
+        // When updating, we use the item's ID (which is the planNumber)
+        // We only pass the fields that can be changed.
+        const { planNumber, ...updateData } = formData;
+        await updateControlPlanItem(editingItem.id, updateData);
         toast({ title: 'Plan Updated' });
       } else {
         await addControlPlanItem(formData);
@@ -142,9 +142,9 @@ export default function ControlPlanPage() {
       }
       setIsDialogOpen(false);
       setEditingItem(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast({ title: 'Error saving item', variant: 'destructive' });
+      toast({ title: 'Error saving item', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -229,7 +229,14 @@ export default function ControlPlanPage() {
                             <div className="grid gap-4 py-4">
                                  <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="planNumber" className="text-right">Plan-Nummer</Label>
-                                    <Input id="planNumber" value={formData.planNumber} onChange={(e) => handleFormChange(e, 'planNumber')} className="col-span-3" />
+                                    <Input 
+                                      id="planNumber" 
+                                      value={formData.planNumber} 
+                                      onChange={(e) => handleFormChange(e, 'planNumber')} 
+                                      className="col-span-3"
+                                      readOnly={!!editingItem} // Make read-only when editing
+                                      disabled={!!editingItem}
+                                    />
                                 </div>
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="partName" className="text-right">Teile-Name</Label>
@@ -333,9 +340,27 @@ export default function ControlPlanPage() {
                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}>
                                 <Edit className="h-4 w-4" />
                            </Button>
-                           <Button variant="ghost" size="icon" onClick={() => setItemToDelete(item.id)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                           </Button>
+                           <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                   <Button variant="ghost" size="icon">
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                   </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete the plan {item.planNumber}.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDelete(item.id)}>
+                                        Delete
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                           </AlertDialog>
                         </TableCell>
                       )}
                     </TableRow>
