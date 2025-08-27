@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2, Database } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -55,7 +55,6 @@ import {
     updateControlPlanItem,
     deleteControlPlanItem,
     type ControlPlanItem,
-    seedDatabaseWithExampleData,
 } from '@/lib/data';
 import { ControlPlanStatus } from '@/types';
 
@@ -79,7 +78,6 @@ export default function ControlPlanPage() {
   });
   const { toast } = useToast();
   const isAdmin = roles.includes('admin');
-  const [isSeeding, setIsSeeding] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   useEffect(() => {
@@ -190,28 +188,6 @@ export default function ControlPlanPage() {
     }
   }
 
-  const handleSeedDatabase = async () => {
-    if (!isAdmin) return;
-    setIsSeeding(true);
-    try {
-      await seedDatabaseWithExampleData();
-      toast({
-        title: "Datenbank erfolgreich befüllt",
-        description: "Zwei Beispiel-Control-Plans wurden der Datenbank hinzugefügt.",
-      });
-    } catch (error: any) {
-       toast({
-        title: "Fehler beim Befüllen der Datenbank",
-        description: error.message,
-        variant: "destructive",
-      });
-      console.error(error);
-    } finally {
-      setIsSeeding(false);
-    }
-  }
-
-
   if (loading || authLoading) {
     return null; // AuthProvider shows LoadingScreen
   }
@@ -239,12 +215,6 @@ export default function ControlPlanPage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-headline text-2xl font-semibold">Plans</h2>
             <div className="flex items-center gap-2">
-                {isAdmin && (
-                    <Button variant="destructive" size="sm" onClick={handleSeedDatabase} disabled={isSeeding}>
-                        {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
-                        Seed Advanced CP
-                    </Button>
-                )}
                 {isAdmin && (
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>

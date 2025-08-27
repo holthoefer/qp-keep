@@ -3,12 +3,12 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
-import { addNote, getNotes, deleteNote, type Note, seedDatabaseWithExampleData } from '@/lib/data';
+import { addNote, getNotes, deleteNote, type Note } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Database } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -27,7 +27,6 @@ export default function NotesPage() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const isAdmin = roles.includes('admin');
-  const [isSeeding, setIsSeeding] = useState(false);
   
   useEffect(() => {
     if (authLoading) return;
@@ -112,27 +111,6 @@ export default function NotesPage() {
     }
   }
 
-  const handleSeedDatabase = async () => {
-    if (!isAdmin) return;
-    setIsSeeding(true);
-    try {
-      await seedDatabaseWithExampleData();
-      toast({
-        title: "Datenbank erfolgreich befüllt",
-        description: "Zwei Beispiel-Control-Plans wurden der Datenbank hinzugefügt.",
-      });
-    } catch (error: any) {
-       toast({
-        title: "Fehler beim Befüllen der Datenbank",
-        description: error.message,
-        variant: "destructive",
-      });
-      console.error(error);
-    } finally {
-      setIsSeeding(false);
-    }
-  }
-
   const isFormDisabled = isSaving || profile?.status === 'inactive';
 
   if (authLoading || !user) {
@@ -161,12 +139,6 @@ export default function NotesPage() {
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                     <Shield className="mr-2 h-4 w-4" />
                     Admin
-                </Button>
-            )}
-             {isAdmin && (
-                <Button variant="destructive" size="sm" onClick={handleSeedDatabase} disabled={isSeeding}>
-                    {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
-                    Seed Database
                 </Button>
             )}
           <p className="text-sm text-muted-foreground hidden sm:block">{user?.email}</p>
