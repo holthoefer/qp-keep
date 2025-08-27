@@ -243,19 +243,31 @@ export async function saveControlPlan(plan: Omit<ControlPlan, 'id'>, userId: str
 export async function saveControlPlan(plan: ControlPlan, userId: string): Promise<string>;
 export async function saveControlPlan(plan: ControlPlan | Omit<ControlPlan, 'id'>, userId: string): Promise<string> {
     const isNew = !('id' in plan) || !plan.id;
-    const docRef = isNew ? doc(collection(db, 'control-plans')) : doc(db, 'control-plans', plan.id);
+
+    if (!plan.planNumber) {
+        throw new Error('Plan Number is a required field.');
+    }
+
+    const docRef = doc(db, 'control-plans', plan.planNumber);
     
+    if (isNew) {
+        const existingDoc = await getDoc(docRef);
+        if (existingDoc.exists()) {
+            throw new Error(`A control plan with the number ${plan.planNumber} already exists.`);
+        }
+    }
+
     const dataToSave = {
         ...plan,
         id: docRef.id,
         lastChangedBy: userId,
         revisionDate: new Date().toISOString(),
-        createdAt: isNew ? new Date().toISOString() : (plan as ControlPlan).createdAt,
+        ...(isNew && { createdAt: new Date().toISOString() }),
     };
     
     const cleanedData = removeUndefinedValues(dataToSave);
 
-    await setDoc(docRef, cleanedData, { merge: true });
+    await setDoc(docRef, cleanedData, { merge: !isNew });
     return docRef.id;
 }
 
@@ -310,4 +322,3 @@ export async function listStorageFiles(path: string): Promise<StorageFile[]> {
 
     return files;
 }
-

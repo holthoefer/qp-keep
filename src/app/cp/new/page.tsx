@@ -49,11 +49,11 @@ export default function NewControlPlanPage() {
         description: `Plan for ${data.partName} has been saved.`,
       });
       router.push(`/cp/edit/${newPlanId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving plan:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save the control plan.',
+        description: error.message || 'Failed to save the control plan.',
         variant: 'destructive',
       });
     }
