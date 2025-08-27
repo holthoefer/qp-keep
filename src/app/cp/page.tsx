@@ -25,7 +25,11 @@ import {
   Printer,
   Loader2,
   Settings,
-  ArrowLeft
+  ArrowLeft,
+  Target,
+  ListChecks,
+  Book,
+  Shield,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -81,6 +85,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { generateControlPlanDocV5Action } from '@/ai/flows/suggest-response-plan';
 import { useAuth } from '@/hooks/use-auth-context';
 import { findThumbnailUrl } from '@/lib/image-utils';
+import { KeepKnowLogo } from '@/components/icons';
 
 
 const statusVariant: Record<
@@ -662,7 +667,7 @@ const getExamplePlans = (): ControlPlan[] => [
 ];
 
 export default function ControlPlansPage() {
-  const { user, roles, loading: authLoading } = useAuth();
+  const { user, roles, loading: authLoading, logout } = useAuth();
   const isAdmin = roles.includes('admin');
   const router = useRouter();
   const [plans, setPlans] = React.useState<ControlPlan[]>([]);
@@ -764,6 +769,11 @@ export default function ControlPlansPage() {
    const handleOpenHistory = (plan: ControlPlan) => {
     setHistoryPlan(plan);
     setIsHistoryOpen(true);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
   };
 
   const handleDuplicatePlan = (planToDuplicate: ControlPlan) => {
@@ -937,175 +947,205 @@ export default function ControlPlansPage() {
   }
 
   return (
-    <DashboardClient>
-      <ImageModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        imageUrl={modalImageUrl}
-        imageAlt={modalImageAlt}
-      />
-      <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-          <DialogContent>
-              <DialogHeader>
-                  <DialogTitle>Version History for {historyPlan?.planNumber}</DialogTitle>
-                  <DialogDescription>
-                      Overview of the plan's versioning information.
-                  </DialogDescription>
-              </DialogHeader>
-              {historyPlan && (
-                 <div className="space-y-4 text-sm py-4">
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Current Version:</span>
-                        <span className="font-medium">{historyPlan.version}</span>
+    <div className="flex min-h-screen flex-col bg-background">
+       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
+        <div className="flex items-center gap-2">
+          <KeepKnowLogo className="h-8 w-8 text-primary" />
+          <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
+            Control Plan
+          </h1>
+        </div>
+        <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                Notizen
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/controlplan')}>
+                <ListChecks className="mr-2 h-4 w-4" />
+                Control Plan (Legacy)
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                <Book className="mr-2 h-4 w-4" />
+                Lenkungsplan (Legacy)
+            </Button>
+            {isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin
+                </Button>
+            )}
+          <Button onClick={handleLogout} variant="secondary">
+            Logout
+          </Button>
+        </div>
+      </header>
+      <main className="flex-1 p-4 md:p-6">
+        <DashboardClient>
+          <ImageModal
+            isOpen={isModalOpen}
+            onOpenChange={setIsModalOpen}
+            imageUrl={modalImageUrl}
+            imageAlt={modalImageAlt}
+          />
+          <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+              <DialogContent>
+                  <DialogHeader>
+                      <DialogTitle>Version History for {historyPlan?.planNumber}</DialogTitle>
+                      <DialogDescription>
+                          Overview of the plan's versioning information.
+                      </DialogDescription>
+                  </DialogHeader>
+                  {historyPlan && (
+                    <div className="space-y-4 text-sm py-4">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Current Version:</span>
+                            <span className="font-medium">{historyPlan.version}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Last Revision Date:</span>
+                            <span className="font-medium">{historyPlan.revisionDate ? format(new Date(historyPlan.revisionDate), 'PPP') : 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Original Creation Date:</span>
+                            <span className="font-medium">{historyPlan.originalFirstDate ? format(new Date(historyPlan.originalFirstDate), 'PPP') : 'N/A'}</span>
+                        </div>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-muted-foreground">Last Revision Date:</span>
-                        <span className="font-medium">{historyPlan.revisionDate ? format(new Date(historyPlan.revisionDate), 'PPP') : 'N/A'}</span>
-                    </div>
-                     <div className="flex justify-between">
-                        <span className="text-muted-foreground">Original Creation Date:</span>
-                        <span className="font-medium">{historyPlan.originalFirstDate ? format(new Date(historyPlan.originalFirstDate), 'PPP') : 'N/A'}</span>
-                    </div>
-                 </div>
-              )}
-          </DialogContent>
-      </Dialog>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                  <CardTitle className="text-xl">cp overview</CardTitle>
-                  <CardDescription>
-                    Manage and track all quality control plans.
-                  </CardDescription>
-              </div>
-               <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Zurück zu den Notizen
-                  </Button>
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
-                          <Filter className="h-3.5 w-3.5" />
-                          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                              Filter
-                          </span>
-                          {statusFilters.length > 0 && <Badge variant="secondary" className="ml-2">{statusFilters.length}</Badge>}
-                          </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {ALL_STATUSES.map(status => (
-                              <DropdownMenuCheckboxItem
-                                  key={status}
-                                  checked={statusFilters.includes(status)}
-                                  onSelect={e => e.preventDefault()}
-                                  onCheckedChange={() => handleStatusFilterChange(status)}
-                              >
-                                  {status}
-                              </DropdownMenuCheckboxItem>
-                          ))}
-                      </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button variant="outline" size="sm" onClick={handleOpenNew}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Neuer Control Plan
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">Aktionen</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href="/prd/control-plan">
-                            <FileText className="mr-2 h-4 w-4" />
-                            PRD anzeigen
-                          </Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-          </div>
-          <div className="relative mt-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search plans by name, part or plan number..."
-              className="pl-8 w-full md:w-1/3"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-           <div className="overflow-x-auto">
-           <Table>
-             <TableHeader>
-               <TableRow>
-                 <TableHead className="w-[68px]">Actions</TableHead>
-                 <TableHead className="sticky left-0 bg-card/80 backdrop-blur-sm z-10 w-32">Plan Number</TableHead>
-                 <TableHead>Image</TableHead>
-                 <TableHead>Part Name</TableHead>
-                 <TableHead>Status</TableHead>
-                 <TableHead>Version</TableHead>
-                 <TableHead>Last Revision</TableHead>
-                 <TableHead className="text-right">Key Contact</TableHead>
-               </TableRow>
-             </TableHeader>
-             {isLoading ? (
-               <TableBody>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                          <TableCell className="w-[68px]"><Skeleton className="h-8 w-24" /></TableCell>
-                          <TableCell className="sticky left-0 bg-card/80 backdrop-blur-sm z-10 w-32"><Skeleton className="h-6 w-full" /></TableCell>
-                          <TableCell><Skeleton className="h-10 w-10 rounded" /></TableCell>
-                          <TableCell><Skeleton className="h-6 w-3/4" /></TableCell>
-                          <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                          <TableCell><Skeleton className="h-6 w-10" /></TableCell>
-                          <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                          <TableCell><Skeleton className="h-6 w-24" /></TableCell>
-                      </TableRow>
-                  ))}
-               </TableBody>
-             ) : (
-               <TableBody>
-                  {filteredPlans.length > 0 ? (
-                    filteredPlans.map((plan) => (
-                    <ControlPlanRow
-                        key={plan.id}
-                        plan={plan}
-                        isAdmin={isAdmin}
-                        allFiles={storageFiles}
-                        onEdit={() => handleOpenEdit(plan)}
-                        onDelete={handleDeletePlan}
-                        onDuplicate={handleDuplicatePlan}
-                        onHistory={handleOpenHistory}
-                        onImageClick={handleImageClick}
-                        onPrintV3={handlePrintV3}
-                        onPrintV4={handlePrintV4}
-                        onPrintV5={handlePrintV5}
-                        onExportCsv={handleExportCsv}
-                    />
-                    ))
-                  ) : (
-                    <TableRow>
-                        <TableCell colSpan={8} className="h-24 text-center">
-                            No control plans found.
-                        </TableCell>
-                    </TableRow>
                   )}
-               </TableBody>
-             )}
-           </Table>
-           </div>
-        </CardContent>
-      </Card>
-    </DashboardClient>
+              </DialogContent>
+          </Dialog>
+
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                      <CardTitle className="text-xl">Control Plan Overview</CardTitle>
+                      <CardDescription>
+                        Manage and track all quality control plans.
+                      </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm">
+                              <Filter className="h-3.5 w-3.5" />
+                              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                                  Filter
+                              </span>
+                              {statusFilters.length > 0 && <Badge variant="secondary" className="ml-2">{statusFilters.length}</Badge>}
+                              </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {ALL_STATUSES.map(status => (
+                                  <DropdownMenuCheckboxItem
+                                      key={status}
+                                      checked={statusFilters.includes(status)}
+                                      onSelect={e => e.preventDefault()}
+                                      onCheckedChange={() => handleStatusFilterChange(status)}
+                                  >
+                                      {status}
+                                  </DropdownMenuCheckboxItem>
+                              ))}
+                          </DropdownMenuContent>
+                      </DropdownMenu>
+                      <Button variant="outline" size="sm" onClick={handleOpenNew}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Neuer Control Plan
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-9 w-9">
+                              <MoreVertical className="h-4 w-4" />
+                              <span className="sr-only">Aktionen</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href="/prd/control-plan">
+                                <FileText className="mr-2 h-4 w-4" />
+                                PRD anzeigen
+                              </Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+              </div>
+              <div className="relative mt-4">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search plans by name, part or plan number..."
+                  className="pl-8 w-full md:w-1/3"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[68px]">Actions</TableHead>
+                    <TableHead className="sticky left-0 bg-card/80 backdrop-blur-sm z-10 w-32">Plan Number</TableHead>
+                    <TableHead>Image</TableHead>
+                    <TableHead>Part Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Last Revision</TableHead>
+                    <TableHead className="text-right">Key Contact</TableHead>
+                  </TableRow>
+                </TableHeader>
+                {isLoading ? (
+                  <TableBody>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                          <TableRow key={i}>
+                              <TableCell className="w-[68px]"><Skeleton className="h-8 w-24" /></TableCell>
+                              <TableCell className="sticky left-0 bg-card/80 backdrop-blur-sm z-10 w-32"><Skeleton className="h-6 w-full" /></TableCell>
+                              <TableCell><Skeleton className="h-10 w-10 rounded" /></TableCell>
+                              <TableCell><Skeleton className="h-6 w-3/4" /></TableCell>
+                              <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                              <TableCell><Skeleton className="h-6 w-10" /></TableCell>
+                              <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                              <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                          </TableRow>
+                      ))}
+                  </TableBody>
+                ) : (
+                  <TableBody>
+                      {filteredPlans.length > 0 ? (
+                        filteredPlans.map((plan) => (
+                        <ControlPlanRow
+                            key={plan.id}
+                            plan={plan}
+                            isAdmin={isAdmin}
+                            allFiles={storageFiles}
+                            onEdit={() => handleOpenEdit(plan)}
+                            onDelete={handleDeletePlan}
+                            onDuplicate={handleDuplicatePlan}
+                            onHistory={handleOpenHistory}
+                            onImageClick={handleImageClick}
+                            onPrintV3={handlePrintV3}
+                            onPrintV4={handlePrintV4}
+                            onPrintV5={handlePrintV5}
+                            onExportCsv={handleExportCsv}
+                        />
+                        ))
+                      ) : (
+                        <TableRow>
+                            <TableCell colSpan={8} className="h-24 text-center">
+                                No control plans found.
+                            </TableCell>
+                        </TableRow>
+                      )}
+                  </TableBody>
+                )}
+              </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </DashboardClient>
+      </main>
+    </div>
   );
 }
