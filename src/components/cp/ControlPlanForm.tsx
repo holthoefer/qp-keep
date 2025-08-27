@@ -109,14 +109,14 @@ const processStepSchema = z.object({
 
 const formSchema = z.object({
   id: z.string().optional(),
-  partName: z.string().min(2, 'Part name must be at least 2 characters.'),
-  partNumber: z.string().min(2, 'Part number must be at least 2 characters.'),
-  planNumber: z.string().min(2, 'Plan number must be at least 2 characters.'),
+  partName: z.string().min(1, 'Part name is required.'),
+  partNumber: z.string().min(1, 'Part number is required.'),
+  planNumber: z.string().min(1, 'Plan number is required.'),
   planDescription: z.string().optional().nullable(),
-  revisionDate: z.string(),
-  version: z.coerce.number().int().min(1),
-  status: z.enum(['Draft', 'For Review', 'Approved', 'Active', 'Inactive', 'Rejected']),
-  processSteps: z.array(processStepSchema).min(1, { message: 'At least one process step is required.' }),
+  revisionDate: z.string().optional(),
+  version: z.coerce.number().int().optional(),
+  status: z.enum(['Draft', 'For Review', 'Approved', 'Active', 'Inactive', 'Rejected']).optional(),
+  processSteps: z.array(processStepSchema).optional(),
   supplierPlant: z.string().optional().nullable(),
   supplierCode: z.string().optional().nullable(),
   keyContact: z.string().optional().nullable(),
@@ -179,8 +179,8 @@ const getDefaultCharacteristic = (itemNumber: string = '1'): Omit<Characteristic
 
 
 export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanFormProps) {
-  const { roles } = useAuth();
-  const isAdmin = roles.includes('admin');
+  const { user } = useAuth();
+  const isAdmin = user?.roles.includes('admin');
   const formatDateForInput = (date?: string | null) => date ? new Date(date).toISOString().split('T')[0] : '';
   const [isBackAlertOpen, setIsBackAlertOpen] = useState(false);
   const [openProcessAccordions, setOpenProcessAccordions] = useState<string[]>([]);
@@ -190,6 +190,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
   const [modalImageUrl, setModalImageUrl] = React.useState('');
   const [modalImageAlt, setModalImageAlt] = React.useState('');
   const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     const fetchFiles = async () => {
@@ -216,7 +217,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
     });
   };
   
-  const getDefaultValues = (): ControlPlanFormValues => {
+  const getDefaultValues = (): Partial<ControlPlanFormValues> => {
     const defaultProcessStep: Omit<ProcessStep, 'id'> & { id: string, characteristics: (Omit<Characteristic, 'id'> & { id?: string })[]} = { 
         id: generateTempId('ps'),
         processNumber: 'OP-10', 
@@ -298,7 +299,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
   const allProcessAccordionItems = fields.map((_, index) => `ps-item-${index}`);
 
   const sortedFields = React.useMemo(() => {
-    const processSteps = form.getValues('processSteps');
+    const processSteps = form.getValues('processSteps') || [];
     return fields
         .map((field, index) => ({ ...field, originalIndex: index, processNumber: processSteps[index]?.processNumber }))
         .sort((a, b) => {
@@ -309,16 +310,26 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
   }, [fields, form.watch('processSteps')]);
   
   const executeSave = (values: ControlPlanFormValues) => {
-    const dataToSubmit = {
+    const dataToSubmit: ControlPlan | Omit<ControlPlan, 'id'> = {
         ...values,
-        id: initialData?.id || values.planNumber, 
+        id: initialData?.id, 
+        // Ensure required fields for a full control plan have defaults if not provided in the simplified form
+        status: values.status || 'Draft',
+        version: values.version || 1,
+        revisionDate: values.revisionDate || new Date().toISOString().split('T')[0],
+        processSteps: values.processSteps || [],
     };
-    onSubmit(dataToSubmit as ControlPlan);
+    onSubmit(dataToSubmit);
   }
   
   const handleExportCsv = () => {
     try {
         const plan = form.getValues();
+        if (!plan.processSteps) {
+            toast({ title: "Export nicht möglich", description: "Es sind keine Prozessschritte zum Exportieren vorhanden.", variant: "destructive" });
+            return;
+        }
+
         const escapeCsvField = (field: any): string => {
             if (field === null || field === undefined) return '';
             const stringField = String(field).replace(/(\r\n|\n|\r)/gm, " ");
@@ -340,7 +351,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
 
         const rows = plan.processSteps.flatMap(step => 
             step.characteristics.map(char => {
-                const planData = planHeaderKeys.map(key => escapeCsvField(plan[key as keyof typeof plan]));
+                const planData = planHeaderKeys.map(key => escapeCsvField((plan as any)[key]));
                 const stepData = processStepHeaderKeys.map(key => escapeCsvField(step[key as keyof typeof step]));
                 const charData = characteristicHeaderKeys.map(key => escapeCsvField(char[key as keyof typeof char]));
                 return [...planData, ...stepData, ...charData].join(';');
@@ -436,8 +447,8 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
             <Tabs defaultValue="general" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="process">Details</TabsTrigger>
-                <TabsTrigger value="ai-plan">AI Exp.</TabsTrigger>
+                <TabsTrigger value="process" disabled={isReadOnly ? false : true}>Details</TabsTrigger>
+                <TabsTrigger value="ai-plan" disabled={isReadOnly ? false : true}>AI Exp.</TabsTrigger>
               </TabsList>
               <TabsContent value="general">
                  <Card>
@@ -522,14 +533,14 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                             <FormField control={form.control} name="version" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Version</FormLabel>
-                                    <FormControl><Input type="number" {...field} /></FormControl>
+                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="revisionDate" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Revision Date</FormLabel>
-                                    <FormControl><Input type="date" {...field} /></FormControl>
+                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
@@ -645,7 +656,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                             ))}
                         </Accordion>
                         <div className="pt-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: generateTempId('ps'), processNumber: `OP-${(fields.length + 1) * 10}`, processName: '', processDescription: '', machineDevice: '', remark: '', imageUrl: '', characteristics: [getDefaultCharacteristic(String(fields.length + 1))] })}>
+                            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: generateTempId('ps'), processNumber: `OP-${((form.getValues('processSteps')?.length || 0) + 1) * 10}`, processName: '', processDescription: '', machineDevice: '', remark: '', imageUrl: '', characteristics: [getDefaultCharacteristic(String((form.getValues('processSteps')?.length || 0) + 1))] })}>
                               <PlusCircle className="mr-2 h-4 w-4" /> Add Process Step
                             </Button>
                         </div>
@@ -1321,6 +1332,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, onImageClick, st
     const [isUploading, setIsUploading] = React.useState(false);
     const [uploadProgress, setUploadProgress] = React.useState(0);
     const [uploadError, setUploadError] = React.useState<string | null>(null);
+    const { toast } = useToast();
 
     const handleUpload = (file: File) => {
         const id = entityId || form.getValues('id');

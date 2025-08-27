@@ -20,6 +20,10 @@ export default function NewControlPlanPage() {
     if (duplicatedPlanJson) {
       try {
         const duplicatedPlan = JSON.parse(duplicatedPlanJson);
+        // Ensure processSteps is an array, provide a default if it's missing
+        if (!duplicatedPlan.processSteps) {
+            duplicatedPlan.processSteps = []; 
+        }
         setInitialData(duplicatedPlan);
       } catch (error) {
         console.error("Failed to parse duplicated plan from session storage", error);
@@ -39,13 +43,12 @@ export default function NewControlPlanPage() {
         return;
     }
     try {
-      await saveControlPlan(data, user.uid);
+      const newPlanId = await saveControlPlan(data, user.uid);
       toast({
         title: 'Control Plan Created',
         description: `Plan for ${data.partName} has been saved.`,
       });
-      router.push('/cp');
-      router.refresh();
+      router.push(`/cp/edit/${newPlanId}`);
     } catch (error) {
       console.error('Error saving plan:', error);
       toast({

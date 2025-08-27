@@ -62,7 +62,6 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
         description: `Plan for ${data.partName} has been saved.`,
       });
       router.push('/cp');
-      router.refresh(); // To force a refetch on the overview page
     } catch (error) {
       console.error('Error saving plan:', error);
       toast({

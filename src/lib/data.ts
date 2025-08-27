@@ -185,6 +185,21 @@ export async function getControlPlan(id: string): Promise<ControlPlan | null> {
     return null;
 }
 
+// Helper to remove undefined values from an object, which Firestore doesn't support
+const removeUndefinedValues = (obj: any): any => {
+    if (Array.isArray(obj)) {
+        return obj.map(removeUndefinedValues);
+    } else if (obj !== null && typeof obj === 'object') {
+        return Object.keys(obj).reduce((acc, key) => {
+            const value = obj[key];
+            if (value !== undefined) {
+                acc[key] = removeUndefinedValues(value);
+            }
+            return acc;
+        }, {} as any);
+    }
+    return obj;
+};
 
 export async function saveControlPlan(plan: Omit<ControlPlan, 'id'>, userId: string): Promise<string>;
 export async function saveControlPlan(plan: ControlPlan, userId: string): Promise<string>;
@@ -199,8 +214,10 @@ export async function saveControlPlan(plan: ControlPlan | Omit<ControlPlan, 'id'
         revisionDate: new Date().toISOString(),
         createdAt: isNew ? new Date().toISOString() : plan.createdAt,
     };
+    
+    const cleanedData = removeUndefinedValues(dataToSave);
 
-    await setDoc(docRef, dataToSave, { merge: true });
+    await setDoc(docRef, cleanedData, { merge: true });
     return docRef.id;
 }
 
@@ -255,4 +272,3 @@ export async function listStorageFiles(path: string): Promise<StorageFile[]> {
 
     return files;
 }
-
