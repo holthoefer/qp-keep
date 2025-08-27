@@ -4,39 +4,28 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isUserAuthenticated() {
-      return request.auth != null;
-    }
-
-    function isUserAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
+    // Users can only read/update their own profile.
     match /users/{userId} {
-      allow read: if isUserAuthenticated();
-      allow write: if isUserAdmin() || isOwner(userId);
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow list: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
-    
+
+    // Notes can be read by their owner or any admin. Write is restricted to admins or the owner.
     match /notes/{noteId} {
-      allow read: if isUserAdmin() || isOwner(request.auth.uid);
-      allow create: if isOwner(request.resource.data.userId);
-      allow update: if isUserAdmin() || isOwner(resource.data.userId);
-      allow delete: if isUserAdmin() || isOwner(resource.data.userId);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      allow write: if request.auth != null && (resource.data.userId == request.auth.uid || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
+    // Old, simple control plan
     match /controlplan/{itemId} {
-      allow read: if isUserAuthenticated();
-      allow write: if isUserAdmin();
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // New, advanced control plans - USE THE SAME RULE AS FOR TASKS
     match /control-plans/{planId} {
-      allow read: if isUserAuthenticated();
-      // Allow admins to create, update, delete
-      allow write: if isUserAdmin();
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
   }
 }
