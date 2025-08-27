@@ -16,10 +16,12 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
   const { toast } = useToast();
   const [initialData, setInitialData] = useState<ControlPlan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!params.id) {
         setLoading(false);
+        setError("No control plan ID provided.");
         return;
     }
     
@@ -28,27 +30,27 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
         if (plan) {
           setInitialData(plan);
         } else {
+          setError('Control Plan not found.');
           toast({
             title: 'Error',
             description: 'Control Plan not found.',
             variant: 'destructive',
           });
-          router.push('/cp');
         }
       })
-      .catch((error) => {
-        console.error('Error fetching control plan:', error);
+      .catch((err) => {
+        console.error('Error fetching control plan:', err);
+        setError('Failed to fetch control plan.');
         toast({
           title: 'Error',
           description: 'Failed to fetch control plan.',
           variant: 'destructive',
         });
-        router.push('/cp');
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [params.id, router, toast]);
+  }, [params.id, toast]);
 
   const handleFormSubmit = async (data: ControlPlan) => {
     if (!user) {
@@ -80,8 +82,8 @@ export default function EditControlPlanPage({ params }: { params: { id: string }
     return <LoadingScreen />;
   }
   
-  if (!initialData) {
-    // This state is briefly hit before redirecting. Can show a loader or a message.
+  if (error || !initialData) {
+    router.push('/cp');
     return <LoadingScreen />;
   }
 
