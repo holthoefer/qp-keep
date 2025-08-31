@@ -1,3 +1,4 @@
+
 'use client';
 
 import { db, auth, getAppStorage } from './firebase';
@@ -344,8 +345,10 @@ export async function saveWorkstation(workstation: Workstation, isNew: boolean):
         if (docSnap.exists()) {
             throw new Error(`Ein Arbeitsplatz mit dem Kürzel ${workstation.AP} existiert bereits.`);
         }
+        await setDoc(docRef, workstation);
+    } else {
+        await updateDoc(docRef, workstation);
     }
-    await setDoc(docRef, workstation, { merge: !isNew });
 }
 
 export async function getAuftraege(): Promise<Auftrag[]> {
