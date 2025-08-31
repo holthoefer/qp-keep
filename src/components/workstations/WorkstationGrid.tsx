@@ -286,7 +286,9 @@ export function WorkstationGrid() {
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isExampleData) {
+    const isNew = !editingWorkstation;
+
+    if (isExampleData && !isNew) {
         toast({ title: 'Beispieldaten', description: 'Beispieldaten können nicht bearbeitet werden. Bitte legen Sie einen neuen Arbeitsplatz an.', variant: 'destructive' });
         return;
     }
@@ -307,8 +309,6 @@ export function WorkstationGrid() {
       });
       return;
     }
-
-    const isNew = !editingWorkstation;
 
     const workstationData: Workstation = {
       AP: ap,
