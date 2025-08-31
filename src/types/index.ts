@@ -175,4 +175,11 @@ export interface ControlPlanItem {
     customerQualityApprovalDate?: string;
     otherApprovalDate?: string;
     generalInformation?: string;
-    imageUrl
+    imageUrl?: string;
+}
+
+export interface StorageFile {
+  url: string;
+  name: string;
+  thumbnailUrl?: string;
+}
