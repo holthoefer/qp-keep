@@ -133,15 +133,28 @@ const WorkstationNextDue = ({ workstation }: { workstation: Workstation }) => {
     }
 
     const exceptions = dueInfos.filter(d => d.checkStatus && (d.checkStatus.includes('Out of Spec') || d.checkStatus.includes('Out of Control')));
-    const overdue = dueInfos.filter(d => d.timeRemaining < 0 && !exceptions.some(ex => ex.charNum === d.charNum)).sort((a,b) => a.timeRemaining - b.timeRemaining);
+    const overdue = dueInfos.filter(d => d.timeRemaining < 0).sort((a,b) => a.timeRemaining - b.timeRemaining);
     const warnings = dueInfos.filter(d => {
-        if(d.timeRemaining < 0) return false; // already in overdue
-        if(exceptions.some(ex => ex.charNum === d.charNum)) return false; // already in exceptions
         const percentageElapsed = (d.frequency - d.timeRemaining) / d.frequency;
-        return percentageElapsed >= 0.8;
+        return d.timeRemaining >= 0 && percentageElapsed >= 0.8;
     }).sort((a, b) => a.timeRemaining - b.timeRemaining);
 
-    const badgesToShow = [...exceptions, ...overdue, ...warnings].slice(0, 3);
+    // Create a map to ensure unique characteristics, with exceptions taking priority.
+    const prioritizedInfos = new Map<string, DueInfo>();
+    
+    exceptions.forEach(info => prioritizedInfos.set(info.charNum, info));
+    overdue.forEach(info => {
+        if (!prioritizedInfos.has(info.charNum)) {
+            prioritizedInfos.set(info.charNum, info);
+        }
+    });
+    warnings.forEach(info => {
+        if (!prioritizedInfos.has(info.charNum)) {
+            prioritizedInfos.set(info.charNum, info);
+        }
+    });
+
+    const badgesToShow = Array.from(prioritizedInfos.values()).slice(0, 3);
     
     const getErfassungUrl = (charNum: string) => {
       if (!workstation.AP || !workstation.POcurrent || !workstation.OPcurrent) return '#';
@@ -150,6 +163,7 @@ const WorkstationNextDue = ({ workstation }: { workstation: Workstation }) => {
 
     const renderBadge = (info: DueInfo) => {
         const isException = info.checkStatus && (info.checkStatus.includes('Out of Spec') || info.checkStatus.includes('Out of Control'));
+        const isOverdue = info.timeRemaining < 0 && !isException;
         
         const url = getErfassungUrl(info.charNum);
 
@@ -171,12 +185,10 @@ const WorkstationNextDue = ({ workstation }: { workstation: Workstation }) => {
         
         return (
             <Link href={url} className="inline-block" onClick={(e) => e.stopPropagation()}>
-                {/* <DnaTimeTracker 
-                    lastTimestamp={info.lastCheckTimestamp}
-                    frequency={info.frequency}
-                    prefix={`M# ${info.charNum}`}
-                /> */}
-                <Badge>M# {info.charNum}: {info.timeRemaining} min</Badge>
+                <Badge variant={isOverdue ? "destructive" : "default"}>
+                    {isOverdue ? `Overdue by ${Math.abs(info.timeRemaining)} min` : `${info.timeRemaining} min left`}
+                    {` (M# ${info.charNum})`}
+                </Badge>
             </Link>
         )
     }
@@ -685,3 +697,5 @@ export function WorkstationGrid() {
     </>
   );
 }
+
+    
