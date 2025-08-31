@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -30,6 +29,7 @@ import {
   ListChecks,
   Book,
   Shield,
+  LayoutGrid,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -958,6 +958,10 @@ export default function ControlPlansPage() {
         <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                 Notizen
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                Arbeitsplätze
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/controlplan')}>
                 <ListChecks className="mr-2 h-4 w-4" />

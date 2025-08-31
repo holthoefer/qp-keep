@@ -1,4 +1,3 @@
-
 'use client';
 
 import { db, auth, getAppStorage } from './firebase';
@@ -22,7 +21,7 @@ import {
 import { ref, listAll, getDownloadURL } from "firebase/storage";
 import { suggestTags } from '@/ai/flows/suggest-tags';
 import type { User } from 'firebase/auth';
-import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile } from '@/types';
+import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA } from '@/types';
 
 
 export { getAppStorage, auth };
@@ -329,4 +328,34 @@ export async function listStorageFiles(path: string): Promise<StorageFile[]> {
     }
 
     return files;
+}
+
+// Workstation data
+export async function getWorkstations(): Promise<Workstation[]> {
+  const q = query(collection(db, 'workstations'), orderBy('AP'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => doc.data() as Workstation);
+}
+
+export async function saveWorkstation(workstation: Workstation, isNew: boolean): Promise<void> {
+    const docRef = doc(db, 'workstations', workstation.AP);
+    if (isNew) {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            throw new Error(`Ein Arbeitsplatz mit dem Kürzel ${workstation.AP} existiert bereits.`);
+        }
+    }
+    await setDoc(docRef, workstation, { merge: !isNew });
+}
+
+export async function getAuftraege(): Promise<Auftrag[]> {
+    const q = query(collection(db, 'auftraege'), orderBy('PO'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => doc.data() as Auftrag);
+}
+
+export async function getDnaData(): Promise<DNA[]> {
+    const q = query(collection(db, 'dna'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => doc.data() as DNA);
 }
