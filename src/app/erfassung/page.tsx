@@ -589,7 +589,7 @@ function ErfassungPage() {
         finalNote = `${finalNote}${separator}${exception.text}`;
     }
 
-    const sampleData: SampleData = {
+    const sampleData: Omit<SampleData, 'id'> = {
         workstationId: workstation.AP,
         characteristicId: characteristic.id,
         po: po,
@@ -605,7 +605,6 @@ function ErfassungPage() {
 
     try {
         const savedSample = await saveSampleData(sampleData, undefined, true);
-        const sampleId = `${savedSample.dnaId}_${savedSample.timestamp}`;
         
         const toastVariant = exception.text ? (exception.variant || 'warning') : 'default';
         const toastTitle = exception.text ? 'Grenzwertverletzung!' : 'Stichprobe gespeichert';
@@ -618,7 +617,7 @@ function ErfassungPage() {
             variant: toastVariant as "default" | "destructive" | "warning",
             duration: toastDuration,
             action: (
-              <ToastAction altText="Notiz/Bild bearbeiten" onClick={() => handlePointClick(sampleId, true)}>
+              <ToastAction altText="Notiz/Bild bearbeiten" onClick={() => handlePointClick(savedSample.id, true)}>
                 Notiz/Bild bearbeiten
               </ToastAction>
             ),
@@ -904,5 +903,4 @@ export default function ErfassungPageWrapper() {
         </React.Suspense>
     );
 }
-
 

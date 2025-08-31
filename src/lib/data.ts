@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { db, auth, getAppStorage } from './firebase';
@@ -391,7 +390,12 @@ export const deleteAuftrag = async (id: string) => {
 };
 
 
-export async function getDnaData(): Promise<DNA[]> {
+export async function getDnaData(dnaId?: string): Promise<DNA[]> {
+    if (dnaId) {
+        const docRef = doc(db, 'dna', dnaId);
+        const docSnap = await getDoc(docRef);
+        return docSnap.exists() ? [docSnap.data() as DNA] : [];
+    }
     const q = query(collection(db, 'dna'));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => doc.data() as DNA);
@@ -442,7 +446,7 @@ export async function saveDnaData(dnaData: Partial<DNA> & { idDNA: string }): Pr
 }
 
 
-export const saveSampleData = async (sampleData: SampleData, sampleId?: string, isNew?: boolean): Promise<SampleData & {id: string}> => {
+export const saveSampleData = async (sampleData: Omit<SampleData, 'id'>, sampleId?: string, isNew?: boolean): Promise<SampleData & {id: string}> => {
     const id = sampleId || `${sampleData.dnaId}_${new Date(sampleData.timestamp).getTime()}`;
     const sampleRef = doc(db, 'samples', id);
     
@@ -473,4 +477,5 @@ export const getSamplesForDna = async (dnaId: string, count?: number): Promise<S
     }
     const snapshot = await getDocs(q);
     const samples = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SampleData));
-    return samples
+    return samples;
+};

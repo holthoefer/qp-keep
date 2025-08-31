@@ -93,6 +93,7 @@ export interface Auftrag {
 }
 
 export interface SampleData {
+  id: string;
   workstationId: string;
   characteristicId: string;
   po: string;
@@ -182,4 +183,3 @@ export interface StorageFile {
   url: string;
   name: string;
   thumbnailUrl?: string;
-}
