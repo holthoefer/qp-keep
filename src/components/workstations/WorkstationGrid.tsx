@@ -54,18 +54,41 @@ interface DueInfo {
   memo?: string;
 }
 
-const getExampleWorkstations = (): Workstation[] => [
-    {
-        AP: "AP-01",
-        Beschreibung: "Montage & Endkontrolle",
-        Bemerkung: "Nur für geschultes Personal. Hey",
-        CPcurrent: "c001",
-        LOTcurrent: "LOT-A456",
-        OPcurrent: "OP-10",
-        POcurrent: "po001",
-        imageUrl: "https://firebasestorage.googleapis.com/v0/b/quapilot-p96ds.firebasestorage.app/o/uploads%2Farbeitsplaetze%2FAP-1%2F1756109425615_QUA_PILOT_1_color%20(80%20x%2080%20mm).png?alt=media&token=4cf68f00-1136-404d-ac5c-896337",
+const DnaTimeTracker = ({ lastTimestamp, frequency, prefix }: { lastTimestamp?: string | null, frequency?: number | null, prefix?: string }) => {
+    const [timeLeft, setTimeLeft] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+        if (!lastTimestamp || !frequency) {
+            setTimeLeft(null);
+            return;
+        }
+
+        const calculateTimeLeft = () => {
+            const lastCheckTime = new Date(lastTimestamp).getTime();
+            const dueTime = lastCheckTime + frequency * 60 * 1000;
+            const now = new Date().getTime();
+            const remaining = Math.floor((dueTime - now) / (1000 * 60));
+            setTimeLeft(remaining);
+        };
+
+        calculateTimeLeft();
+        const interval = setInterval(calculateTimeLeft, 60000); // Update every minute
+
+        return () => clearInterval(interval);
+    }, [lastTimestamp, frequency]);
+
+    if (timeLeft === null) {
+        return null;
     }
-];
+    
+    const isOverdue = timeLeft < 0;
+
+    return (
+        <Badge variant={isOverdue ? "destructive" : "default"}>
+            {prefix ? `${prefix}: ` : ''}{isOverdue ? `Overdue by ${Math.abs(timeLeft)} min` : `${timeLeft} min left`}
+        </Badge>
+    );
+};
 
 const WorkstationNextDue = ({ workstation }: { workstation: Workstation }) => {
     const [dueInfos, setDueInfos] = React.useState<DueInfo[]>([]);
@@ -133,26 +156,18 @@ const WorkstationNextDue = ({ workstation }: { workstation: Workstation }) => {
     }
 
     const exceptions = dueInfos.filter(d => d.checkStatus && (d.checkStatus.includes('Out of Spec') || d.checkStatus.includes('Out of Control')));
-    const overdue = dueInfos.filter(d => d.timeRemaining < 0).sort((a,b) => a.timeRemaining - b.timeRemaining);
+    const overdue = dueInfos.filter(d => d.timeRemaining < 0 && !exceptions.some(ex => ex.charNum === d.charNum)).sort((a,b) => a.timeRemaining - b.timeRemaining);
     const warnings = dueInfos.filter(d => {
+        if(d.timeRemaining < 0) return false; // already in overdue
+        if(exceptions.some(ex => ex.charNum === d.charNum)) return false; // already in exceptions
         const percentageElapsed = (d.frequency - d.timeRemaining) / d.frequency;
-        return d.timeRemaining >= 0 && percentageElapsed >= 0.8;
+        return percentageElapsed >= 0.8;
     }).sort((a, b) => a.timeRemaining - b.timeRemaining);
-
-    // Create a map to ensure unique characteristics, with exceptions taking priority.
-    const prioritizedInfos = new Map<string, DueInfo>();
     
+    const prioritizedInfos = new Map<string, DueInfo>();
     exceptions.forEach(info => prioritizedInfos.set(info.charNum, info));
-    overdue.forEach(info => {
-        if (!prioritizedInfos.has(info.charNum)) {
-            prioritizedInfos.set(info.charNum, info);
-        }
-    });
-    warnings.forEach(info => {
-        if (!prioritizedInfos.has(info.charNum)) {
-            prioritizedInfos.set(info.charNum, info);
-        }
-    });
+    overdue.forEach(info => !prioritizedInfos.has(info.charNum) && prioritizedInfos.set(info.charNum, info));
+    warnings.forEach(info => !prioritizedInfos.has(info.charNum) && prioritizedInfos.set(info.charNum, info));
 
     const badgesToShow = Array.from(prioritizedInfos.values()).slice(0, 3);
     
@@ -163,7 +178,6 @@ const WorkstationNextDue = ({ workstation }: { workstation: Workstation }) => {
 
     const renderBadge = (info: DueInfo) => {
         const isException = info.checkStatus && (info.checkStatus.includes('Out of Spec') || info.checkStatus.includes('Out of Control'));
-        const isOverdue = info.timeRemaining < 0 && !isException;
         
         const url = getErfassungUrl(info.charNum);
 
@@ -185,10 +199,11 @@ const WorkstationNextDue = ({ workstation }: { workstation: Workstation }) => {
         
         return (
             <Link href={url} className="inline-block" onClick={(e) => e.stopPropagation()}>
-                <Badge variant={isOverdue ? "destructive" : "default"}>
-                    {isOverdue ? `Overdue by ${Math.abs(info.timeRemaining)} min` : `${info.timeRemaining} min left`}
-                    {` (M# ${info.charNum})`}
-                </Badge>
+                 <DnaTimeTracker 
+                    lastTimestamp={info.lastCheckTimestamp}
+                    frequency={info.frequency}
+                    prefix={`M# ${info.charNum}`}
+                />
             </Link>
         )
     }
@@ -223,7 +238,6 @@ export function WorkstationGrid() {
   const [controlPlans, setControlPlans] = React.useState<ControlPlan[]>([]);
   const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [isExampleData, setIsExampleData] = React.useState(false);
   const [editingWorkstation, setEditingWorkstation] =
     React.useState<Workstation | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
@@ -235,11 +249,13 @@ export function WorkstationGrid() {
   const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
   const [modalImageUrl, setModalImageUrl] = React.useState('');
   const [modalImageAlt, setModalImageAlt] = React.useState('');
+  
+  const [isWorkstationModalOpen, setIsWorkstationModalOpen] = React.useState(false);
+  const [selectedWorkstationAp, setSelectedWorkstationAp] = React.useState<string | null>(null);
 
 
   const fetchData = React.useCallback(async () => {
     setIsLoading(true);
-    setIsExampleData(false);
     try {
       const [workstationsData, auftraegeData, controlPlansData, allFiles] = await Promise.all([
         getWorkstations(),
@@ -247,29 +263,17 @@ export function WorkstationGrid() {
         getControlPlans(),
         listStorageFiles('uploads/'),
       ]);
-      
-      if (workstationsData.length === 0) {
-        setWorkstations(getExampleWorkstations());
-        setIsExampleData(true);
-      } else {
-        setWorkstations(workstationsData);
-      }
-
+      setWorkstations(workstationsData);
       setAuftraege(auftraegeData);
       setControlPlans(controlPlansData);
       setStorageFiles(allFiles);
-    } catch (error: any) {
-      if (error.code === 'permission-denied') {
-        setWorkstations(getExampleWorkstations());
-        setIsExampleData(true);
-      } else {
-        console.error('Error fetching data:', error);
-        toast({
-            title: 'Error',
-            description: 'Could not fetch data from the database.',
-            variant: 'destructive',
-        });
-      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not fetch data from the database.',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -292,12 +296,6 @@ export function WorkstationGrid() {
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const isNew = !editingWorkstation;
-
-    if (isExampleData && !isNew) {
-        toast({ title: 'Beispieldaten', description: 'Beispieldaten können nicht bearbeitet werden. Bitte legen Sie einen neuen Arbeitsplatz an.', variant: 'destructive' });
-        return;
-    }
     const formData = new FormData(event.currentTarget);
     const ap = formData.get('AP') as string;
     let poCurrent = formData.get('POcurrent') as string;
@@ -315,6 +313,8 @@ export function WorkstationGrid() {
       });
       return;
     }
+
+    const isNew = !editingWorkstation;
 
     const workstationData: Workstation = {
       AP: ap,
@@ -348,10 +348,6 @@ export function WorkstationGrid() {
   };
 
   const openDialogForEdit = async (workstation: Workstation) => {
-    if (isExampleData) {
-        toast({ title: 'Beispieldaten', description: 'Beispieldaten können nicht bearbeitet werden. Bitte legen Sie einen neuen Arbeitsplatz an, um ihn zu bearbeiten.' });
-        return;
-    }
     await fetchData(); 
     setEditingWorkstation(workstation);
     setSelectedPO(workstation.POcurrent);
@@ -372,13 +368,9 @@ export function WorkstationGrid() {
     const newPo = value === 'none' ? undefined : value;
     setSelectedPO(newPo);
 
-    // Reset dependent fields in the form directly
     if (formRef.current) {
       const opCurrentSelect = formRef.current.elements.namedItem('OPcurrent') as HTMLSelectElement | null;
       if (opCurrentSelect) {
-         // This is a bit of a hack as we can't control the Select component directly here
-         // A better approach would be to use a form library like react-hook-form
-         // But for a quick fix, we can try to find the button and update its text
          const trigger = opCurrentSelect.closest('[role="combobox"]');
          const valueDisplay = trigger?.querySelector('span');
          if(valueDisplay) valueDisplay.textContent = "Prozessschritt auswählen";
@@ -400,16 +392,10 @@ export function WorkstationGrid() {
 
 
   const handleCardClick = (e: React.MouseEvent<HTMLDivElement>, ap: string) => {
-    // If the click is on a button, don't navigate
     if ((e.target as HTMLElement).closest('button, a')) {
       return;
     }
     
-    if (isExampleData) {
-        toast({ title: 'Beispieldaten', description: 'Dies ist ein Beispieldatensatz. Bitte legen Sie zuerst einen echten Arbeitsplatz an.' });
-        return;
-    }
-
     const { id } = toast({
       title: (
         <div className="flex items-center">
@@ -436,8 +422,20 @@ export function WorkstationGrid() {
         imageUrl={modalImageUrl}
         imageAlt={modalImageAlt}
       />
+      <Dialog open={isWorkstationModalOpen} onOpenChange={setIsWorkstationModalOpen}>
+        <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0">
+           <DialogHeader className="p-6 pb-0">
+             <DialogTitle>Bild zum Arbeitsplatz</DialogTitle>
+           </DialogHeader>
+           {selectedWorkstationAp && (
+            <React.Suspense fallback={<Skeleton className="h-full w-full" />}>
+               <div className="p-4"><p>Workstation Detail Page Placeholder</p></div>
+            </React.Suspense>
+           )}
+        </DialogContent>
+     </Dialog>
       <Card className="bg-transparent border-none shadow-none">
-        <CardHeader className="py-2 px-0">
+        <CardHeader className="py-2">
           <div className="flex items-center justify-between">
               <div>
                   <CardTitle className="text-lg">Arbeitsplätze</CardTitle>
@@ -697,5 +695,3 @@ export function WorkstationGrid() {
     </>
   );
 }
-
-    
