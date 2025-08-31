@@ -21,9 +21,9 @@ import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-export default function WorkstationDetailPage({ params }: { params: { ap: string } }) {
+export default function WorkstationDetailPage({ params }: { params: Promise<{ ap: string }> }) {
   const router = useRouter();
-  const { ap } = params;
+  const { ap } = React.use(params);
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
