@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -54,6 +55,19 @@ interface DueInfo {
   checkStatus?: string;
   memo?: string;
 }
+
+const getExampleWorkstations = (): Workstation[] => [
+    {
+        AP: "AP-01",
+        Beschreibung: "Montage & Endkontrolle",
+        Bemerkung: "Nur für geschultes Personal. Hey",
+        CPcurrent: "c001",
+        LOTcurrent: "LOT-A456",
+        OPcurrent: "OP-10",
+        POcurrent: "po001",
+        imageUrl: "https://firebasestorage.googleapis.com/v0/b/quapilot-p96ds.firebasestorage.app/o/uploads%2Farbeitsplaetze%2FAP-1%2F1756109425615_QUA_PILOT_1_color%20(80%20x%2080%20mm).png?alt=media&token=4cf68f00-1136-404d-ac5c-896337",
+    }
+];
 
 const WorkstationNextDue = ({ workstation }: { workstation: Workstation }) => {
     const [dueInfos, setDueInfos] = React.useState<DueInfo[]>([]);
@@ -199,6 +213,7 @@ export function WorkstationGrid() {
   const [controlPlans, setControlPlans] = React.useState<ControlPlan[]>([]);
   const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isExampleData, setIsExampleData] = React.useState(false);
   const [editingWorkstation, setEditingWorkstation] =
     React.useState<Workstation | null>(null);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
@@ -217,6 +232,7 @@ export function WorkstationGrid() {
 
   const fetchData = React.useCallback(async () => {
     setIsLoading(true);
+    setIsExampleData(false);
     try {
       const [workstationsData, auftraegeData, controlPlansData, allFiles] = await Promise.all([
         getWorkstations(),
@@ -224,17 +240,29 @@ export function WorkstationGrid() {
         getControlPlans(),
         listStorageFiles('uploads/'),
       ]);
-      setWorkstations(workstationsData);
+      
+      if (workstationsData.length === 0) {
+        setWorkstations(getExampleWorkstations());
+        setIsExampleData(true);
+      } else {
+        setWorkstations(workstationsData);
+      }
+
       setAuftraege(auftraegeData);
       setControlPlans(controlPlansData);
       setStorageFiles(allFiles);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not fetch data from the database.',
-        variant: 'destructive',
-      });
+    } catch (error: any) {
+      if (error.code === 'permission-denied') {
+        setWorkstations(getExampleWorkstations());
+        setIsExampleData(true);
+      } else {
+        console.error('Error fetching data:', error);
+        toast({
+            title: 'Error',
+            description: 'Could not fetch data from the database.',
+            variant: 'destructive',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -258,6 +286,10 @@ export function WorkstationGrid() {
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isExampleData) {
+        toast({ title: 'Beispieldaten', description: 'Beispieldaten können nicht bearbeitet werden. Bitte legen Sie einen neuen Arbeitsplatz an.', variant: 'destructive' });
+        return;
+    }
     const formData = new FormData(event.currentTarget);
     const ap = formData.get('AP') as string;
     let poCurrent = formData.get('POcurrent') as string;
@@ -310,6 +342,10 @@ export function WorkstationGrid() {
   };
 
   const openDialogForEdit = async (workstation: Workstation) => {
+    if (isExampleData) {
+        toast({ title: 'Beispieldaten', description: 'Beispieldaten können nicht bearbeitet werden. Bitte legen Sie einen neuen Arbeitsplatz an, um ihn zu bearbeiten.' });
+        return;
+    }
     await fetchData(); 
     setEditingWorkstation(workstation);
     setSelectedPO(workstation.POcurrent);
@@ -363,6 +399,11 @@ export function WorkstationGrid() {
       return;
     }
     
+    if (isExampleData) {
+        toast({ title: 'Beispieldaten', description: 'Dies ist ein Beispieldatensatz. Bitte legen Sie zuerst einen echten Arbeitsplatz an.' });
+        return;
+    }
+
     const { id } = toast({
       title: (
         <div className="flex items-center">
