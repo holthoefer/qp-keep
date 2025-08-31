@@ -7,13 +7,12 @@ import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  "projectId": "keep-know",
-  "appId": "1:897948696245:web:993f704158bf4bd63e88fc",
-  "storageBucket": "keep-know.firebasestorage.app",
-  "apiKey": "AIzaSyA7fATeewT2caPFET9uyd1YUEgkVvsRM8Q",
-  "authDomain": "keep-know.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "897948696245"
+  apiKey: "AIzaSyBUKXOCOcrnAzQT4LjimD4q4Gu99RkTotI",
+  authDomain: "note-keep-know.firebaseapp.com",
+  projectId: "note-keep-know",
+  storageBucket: "note-keep-know.firebasestorage.app",
+  messagingSenderId: "259043482521",
+  appId: "1:259043482521:web:615f5a41400be0aa225108"
 };
 
 // Initialize Firebase
