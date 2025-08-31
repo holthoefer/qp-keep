@@ -35,8 +35,9 @@ export function LoginForm() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [isSignupLoading, setIsSignupLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false);
   const { toast } = useToast();
-  const { loginWithEmail, signupWithEmail, loginWithGoogle } = useAuth();
+  const { loginWithEmail, signupWithEmail, loginWithGoogle, sendPasswordReset } = useAuth();
 
 
   const handleLogin = async () => {
@@ -94,7 +95,29 @@ export function LoginForm() {
     }
   };
 
-  const isLoading = isLoginLoading || isSignupLoading || isGoogleLoading;
+  const handlePasswordReset = async () => {
+    if (!email) {
+      setError("Bitte geben Sie Ihre E-Mail-Adresse ein, um Ihr Passwort zurückzusetzen.");
+      return;
+    }
+    setIsResetLoading(true);
+    setError(null);
+    try {
+      await sendPasswordReset(email);
+      toast({
+        title: "E-Mail zum Zurücksetzen gesendet",
+        description: "Bitte überprüfen Sie Ihren Posteingang für weitere Anweisungen.",
+        duration: 10000,
+      });
+    } catch (err: any) {
+      setError("Fehler beim Senden der E-Mail zum Zurücksetzen des Passworts. " + err.message);
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
+
+
+  const isLoading = isLoginLoading || isSignupLoading || isGoogleLoading || isResetLoading;
 
   return (
     <Card>
@@ -113,7 +136,17 @@ export function LoginForm() {
           <Input id="email" name="email" type="email" placeholder="you@example.com" required value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Passwort</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Passwort</Label>
+            <button
+              type="button"
+              onClick={handlePasswordReset}
+              disabled={isLoading}
+              className="text-xs font-medium text-primary hover:underline focus:outline-none"
+            >
+              Passwort vergessen?
+            </button>
+          </div>
           <Input id="password" name="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
         </div>
       </CardContent>
