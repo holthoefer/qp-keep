@@ -80,4 +80,8 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
                 {dnaData.CL !== undefined && <ReferenceLine y={dnaData.CL} label={{ value: "CL", fontSize: 10, position: 'insideBottomLeft' }} stroke="green" />}
                 {dnaData.UCL !== undefined && <ReferenceLine y={dnaData.UCL} label={{ value: "UCL", fontSize: 10, position: 'insideTopLeft' }} stroke="blue" strokeDasharray="3 3" />}
                 {dnaData.USL !== undefined && <ReferenceLine y={dnaData.USL} label={{ value: "USL", fontSize: 10, position: 'insideTopLeft' }} stroke="red" strokeDasharray="3 3" />}
-                <Line type="monotone" dataKey="mean" stroke="#8884d8" activeDot={{ r: 8
+                <Line type="monotone" dataKey="mean" stroke="#8884d8" activeDot={{ r: 8 }} />
+            </LineChart>
+        </ResponsiveContainer>
+    );
+}
