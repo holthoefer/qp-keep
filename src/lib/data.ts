@@ -57,14 +57,23 @@ export const getNotes = (
 ) => {
   let q;
   if (isAdmin) {
+    // Admin query can sort directly as it doesn't have a 'where' clause on a different field.
     q = query(collection(db, 'notes'), orderBy('createdAt', 'desc'));
   } else {
-    q = query(collection(db, 'notes'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
+    // For regular users, filter by userId. Sorting will be done on the client.
+    q = query(collection(db, 'notes'), where('userId', '==', userId));
   }
   
   return onSnapshot(q, 
     (querySnapshot) => {
       const notes: Note[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Note));
+      // Sort on the client side to avoid needing a composite index.
+      notes.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return b.createdAt.toMillis() - a.createdAt.toMillis();
+        }
+        return 0;
+      });
       onSuccess(notes);
     }, 
     (error) => {
