@@ -52,13 +52,22 @@ service cloud.firestore {
     }
 
     // Workstations
-    // - Authenticated users can read all workstations.
-    // - Admins can create, update, and delete workstations.
-    match /workstations/{wsId} {
-      allow read: if request.auth.uid != null;
-      allow create, update, delete: if isAdmin();
+    // - Any authenticated user can read all workstations.
+    // - Any authenticated user can create or update a workstation.
+    match /workstations/{workstationId} {
+        allow read, write: if request.auth.uid != null;
+    }
+
+    // Auftraege (Orders)
+    // - Any authenticated user can read all orders.
+    match /auftraege/{auftragId} {
+        allow read, write: if request.auth.uid != null;
+    }
+
+     // DNA (Data for quality checks)
+    // - Any authenticated user can read all DNA data.
+    match /dna/{dnaId} {
+        allow read: if request.auth.uid != null;
     }
   }
 }
-
-    

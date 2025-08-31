@@ -85,6 +85,7 @@ export interface Workstation {
 }
 
 export interface Auftrag {
+  id: string;
   PO: string;
   CP?: string;
   Anmerkung?: string;

@@ -351,11 +351,40 @@ export async function saveWorkstation(workstation: Workstation, isNew: boolean):
     }
 }
 
-export async function getAuftraege(): Promise<Auftrag[]> {
-    const q = query(collection(db, 'auftraege'), orderBy('PO'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as Auftrag);
-}
+
+// Auftraege
+export const getAuftraege = (
+  onSuccess: (items: Auftrag[]) => void,
+  onError: (error: Error) => void
+) => {
+  const q = query(collection(db, 'auftraege'), orderBy('PO'));
+  return onSnapshot(q, (snapshot) => {
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Auftrag));
+    onSuccess(items);
+  }, onError);
+};
+
+export const addAuftrag = async (item: Omit<Auftrag, 'id'>) => {
+  if (!item.PO) {
+    throw new Error("Auftragsnummer (PO) ist ein Pflichtfeld.");
+  }
+  const docRef = doc(db, 'auftraege', item.PO);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    throw new Error(`Ein Auftrag mit der Nummer ${item.PO} existiert bereits.`);
+  }
+  await setDoc(docRef, item);
+};
+
+export const updateAuftrag = async (id: string, data: Partial<Omit<Auftrag, 'id' | 'PO'>>) => {
+  await updateDoc(doc(db, 'auftraege', id), data);
+};
+
+export const deleteAuftrag = async (id: string) => {
+  await deleteDoc(doc(db, 'auftraege', id));
+};
+
 
 export async function getDnaData(): Promise<DNA[]> {
     const q = query(collection(db, 'dna'));

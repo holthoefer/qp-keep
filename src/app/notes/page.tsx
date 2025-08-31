@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -129,6 +130,10 @@ export default function NotesPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 Arbeitsplätze
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
+                <FolderKanban className="mr-2 h-4 w-4" />
+                Aufträge
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                 <Target className="mr-2 h-4 w-4" />

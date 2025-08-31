@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -30,6 +31,7 @@ import {
   Book,
   Shield,
   LayoutGrid,
+  FolderKanban,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -962,6 +964,10 @@ export default function ControlPlansPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 Arbeitsplätze
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
+                <FolderKanban className="mr-2 h-4 w-4" />
+                Aufträge
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/controlplan')}>
                 <ListChecks className="mr-2 h-4 w-4" />

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -262,6 +263,10 @@ export default function LenkungsplanPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 Arbeitsplätze
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
+                <FolderKanban className="mr-2 h-4 w-4" />
+                Aufträge
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                 <Target className="mr-2 h-4 w-4" />
