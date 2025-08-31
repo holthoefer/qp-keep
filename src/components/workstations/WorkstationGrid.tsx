@@ -358,8 +358,8 @@ export function WorkstationGrid() {
     setIsDialogOpen(true);
   };
   
-  const selectedAuftrag = auftraege.find(a => a.PO === selectedPO);
-  const selectedControlPlan = controlPlans.find(cp => cp.planNumber === selectedAuftrag?.CP);
+  const selectedAuftrag = auftraege ? auftraege.find(a => a.PO === selectedPO) : undefined;
+  const selectedControlPlan = controlPlans ? controlPlans.find(cp => cp.planNumber === selectedAuftrag?.CP) : undefined;
   const availableProcessSteps: ProcessStep[] = selectedControlPlan?.processSteps || [];
 
   const handlePoChange = (value: string) => {
@@ -705,5 +705,3 @@ export function WorkstationGrid() {
     </>
   );
 }
-
-    
