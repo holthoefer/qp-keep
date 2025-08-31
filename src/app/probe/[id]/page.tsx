@@ -504,7 +504,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; color: #333; }
         .print-button-container { text-align: center; margin-bottom: 20px; }
-        .print-button { background-color: #005f9c; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background-color 0.3s; }
+        .print-button { background-color: #005f9c; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background-color: 0.3s; }
         .print-button:hover { background-color: #004c7d; }
         .container { max-width: 900px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
         .header { text-align: center; border-bottom: 2px solid #005f9c; padding-bottom: 20px; margin-bottom: 30px; }

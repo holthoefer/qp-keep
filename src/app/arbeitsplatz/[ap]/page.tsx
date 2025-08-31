@@ -387,4 +387,4 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
         </Card>
       ) : (
          <div className="text-center py-10 text-gray-500">
-            
+            <p>Keine Arbeitsplatzdaten gefunden.</p

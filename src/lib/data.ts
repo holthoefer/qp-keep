@@ -1,7 +1,6 @@
-
 'use client';
 
-import { db, auth, getAppStorage } from './firebase';
+import { db, auth, getAppStorage as getFirebaseStorage } from './firebase';
 import {
   collection,
   query,
@@ -26,7 +25,8 @@ import type { User } from 'firebase/auth';
 import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA, SampleData, ProcessStep, Characteristic } from '@/types';
 
 
-export { getAppStorage, auth };
+export const getAppStorage = getFirebaseStorage;
+export { auth };
 
 // Note Management
 export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'> & { userEmail: string }) => {

@@ -1,15 +1,14 @@
-
 'use client';
 
 import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getSamplesForDna, getDnaData, getControlPlan, getControlPlans } from '@/lib/data';
-import type { SampleData, DNA, ControlPlan, ProcessStep, Characteristic } from '@/types';
+import { getSamplesForDna, getDnaData, getControlPlans } from '@/lib/data';
+import type { SampleData, DNA, ControlPlan, Characteristic } from '@/types';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, ArrowLeft, BarChart, FileSearch } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, BarChart, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -48,7 +47,7 @@ function ProbenPage() {
                 }
                 const currentDna = dnaData[0];
                 setDna(currentDna);
-                setSamples(sampleData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+                setSamples(sampleData);
 
                 // Fetch Control Plan to find the characteristic
                 const allPlans = await getControlPlans();
@@ -193,4 +192,6 @@ export default function ProbenPageWrapper() {
         </div>
     }>
         <ProbenPage />
-    
+    </React.Suspense>
+  )
+}
