@@ -407,7 +407,11 @@ export async function getDnaData(): Promise<DNA[]> {
 
 
 export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auftrag, processStep: ProcessStep, characteristic: Characteristic): Promise<DNA> {
-    const idDNA = `${auftrag.CP}-${processStep.processNumber}-${characteristic.itemNumber}-${workstation.AP}-${auftrag.PO}`;
+    if (!auftrag.CP || !processStep.id || !characteristic.id || !workstation.AP || !auftrag.PO) {
+        throw new Error("Missing one or more required IDs to create or get DNA data.");
+    }
+    
+    const idDNA = `${auftrag.CP}-${processStep.id}-${characteristic.id}-${workstation.AP}-${auftrag.PO}`;
     const docRef = doc(db, 'dna', idDNA);
     const docSnap = await getDoc(docRef);
 
@@ -416,11 +420,13 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
     } else {
         const newDna: DNA = {
             idDNA,
-            CP: auftrag.CP || '',
+            idPs: processStep.id,
+            idChar: characteristic.id,
+            CP: auftrag.CP,
             OP: processStep.processNumber,
             Char: characteristic.itemNumber,
             WP: workstation.AP,
-            PO: auftrag.PO || '',
+            PO: auftrag.PO,
             LSL: characteristic.lsl,
             LCL: characteristic.lcl,
             CL: characteristic.cl,
@@ -444,8 +450,8 @@ export async function saveDnaData(dnaData: Partial<DNA> & { idDNA: string }): Pr
 }
 
 
-export const saveSampleData = async (sampleData: SampleData, sampleId?: string, isNew?: boolean): Promise<SampleData> => {
-    const id = sampleId || `${sampleData.dnaId}_${sampleData.timestamp}`;
+export const saveSampleData = async (sampleData: SampleData, sampleId?: string, isNew?: boolean): Promise<SampleData & {id: string}> => {
+    const id = sampleId || `${sampleData.dnaId}_${new Date(sampleData.timestamp).getTime()}`;
     const sampleRef = doc(db, 'samples', id);
     
     await setDoc(sampleRef, sampleData, { merge: !isNew });
