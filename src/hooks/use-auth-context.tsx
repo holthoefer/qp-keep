@@ -48,6 +48,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (userProfile?.role) {
                     userRoles.push(userProfile.role);
                 }
+                
+                // Special override for development admin
+                if (currentUser.email === 'holthofer@gmail.com' && !userRoles.includes('admin')) {
+                    userRoles.push('admin');
+                }
+
                 setRoles(userRoles);
 
             } else {
