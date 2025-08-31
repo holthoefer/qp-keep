@@ -63,4 +63,8 @@ export function SChart({ dnaData, onPointClick }: SChartProps) {
                 />
                 <Legend wrapperStyle={{fontSize: '12px'}} />
                 {dnaData.sUSL !== undefined && <ReferenceLine y={dnaData.sUSL} label={{ value: "sUSL", fontSize: 10, position: 'insideTopLeft' }} stroke="orange" strokeDasharray="3 3" />}
-                <Line type="monotone" dataKey="stddev" name="StdDev" stroke="#82
+                <Line type="monotone" dataKey="stddev" name="StdDev" stroke="#82ca9d" dot={{ r: 2 }} activeDot={{ r: 6 }} />
+            </LineChart>
+        </ResponsiveContainer>
+    );
+}
