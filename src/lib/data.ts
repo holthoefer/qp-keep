@@ -471,11 +471,18 @@ export const getSample = async (sampleId: string): Promise<SampleData | null> =>
 };
 
 export const getSamplesForDna = async (dnaId: string, count?: number): Promise<SampleData[]> => {
-    let q = query(collection(db, "samples"), where("dnaId", "==", dnaId), orderBy("timestamp", "desc"));
-    if (count) {
-        q = query(q, limit(count));
-    }
+    let q = query(collection(db, "samples"), where("dnaId", "==", dnaId));
+    
     const snapshot = await getDocs(q);
-    const samples = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SampleData));
-    return samples;
+    let samples = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SampleData));
+    
+    // Sort on the client
+    samples.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    if (count) {
+        samples = samples.slice(0, count);
+    }
+    
+    // The samples are now sorted from newest to oldest. Reverse them for chronological order in charts.
+    return samples.reverse();
 };
