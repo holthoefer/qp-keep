@@ -7,6 +7,9 @@ import { AuthProvider } from '@/hooks/use-auth-context';
 export const metadata: Metadata = {
   title: 'Note-Keep-Know',
   description: 'Focus, Organize, Succeed.',
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({
