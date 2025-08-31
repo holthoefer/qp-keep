@@ -135,8 +135,8 @@ export default function AuftraegePage() {
 
     try {
       if (editingItem) {
-        const { PO, ...updateData } = formData;
-        await updateAuftrag(editingItem.id, updateData);
+        // Can't change PO (the ID), so we can just use the full formData
+        await updateAuftrag(editingItem.id, formData);
         toast({ title: 'Auftrag aktualisiert' });
       } else {
         await addAuftrag(formData);
@@ -185,6 +185,10 @@ export default function AuftraegePage() {
         setItemToDelete(null);
     }
   }
+
+  const handleRowClick = (item: Auftrag) => {
+    router.push(`/auftraege/${item.PO}`);
+  };
 
   if (loading || authLoading) {
     return null; // AuthProvider shows LoadingScreen
@@ -311,12 +315,12 @@ export default function AuftraegePage() {
                   </TableRow>
                 ) : (
                   items.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} onClick={() => handleRowClick(item)} className="cursor-pointer">
                       <TableCell className="font-medium">{item.PO}</TableCell>
                       <TableCell>{item.CP}</TableCell>
                       <TableCell className="truncate max-w-xs">{item.Anmerkung}</TableCell>
                       {isAdmin && (
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(item)}>
                             <Edit className="h-4 w-4" />
                           </Button>

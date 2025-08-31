@@ -347,7 +347,7 @@ export async function saveWorkstation(workstation: Workstation, isNew: boolean):
         }
         await setDoc(docRef, workstation);
     } else {
-        await updateDoc(docRef, workstation);
+        await updateDoc(docRef, { ...workstation });
     }
 }
 
@@ -362,6 +362,17 @@ export const getAuftraege = (
     const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Auftrag));
     onSuccess(items);
   }, onError);
+};
+
+export const getAuftrag = async (po: string): Promise<Auftrag | null> => {
+  const docRef = doc(db, 'auftraege', po);
+  const docSnap = await getDoc(docRef);
+  return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Auftrag : null;
+};
+
+export const saveAuftrag = async (auftrag: Auftrag): Promise<void> => {
+    const docRef = doc(db, 'auftraege', auftrag.PO);
+    await setDoc(docRef, auftrag, { merge: true });
 };
 
 export const addAuftrag = async (item: Omit<Auftrag, 'id'>) => {

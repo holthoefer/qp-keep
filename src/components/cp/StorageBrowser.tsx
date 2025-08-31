@@ -15,17 +15,13 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { AlertTriangle, ImageOff } from 'lucide-react';
 import Image from 'next/image';
 import { ScrollArea } from '../ui/scroll-area';
+import type { StorageFile } from '@/types';
+
 
 interface StorageBrowserProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onImageSelect: (url: string) => void;
-}
-
-interface StorageFile {
-  url: string;
-  name: string;
-  thumbnailUrl?: string;
 }
 
 function StorageBrowserContent({ onImageSelect, onOpenChange }: { onImageSelect: (url: string) => void; onOpenChange: (isOpen: boolean) => void; }) {

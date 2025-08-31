@@ -60,8 +60,10 @@ service cloud.firestore {
 
     // Auftraege (Orders)
     // - Any authenticated user can read all orders.
+    // - Admins can write/delete orders.
     match /auftraege/{auftragId} {
-        allow read, write: if request.auth.uid != null;
+        allow read: if request.auth.uid != null;
+        allow write, delete: if isAdmin();
     }
 
      // DNA (Data for quality checks)
