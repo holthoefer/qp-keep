@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/hooks/use-auth-context';
 
 export const metadata: Metadata = {
-  title: 'Keep-Know',
+  title: 'Note-Keep-Know',
   description: 'Focus, Organize, Succeed.',
 };
 
