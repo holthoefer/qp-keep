@@ -1472,4 +1472,10 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
                     <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertTitle>Upload Fehler</AlertTitle>
-                        
+                        <AlertDescription>{uploadError}</AlertDescription>
+                    </Alert>
+                )}
+            </CardContent>
+        </Card>
+    );
+};
