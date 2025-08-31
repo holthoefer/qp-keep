@@ -18,11 +18,12 @@ import {
   Timestamp,
   orderBy,
   writeBatch,
+  limit,
 } from 'firebase/firestore';
 import { ref, listAll, getDownloadURL } from "firebase/storage";
 import { suggestTags } from '@/ai/flows/suggest-tags';
 import type { User } from 'firebase/auth';
-import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA } from '@/types';
+import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA, SampleData, ProcessStep, Characteristic } from '@/types';
 
 
 export { getAppStorage, auth };
@@ -403,3 +404,76 @@ export async function getDnaData(): Promise<DNA[]> {
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => doc.data() as DNA);
 }
+
+
+export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auftrag, processStep: ProcessStep, characteristic: Characteristic): Promise<DNA> {
+    const idDNA = `${auftrag.CP}-${processStep.processNumber}-${characteristic.itemNumber}-${workstation.AP}-${auftrag.PO}`;
+    const docRef = doc(db, 'dna', idDNA);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        return docSnap.data() as DNA;
+    } else {
+        const newDna: DNA = {
+            idDNA,
+            CP: auftrag.CP || '',
+            OP: processStep.processNumber,
+            Char: characteristic.itemNumber,
+            WP: workstation.AP,
+            PO: auftrag.PO || '',
+            LSL: characteristic.lsl,
+            LCL: characteristic.lcl,
+            CL: characteristic.cl,
+            UCL: characteristic.ucl,
+            USL: characteristic.usl,
+            sUSL: characteristic.sUSL,
+            SampleSize: characteristic.sampleSize,
+            Frequency: characteristic.frequency,
+            imageUrl: characteristic.imageUrl,
+        };
+        await setDoc(docRef, newDna);
+        return newDna;
+    }
+}
+
+export async function saveDnaData(dnaData: Partial<DNA> & { idDNA: string }): Promise<DNA> {
+    const docRef = doc(db, 'dna', dnaData.idDNA);
+    await setDoc(docRef, dnaData, { merge: true });
+    const docSnap = await getDoc(docRef);
+    return docSnap.data() as DNA;
+}
+
+
+export const saveSampleData = async (sampleData: SampleData, sampleId?: string, isNew?: boolean): Promise<SampleData> => {
+    const id = sampleId || `${sampleData.dnaId}_${sampleData.timestamp}`;
+    const sampleRef = doc(db, 'samples', id);
+    
+    await setDoc(sampleRef, sampleData, { merge: !isNew });
+
+    // Update DNA with last check info
+    const dnaRef = doc(db, 'dna', sampleData.dnaId);
+    await updateDoc(dnaRef, {
+        checkStatus: sampleData.exception ? 'Out of Spec' : 'OK',
+        lastCheckTimestamp: sampleData.timestamp,
+        ...(sampleData.imageUrl && { imageUrlLatestSample: sampleData.imageUrl }),
+        ...(sampleData.note && { Memo: sampleData.note }),
+    });
+
+    return { ...sampleData, id };
+};
+
+export const getSample = async (sampleId: string): Promise<SampleData | null> => {
+    const docRef = doc(db, 'samples', sampleId);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as SampleData : null;
+};
+
+export const getSamplesForDna = async (dnaId: string, count?: number): Promise<SampleData[]> => {
+    let q = query(collection(db, "samples"), where("dnaId", "==", dnaId), orderBy("timestamp", "desc"));
+    if (count) {
+        q = query(q, limit(count));
+    }
+    const snapshot = await getDocs(q);
+    const samples = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SampleData));
+    return samples.reverse(); // Return in ascending time order
+};
