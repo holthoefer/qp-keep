@@ -338,7 +338,13 @@ export async function getWorkstations(): Promise<Workstation[]> {
   return snapshot.docs.map(doc => doc.data() as Workstation);
 }
 
-export async function saveWorkstation(workstation: Workstation, isNew: boolean): Promise<void> {
+export async function getWorkstation(ap: string): Promise<Workstation | null> {
+    const docRef = doc(db, 'workstations', ap);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? docSnap.data() as Workstation : null;
+}
+
+export async function saveWorkstation(workstation: Workstation, isNew?: boolean): Promise<void> {
     const docRef = doc(db, 'workstations', workstation.AP);
     if (isNew) {
         const docSnap = await getDoc(docRef);

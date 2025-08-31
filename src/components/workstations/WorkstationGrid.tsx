@@ -41,9 +41,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { ImageModal } from '@/components/cp/ImageModal';
-// import WorkstationDetailPage from '@/app/arbeitsplatz/[ap]/page';
 import { cn } from '@/lib/utils';
-// import { DnaTimeTracker } from '@/app/dna/page';
 import { findThumbnailUrl } from '@/lib/image-utils';
 
 
@@ -225,9 +223,6 @@ export function WorkstationGrid() {
   const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
   const [modalImageUrl, setModalImageUrl] = React.useState('');
   const [modalImageAlt, setModalImageAlt] = React.useState('');
-  
-  const [isWorkstationModalOpen, setIsWorkstationModalOpen] = React.useState(false);
-  const [selectedWorkstationAp, setSelectedWorkstationAp] = React.useState<string | null>(null);
 
 
   const fetchData = React.useCallback(async () => {
@@ -280,8 +275,7 @@ export function WorkstationGrid() {
   };
   
   const handleWorkstationImageClick = (ap: string) => {
-    setSelectedWorkstationAp(ap);
-    setIsWorkstationModalOpen(true);
+    router.push(`/arbeitsplatz/${ap}`);
   }
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -358,8 +352,8 @@ export function WorkstationGrid() {
     setIsDialogOpen(true);
   };
   
-  const selectedAuftrag = auftraege ? auftraege.find(a => a.PO === selectedPO) : undefined;
-  const selectedControlPlan = controlPlans ? controlPlans.find(cp => cp.planNumber === selectedAuftrag?.CP) : undefined;
+  const selectedAuftrag = auftraege.find(a => a.PO === selectedPO);
+  const selectedControlPlan = controlPlans.find(cp => cp.planNumber === selectedAuftrag?.CP);
   const availableProcessSteps: ProcessStep[] = selectedControlPlan?.processSteps || [];
 
   const handlePoChange = (value: string) => {
@@ -430,20 +424,6 @@ export function WorkstationGrid() {
         imageUrl={modalImageUrl}
         imageAlt={modalImageAlt}
       />
-       <Dialog open={isWorkstationModalOpen} onOpenChange={setIsWorkstationModalOpen}>
-        <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0">
-           <DialogHeader className="p-6 pb-0">
-             <DialogTitle>Bild zum Arbeitsplatz</DialogTitle>
-           </DialogHeader>
-           {/* {selectedWorkstationAp && (
-            <React.Suspense fallback={<Skeleton className="h-full w-full" />}>
-              <WorkstationDetailPage
-                params={Promise.resolve({ ap: selectedWorkstationAp })} 
-              />
-            </React.Suspense>
-           )} */}
-        </DialogContent>
-     </Dialog>
       <Card className="bg-transparent border-none shadow-none">
         <CardHeader className="py-2 px-0">
           <div className="flex items-center justify-between">
