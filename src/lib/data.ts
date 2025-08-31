@@ -353,15 +353,10 @@ export async function saveWorkstation(workstation: Workstation, isNew: boolean):
 
 
 // Auftraege
-export const getAuftraege = (
-  onSuccess: (items: Auftrag[]) => void,
-  onError: (error: Error) => void
-) => {
+export const getAuftraege = async (): Promise<Auftrag[]> => {
   const q = query(collection(db, 'auftraege'), orderBy('PO'));
-  return onSnapshot(q, (snapshot) => {
-    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Auftrag));
-    onSuccess(items);
-  }, onError);
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Auftrag));
 };
 
 export const getAuftrag = async (po: string): Promise<Auftrag | null> => {

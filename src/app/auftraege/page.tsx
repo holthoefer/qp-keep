@@ -89,35 +89,22 @@ export default function AuftraegePage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const unsubscribe = getAuftraege(
-          (newItems) => {
-            setItems(newItems);
-            setError(null);
-          },
-          (err) => {
-            console.error(err);
-            setError(`Error loading items: ${err.message}`);
-          }
-        );
-
-        const plans = await getControlPlans();
+        const [auftraegeData, plans] = await Promise.all([
+            getAuftraege(),
+            getControlPlans()
+        ]);
+        setItems(auftraegeData);
         setControlPlans(plans);
-        setLoading(false);
-        return unsubscribe;
-      } catch (err) {
+        setError(null);
+      } catch (err: any) {
         console.error(err);
-        setError('Failed to load data.');
+        setError(`Error loading items: ${err.message}`);
+      } finally {
         setLoading(false);
       }
     };
 
-    const unsubscribePromise = fetchData();
-
-    return () => {
-      unsubscribePromise.then(unsubscribe => {
-        if (unsubscribe) unsubscribe();
-      });
-    };
+    fetchData();
   }, [user, authLoading, router]);
 
   const handleLogout = async () => {
