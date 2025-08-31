@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { db, auth, getAppStorage } from './firebase';
@@ -248,8 +249,6 @@ const removeUndefinedValues = (obj: any): any => {
     return obj;
 };
 
-export async function saveControlPlan(plan: Omit<ControlPlan, 'id'>, userId: string): Promise<string>;
-export async function saveControlPlan(plan: ControlPlan, userId: string): Promise<string>;
 export async function saveControlPlan(plan: ControlPlan | Omit<ControlPlan, 'id'>, userId: string): Promise<string> {
     const isNew = !('id' in plan) || !plan.id;
 
@@ -257,18 +256,11 @@ export async function saveControlPlan(plan: ControlPlan | Omit<ControlPlan, 'id'
         throw new Error('Plan Number is a required field.');
     }
 
-    const docRef = doc(db, 'control-plans', plan.planNumber);
+    const docRef = isNew ? doc(collection(db, 'control-plans')) : doc(db, 'control-plans', plan.id);
     
-    if (isNew) {
-        const existingDoc = await getDoc(docRef);
-        if (existingDoc.exists()) {
-            throw new Error(`A control plan with the number ${plan.planNumber} already exists.`);
-        }
-    }
-
-    const dataToSave = {
+    const dataToSave: ControlPlan = {
         ...plan,
-        id: docRef.id,
+        id: docRef.id, // always use the reference's ID
         lastChangedBy: userId,
         revisionDate: new Date().toISOString(),
         ...(isNew && { createdAt: new Date().toISOString() }),
@@ -481,5 +473,4 @@ export const getSamplesForDna = async (dnaId: string, count?: number): Promise<S
     }
     const snapshot = await getDocs(q);
     const samples = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SampleData));
-    return samples.reverse(); // Return in ascending time order
-};
+    return samples

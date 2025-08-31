@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -624,7 +625,7 @@ function ErfassungPage() {
         });
         
         if (savedSample.dnaId) {
-            const updatedDna = await getOrCreateDnaData(workstation, { PO: po, CP: dnaData.CP, Anmerkung: sampleNote }, processStep!, characteristic);
+            const updatedDna = await getOrCreateDnaData(workstation, { PO: po, CP: dnaData.CP, Anmerkung: sampleNote, id: po, imageUrl: '' }, processStep!, characteristic);
             setDnaData(updatedDna);
         }
 
@@ -903,4 +904,5 @@ export default function ErfassungPageWrapper() {
         </React.Suspense>
     );
 }
+
 

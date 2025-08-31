@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -72,7 +73,7 @@ const optionalIntegerSchema = emptyStringToUndefined.pipe(z.coerce.number().int(
 
 
 const characteristicSchema = z.object({
-    id: z.string().optional(),
+    id: z.string(),
     itemNumber: z.string().min(1, { message: "Item # is required." }),
     DesciptionSpec: z.string().optional().nullable(),
     ctq: z.boolean().optional(),
@@ -97,7 +98,7 @@ const characteristicSchema = z.object({
 });
 
 const processStepSchema = z.object({
-    id: z.string().optional(),
+    id: z.string(),
     processNumber: z.string().min(1, { message: "Process number is required." }),
     processName: z.string().optional().nullable(),
     processDescription: z.string().optional().nullable(),
@@ -138,6 +139,7 @@ type ControlPlanFormValues = z.infer<typeof formSchema>;
 type ControlPlanFormProps = {
   onSubmit: (data: ControlPlan) => Promise<void>;
   initialData?: ControlPlan | null;
+  onClose?: () => void;
 };
 
 // Helper function to convert nulls/empty strings to undefined for number fields
@@ -149,9 +151,9 @@ const cleanNumber = (value: any): number | undefined => {
     return isNaN(num) ? undefined : num;
 }
 
-const generateTempId = (prefix: string) => `${prefix}_${Timestamp.now().toMillis()}_${Math.random().toString(36).substring(2, 9)}`;
+const generateTempId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-const getDefaultCharacteristic = (itemNumber: string = '1'): Omit<Characteristic, 'id'> & { id: string } => ({
+const getDefaultCharacteristic = (itemNumber: string = '1'): Characteristic => ({
     id: generateTempId('char'),
     itemNumber: itemNumber, 
     DesciptionSpec: '', 
@@ -177,7 +179,7 @@ const getDefaultCharacteristic = (itemNumber: string = '1'): Omit<Characteristic
 });
 
 
-export function ControlPlanForm({ onSubmit, initialData }: ControlPlanFormProps) {
+export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanFormProps) {
   const { roles } = useAuth();
   const isAdmin = roles.includes('admin');
   const formatDateForInput = (date?: string | null) => date ? new Date(date).toISOString().split('T')[0] : '';
@@ -217,7 +219,7 @@ export function ControlPlanForm({ onSubmit, initialData }: ControlPlanFormProps)
   };
   
   const getDefaultValues = (): Partial<ControlPlanFormValues> => {
-    const defaultProcessStep: Omit<ProcessStep, 'id'> & { id: string, characteristics: (Omit<Characteristic, 'id'> & { id?: string })[]} = { 
+    const defaultProcessStep: ProcessStep = { 
         id: generateTempId('ps'),
         processNumber: 'OP-10', 
         processName: 'Initial Step', 
@@ -320,11 +322,6 @@ export function ControlPlanForm({ onSubmit, initialData }: ControlPlanFormProps)
     
     try {
         await onSubmit(dataToSubmit);
-        toast({
-            title: 'Control Plan Updated',
-            description: `Plan for ${dataToSubmit.partName} has been saved.`,
-        });
-        router.push('/cp');
     } catch (error: any) {
          toast({
             title: 'Error Saving Plan',
@@ -418,7 +415,7 @@ export function ControlPlanForm({ onSubmit, initialData }: ControlPlanFormProps)
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                      <AlertDialogCancel>Stay on page</AlertDialogCancel>
-                     <AlertDialogAction onClick={() => router.push('/cp')}>Discard and Go Back</AlertDialogAction>
+                     <AlertDialogAction onClick={onClose || (() => router.push('/cp'))}>Discard and Go Back</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -437,7 +434,7 @@ export function ControlPlanForm({ onSubmit, initialData }: ControlPlanFormProps)
       >
         <header className="flex-shrink-0 px-4 flex justify-between items-center sticky top-0 bg-background z-10 py-3 border-b">
             <div className="flex items-center gap-1">
-                <Button type="button" variant="ghost" size="icon" onClick={handleBack} className="flex-shrink-0">
+                <Button type="button" variant="ghost" size="icon" onClick={onClose || handleBack} className="flex-shrink-0">
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div className='truncate'>
@@ -664,13 +661,13 @@ export function ControlPlanForm({ onSubmit, initialData }: ControlPlanFormProps)
                                             id: generateTempId('char')
                                         }))
                                     };
-                                    insert(field.originalIndex + 1, duplicatedStep as ProcessStep & {id?: string});
+                                    insert(field.originalIndex + 1, duplicatedStep);
                                 }}
                               />
                             ))}
                         </Accordion>
                         <div className="pt-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: generateTempId('ps'), processNumber: `OP-${((form.getValues('processSteps')?.length || 0) + 1) * 10}`, processName: '', processDescription: '', machineDevice: '', remark: '', imageUrl: '', characteristics: [getDefaultCharacteristic(String((form.getValues('processSteps')?.length || 0) + 1))] })}>
+                            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: generateTempId('ps'), processNumber: `OP-${((form.getValues('processSteps')?.length || 0) + 1) * 10}`, processName: '', processDescription: '', machineDevice: '', remark: '', imageUrl: '', characteristics: [getDefaultCharacteristic(String(fields.length + 1))] })}>
                               <PlusCircle className="mr-2 h-4 w-4" /> Add Process Step
                             </Button>
                         </div>
@@ -712,7 +709,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
 
     const processNumber = form.watch(`processSteps.${processStepIndex}.processNumber`);
     const processName = form.watch(`processSteps.${processStepIndex}.processName`);
-    const processStepId = form.watch(`processSteps.${processStepIndex}.id`) || `temp-ps-${processStepIndex}`;
+    const processStepId = form.watch(`processSteps.${processStepIndex}.id`);
 
 
     return (
@@ -885,7 +882,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
 };
 
 const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, controlPlanId, planNumber, onImageClick, onDuplicate, storageFiles }: { form: any, processStepIndex: number, characteristicIndex: number, controlPlanId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void, storageFiles: StorageFile[] }) => {
-    const characteristicId = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.id`) || `temp-char-${characteristicIndex}`;
+    const characteristicId = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.id`);
     const itemNumber = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.itemNumber`);
     const description = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.DesciptionSpec`);
     const charType = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.charType`);
@@ -1475,14 +1472,4 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
                     <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertTitle>Upload Fehler</AlertTitle>
-                        <AlertDescription>{uploadError}</AlertDescription>
-                    </Alert>
-                )}
-            </CardContent>
-        </Card>
-    );
-};
-
-
-
-    
+                        
