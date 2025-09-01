@@ -102,6 +102,7 @@ function MerkmaleCardsPage() {
 
   const handleImageClick = (e: React.MouseEvent, url: string, alt: string) => {
     e.stopPropagation();
+    e.preventDefault();
     setModalImageUrl(url);
     setModalImageAlt(alt);
     setIsModalOpen(true);
@@ -226,6 +227,7 @@ function MerkmaleCardsPage() {
   }
   
   const handleNavigateToErfassung = (e: React.MouseEvent, url: string) => {
+    // This function is for the main card click
     e.preventDefault();
     if (url === '#') return;
     
@@ -241,19 +243,9 @@ function MerkmaleCardsPage() {
 
     router.push(url);
   };
-  
-  const handleNavigate = (e: React.MouseEvent, href: string) => {
-    e.preventDefault();
-    toast({
-      title: (
-        <div className="flex items-center">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          <span>Lade Listenansicht...</span>
-        </div>
-      ),
-      duration: 1000,
-    });
-    router.push(href);
+
+  const handlePointClick = (sampleId: string) => {
+    router.push(`/probe/${encodeURIComponent(sampleId)}`);
   };
   
   const getStatusColorClass = (status?: string): string => {
@@ -262,10 +254,6 @@ function MerkmaleCardsPage() {
     if (status.includes('Out of Control')) return 'text-orange-500 font-semibold';
     return 'text-green-600';
   }
-
-  const handlePointClick = (sampleId: string) => {
-    router.push(`/probe/${encodeURIComponent(sampleId)}`);
-  };
 
 
   return (
@@ -348,8 +336,11 @@ function MerkmaleCardsPage() {
                   const dnaForChar = dnaData.find(d => d.Char === char.itemNumber);
                   const erfassungUrl = getErfassungUrl(char);
                    return (
-                   <Link key={`${processStep.id}-${char.id}`} href={erfassungUrl} onClick={(e) => handleNavigateToErfassung(e, erfassungUrl)} className="block">
-                     <Card className="h-full flex flex-col hover:border-primary transition-colors cursor-pointer">
+                     <Card 
+                        key={`${processStep.id}-${char.id}`}
+                        onClick={(e) => handleNavigateToErfassung(e, erfassungUrl)} 
+                        className="h-full flex flex-col hover:border-primary transition-colors cursor-pointer"
+                     >
                         <CardHeader>
                              <div className="flex items-start justify-between gap-4">
                                 <div className="flex-grow">
@@ -398,7 +389,6 @@ function MerkmaleCardsPage() {
                             <span>{char.gauge || 'N/A'}</span>
                         </CardFooter>
                      </Card>
-                   </Link>
                    )
                 })}
             </div>
