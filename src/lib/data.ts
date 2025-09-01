@@ -473,10 +473,13 @@ export const getSample = async (sampleId: string): Promise<SampleData | null> =>
 };
 
 export const getSamplesForDna = async (dnaId: string, count?: number): Promise<SampleData[]> => {
-    let q = query(collection(db, "samples"), where("dnaId", "==", dnaId), orderBy("timestamp", "asc"));
+    let q = query(collection(db, "samples"), where("dnaId", "==", dnaId));
     
     const snapshot = await getDocs(q);
     let samples = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SampleData));
+
+    // Sort client-side
+    samples.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
     if (count) {
         samples = samples.slice(-count);
