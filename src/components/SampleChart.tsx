@@ -14,13 +14,21 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
   if (active && payload && payload.length) {
     const data: SampleData = payload[0].payload;
     const note = data.note || '';
-    const wrappedNote = note.length > 20 ? `${note.substring(0, 20)}...` : note;
+    
+    // Wrap note text
+    const wrapNote = (text: string, lineLength: number) => {
+      const regex = new RegExp(`.{1,${lineLength}}`, 'g');
+      const lines = text.match(regex) || [];
+      return lines.slice(0, 3).join('\n');
+    }
+    const wrappedNote = wrapNote(note, 20);
+
     return (
-      <div className="bg-background border border-border p-2 rounded-md shadow-lg text-xs">
+      <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
         <p className="font-bold">{`Mittelwert: ${payload[0].value}`}</p>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
         {data.values && <p className="text-muted-foreground mt-1">Werte: {data.values.join('; ')}</p>}
-        {note && <p className="text-muted-foreground mt-1">Notiz: {wrappedNote}</p>}
+        {note && <p className="text-muted-foreground mt-1 whitespace-pre-wrap">Notiz: {wrappedNote}</p>}
       </div>
     );
   }
@@ -33,8 +41,8 @@ const CustomizedDot = (props: any) => {
   const { mean, note, imageUrl } = payload;
   const { LSL, USL, LCL, UCL } = dnaData;
 
-  let fill = "#8884d8"; // Default color
-  let radius = 4;
+  let fill = "#8884d8"; 
+  let stroke = "none";
 
   if ((USL !== undefined && USL !== null && mean > USL) || (LSL !== undefined && LSL !== null && mean < LSL)) {
     fill = "red";
@@ -43,11 +51,16 @@ const CustomizedDot = (props: any) => {
   }
 
   if (note || imageUrl) {
-      radius = 6;
+      return (
+        <g>
+            <Dot cx={cx} cy={cy} r={4} fill={fill} />
+            <Dot cx={cx} cy={cy} r={8} fill="transparent" stroke={fill} strokeWidth={1} />
+        </g>
+      );
   }
 
 
-  return <Dot cx={cx} cy={cy} r={radius} fill={fill} />;
+  return <Dot cx={cx} cy={cy} r={4} fill={fill} />;
 };
 
 
@@ -135,7 +148,7 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
                     </ReferenceLine>
                 )}
                 {dnaData.UCL !== undefined && dnaData.UCL !== null && (
-                    <ReferenceLine y={dnaData.UCL} stroke="red" strokeWidth={1.5} ifOverflow="visible">
+                    <ReferenceLine y={dnaData.UCL} stroke="red" strokeWidth={2} ifOverflow="visible">
                         <Label value="UCL" position="right" fontSize={10} fill="#666" />
                     </ReferenceLine>
                 )}
@@ -145,7 +158,7 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
                     </ReferenceLine>
                 )}
                 {dnaData.LCL !== undefined && dnaData.LCL !== null && (
-                     <ReferenceLine y={dnaData.LCL} stroke="red" strokeWidth={1.5} ifOverflow="visible">
+                     <ReferenceLine y={dnaData.LCL} stroke="red" strokeWidth={2} ifOverflow="visible">
                         <Label value="LCL" position="right" fontSize={10} fill="#666" />
                     </ReferenceLine>
                 )}

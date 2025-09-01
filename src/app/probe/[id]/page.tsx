@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -813,40 +814,45 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
                 </CardFooter>
                 </Card>
 
-                <div className="max-w-2xl mx-auto w-full space-y-4">
-                    <div className="space-y-2">
-                         <div className="flex justify-between items-center">
-                            <Label htmlFor="prompt-text">Text-Prompt für Gemini Canvas</Label>
-                            <Button size="sm" variant="secondary" onClick={() => handleExport(promptText, `${sample.dnaId}_prompt`, 'txt')} disabled={!promptText}>
-                                <FileDown className="mr-2 h-4 w-4"/>
-                                Export
+                <Card className="max-w-2xl mx-auto w-full">
+                    <CardHeader>
+                        <CardTitle>AI-Assistent</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                                <Label htmlFor="prompt-text">Text-Prompt für Gemini Canvas</Label>
+                                <Button size="sm" variant="secondary" onClick={() => handleExport(promptText, `${sample.dnaId}_prompt`, 'txt')} disabled={!promptText}>
+                                    <FileDown className="mr-2 h-4 w-4"/>
+                                    Export
+                                </Button>
+                            </div>
+                            <Textarea id="prompt-text" value={promptText ?? ''} readOnly placeholder="Klicken Sie auf 'Prompt generieren', um die Daten für die AI vorzubereiten." rows={10} className="font-mono text-xs"/>
+                        </div>
+                        <div className="space-y-2 mt-4">
+                            <div className="flex justify-between items-center">
+                                <Label htmlFor="html-skeleton">HTML-Grundgerüst</Label>
+                                <Button size="sm" variant="secondary" onClick={() => handleExport(htmlSkeleton, `${sample.dnaId}_skeleton`, 'html')} disabled={!htmlSkeleton}>
+                                    <FileDown className="mr-2 h-4 w-4"/>
+                                    HTML-Export
+                                </Button>
+                            </div>
+                            <Textarea id="html-skeleton" value={htmlSkeleton ?? ''} readOnly placeholder="Klicken Sie auf 'HTML generieren', um das Grundgerüst zu erstellen." rows={10} className="font-mono text-xs"/>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-4">
+                            <Button onClick={handleGeneratePrompt}>
+                            Prompt für AI generieren
+                            </Button>
+                            <Button onClick={handleGenerateHtmlSkeleton}>
+                            HTML-Grundgerüst generieren
+                            </Button>
+                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis}>
+                                {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                Analyse an AI senden
                             </Button>
                         </div>
-                        <Textarea id="prompt-text" value={promptText ?? ''} readOnly placeholder="Klicken Sie auf 'Prompt generieren', um die Daten für die AI vorzubereiten." rows={10} className="font-mono text-xs"/>
-                    </div>
-                     <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                            <Label htmlFor="html-skeleton">HTML-Grundgerüst</Label>
-                            <Button size="sm" variant="secondary" onClick={() => handleExport(htmlSkeleton, `${sample.dnaId}_skeleton`, 'html')} disabled={!htmlSkeleton}>
-                                <FileDown className="mr-2 h-4 w-4"/>
-                                HTML-Export
-                            </Button>
-                        </div>
-                        <Textarea id="html-skeleton" value={htmlSkeleton ?? ''} readOnly placeholder="Klicken Sie auf 'HTML generieren', um das Grundgerüst zu erstellen." rows={10} className="font-mono text-xs"/>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <Button onClick={handleGeneratePrompt}>
-                           Prompt für AI generieren
-                        </Button>
-                         <Button onClick={handleGenerateHtmlSkeleton}>
-                           HTML-Grundgerüst generieren
-                        </Button>
-                        <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis}>
-                            {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                            Analyse an AI senden
-                        </Button>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
           ) : (
              <div className="text-center py-10 text-gray-500">
