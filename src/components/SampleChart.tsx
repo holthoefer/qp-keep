@@ -1,8 +1,7 @@
-
 'use client';
 
 import * as React from 'react';
-import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer, TooltipProps } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer, TooltipProps, Dot } from 'recharts';
 import type { DNA, SampleData } from '@/types';
 import { getSamplesForDna } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
@@ -21,6 +20,23 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
     );
   }
   return null;
+};
+
+const CustomizedDot = (props: any) => {
+  const { cx, cy, payload, dnaData } = props;
+
+  const { mean } = payload;
+  const { LSL, USL, LCL, UCL } = dnaData;
+
+  let fill = "#8884d8"; // Default color
+
+  if ((USL !== undefined && mean > USL) || (LSL !== undefined && mean < LSL)) {
+    fill = "red";
+  } else if ((UCL !== undefined && mean > UCL) || (LCL !== undefined && mean < LCL)) {
+    fill = "orange";
+  }
+
+  return <Dot cx={cx} cy={cy} r={4} fill={fill} />;
 };
 
 
@@ -57,13 +73,13 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
 
     const yAxisDomain = React.useMemo(() => {
         const allValues = formattedData.map(d => d.mean);
-        if (dnaData.LSL !== undefined) allValues.push(dnaData.LSL);
-        if (dnaData.USL !== undefined) allValues.push(dnaData.USL);
-        if (allValues.length === 0) return [0, 0];
+        if (dnaData.LSL !== undefined && dnaData.LSL !== null) allValues.push(dnaData.LSL);
+        if (dnaData.USL !== undefined && dnaData.USL !== null) allValues.push(dnaData.USL);
+        if (allValues.length === 0) return ['auto', 'auto'];
         
         const min = Math.min(...allValues);
         const max = Math.max(...allValues);
-        const padding = (max - min) * 0.1;
+        const padding = (max - min) * 0.1 || 1;
         
         return [min - padding, max + padding];
     }, [formattedData, dnaData.LSL, dnaData.USL]);
@@ -81,6 +97,15 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
         }
     }
 
+    const renderLabel = (props: any) => {
+        const { x, y, value, textAnchor } = props;
+        return (
+            <text x={x} y={y} dy={-4} dx={textAnchor === "start" ? 4 : -4} fill="#666" fontSize={10} textAnchor="start">
+            {value}
+            </text>
+        );
+    };
+
     return (
         <ResponsiveContainer width="100%" height="100%">
             <LineChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} onClick={handleChartClick}>
@@ -88,13 +113,14 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
                 <XAxis dataKey="name" style={{ fontSize: '12px' }} />
                 <YAxis domain={yAxisDomain} style={{ fontSize: '12px' }} width={50} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{fontSize: '12px'}} />
-                {dnaData.USL !== undefined && <ReferenceLine y={dnaData.USL} label={{ value: "USL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeDasharray="3 3" />}
-                {dnaData.UCL !== undefined && <ReferenceLine y={dnaData.UCL} label={{ value: "UCL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeWidth={2} />}
-                {dnaData.CL !== undefined && <ReferenceLine y={dnaData.CL} label={{ value: "CL", position: 'insideLeft', fontSize: 10 }} stroke="green" />}
-                {dnaData.LCL !== undefined && <ReferenceLine y={dnaData.LCL} label={{ value: "LCL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeWidth={2} />}
-                {dnaData.LSL !== undefined && <ReferenceLine y={dnaData.LSL} label={{ value: "LSL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeDasharray="3 3" />}
-                <Line type="linear" dataKey="mean" stroke="#8884d8" activeDot={{ r: 8 }} dot={{ r: 3 }} />
+                
+                {dnaData.USL !== undefined && dnaData.USL !== null && <ReferenceLine y={dnaData.USL} label={{ value: "USL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeDasharray="3 3" ifOverflow="visible" />}
+                {dnaData.UCL !== undefined && dnaData.UCL !== null && <ReferenceLine y={dnaData.UCL} label={{ value: "UCL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeWidth={1.5} ifOverflow="visible" />}
+                {dnaData.CL !== undefined && dnaData.CL !== null && <ReferenceLine y={dnaData.CL} label={{ value: "CL", position: 'insideLeft', fontSize: 10 }} stroke="grey" ifOverflow="visible" />}
+                {dnaData.LCL !== undefined && dnaData.LCL !== null && <ReferenceLine y={dnaData.LCL} label={{ value: "LCL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeWidth={1.5} ifOverflow="visible" />}
+                {dnaData.LSL !== undefined && dnaData.LSL !== null && <ReferenceLine y={dnaData.LSL} label={{ value: "LSL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeDasharray="3 3" ifOverflow="visible" />}
+                
+                <Line type="linear" dataKey="mean" stroke="#8884d8" activeDot={{ r: 8 }} dot={<CustomizedDot dnaData={dnaData} />} />
             </LineChart>
         </ResponsiveContainer>
     );
