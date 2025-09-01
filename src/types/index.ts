@@ -106,6 +106,7 @@ export interface SampleData {
   note?: string;
   imageUrl?: string;
   exception?: boolean;
+  userEmail?: string;
 }
 
 export interface DNA {

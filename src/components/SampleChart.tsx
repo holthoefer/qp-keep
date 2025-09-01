@@ -24,11 +24,12 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
     const wrappedNote = wrapNote(note, 20);
 
     return (
-      <div className="bg-background/20 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
+      <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
         <p className="font-bold">{`x̄: ${payload[0].value}`}</p>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
         {data.values && <p className="text-muted-foreground mt-1">x: {data.values.join('; ')}</p>}
         {note && <p className="font-bold mt-1 whitespace-pre-wrap">{wrappedNote}</p>}
+        {data.userEmail && <p className="text-muted-foreground text-right pt-1">{data.userEmail}</p>}
       </div>
     );
   }

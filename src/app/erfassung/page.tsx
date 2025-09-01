@@ -29,9 +29,11 @@ import {
   getSample,
   getSamplesForDna,
   listStorageFiles,
+  auth,
 } from '@/lib/data';
 import type {
   Workstation,
+  Auftrag,
   ControlPlan,
   Characteristic,
   ProcessStep,
@@ -592,7 +594,7 @@ function ErfassungPage() {
         finalNote = `${finalNote}${separator}${exception.text}`;
     }
 
-    const sampleData: Omit<SampleData, 'id'> = {
+    const sampleData: Omit<SampleData, 'id' | 'userEmail'> = {
         workstationId: workstation.AP,
         characteristicId: characteristic.id,
         po: po,
@@ -722,7 +724,7 @@ function ErfassungPage() {
             onClick={() => router.back()}
             size="icon"
         >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex items-center gap-1">
             {dnaData && (
@@ -852,7 +854,7 @@ function ErfassungPage() {
                             placeholder="Note..."
                             className="flex-grow bg-blue-500/10"
                         />
-                         <Button onClick={handleSave} disabled={isSaveDisabled} className="mt-2 w-full">
+                         <Button onClick={handleSave} disabled={isSaveDisabled} className="mt-2 w-full bg-primary hover:bg-primary/90">
                             <Save className="mr-2 h-4 w-4" />
                             Save
                         </Button>

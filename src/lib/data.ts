@@ -408,7 +408,6 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         throw new Error("Missing one or more required IDs to create or get DNA data.");
     }
     
-    // CP~OP~Char~WP~PO
     const idDNA = `${auftrag.CP}~${processStep.processNumber}~${characteristic.itemNumber}~${workstation.AP}~${auftrag.PO}`;
     const docRef = doc(db, 'dna', idDNA);
     const docSnap = await getDoc(docRef);
@@ -448,11 +447,12 @@ export async function saveDnaData(dnaData: Partial<DNA> & { idDNA: string }): Pr
 }
 
 
-export const saveSampleData = async (sampleData: Omit<SampleData, 'id'>, sampleId?: string, isNew?: boolean): Promise<SampleData & {id: string}> => {
+export const saveSampleData = async (sampleData: Omit<SampleData, 'id' | 'userEmail'>, sampleId?: string, isNew?: boolean): Promise<SampleData & {id: string}> => {
     const id = sampleId || `${sampleData.dnaId}_${new Date(sampleData.timestamp).getTime()}`;
     const sampleRef = doc(db, 'samples', id);
+    const user = auth.currentUser;
     
-    await setDoc(sampleRef, sampleData, { merge: !isNew });
+    await setDoc(sampleRef, {...sampleData, userEmail: user?.email || 'unknown'}, { merge: !isNew });
 
     // Update DNA with last check info
     const dnaRef = doc(db, 'dna', sampleData.dnaId);
@@ -473,18 +473,14 @@ export const getSample = async (sampleId: string): Promise<SampleData | null> =>
 };
 
 export const getSamplesForDna = async (dnaId: string, count?: number): Promise<SampleData[]> => {
-    let q = query(collection(db, "samples"), where("dnaId", "==", dnaId));
+    let q = query(collection(db, "samples"), where("dnaId", "==", dnaId), orderBy("timestamp", "asc"));
     
     const snapshot = await getDocs(q);
     let samples = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SampleData));
     
-    // Sort on the client
-    samples.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
     if (count) {
-        samples = samples.slice(0, count);
+        samples = samples.slice(-count);
     }
     
-    // The samples are now sorted from newest to oldest. Reverse them for chronological order in charts.
-    return samples.reverse();
+    return samples;
 };
