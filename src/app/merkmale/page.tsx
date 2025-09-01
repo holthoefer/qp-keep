@@ -177,11 +177,12 @@ function MerkmaleCardsPage() {
             `Prozessschritt ${currentWorkstation.OPcurrent} nicht im Control Plan ${currentControlPlan.planNumber} gefunden.`
           );
         }
-
+        
+        // Filter DNA data based on the active combination of WP, PO, and OP
         const relevantDna = allDna.filter(d => 
             d.WP === currentWorkstation.AP &&
             d.PO === currentWorkstation.POcurrent &&
-            d.idPs === currentProcessStep.id
+            d.OP === currentWorkstation.OPcurrent
         );
         setDnaData(relevantDna);
 
@@ -248,10 +249,11 @@ function MerkmaleCardsPage() {
   };
 
   const handlePointClick = (sampleId: string) => {
-    if ((event?.target as HTMLElement).closest('a, button')) {
-      event?.stopPropagation();
+    if ((event?.target as HTMLElement).closest('a, button, [role="button"]')) {
       event?.preventDefault();
     }
+    if (!sampleId) return;
+
     router.push(`/probe/${encodeURIComponent(sampleId)}`);
   };
   
@@ -351,7 +353,7 @@ function MerkmaleCardsPage() {
           ) : characteristics.length > 0 && processStep && auftrag ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
                 {characteristics.map((char) => {
-                  const dnaForChar = dnaData.find(d => d.idChar === char.id);
+                  const dnaForChar = dnaData.find(d => d.Char === char.itemNumber);
                   const erfassungUrl = getErfassungUrl(char);
                    return (
                      <Card 
@@ -390,7 +392,7 @@ function MerkmaleCardsPage() {
                             </div>
                             <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
                                 {dnaForChar ? (
-                                    <SampleChart dnaData={dnaForChar} onPointClick={handlePointClick} />
+                                    <SampleChart dnaData={dnaForChar} onPointClick={(sampleId) => handlePointClick(sampleId)} />
                                 ) : (
                                     <div className="h-full flex items-center justify-center text-xs text-muted-foreground bg-gray-50 rounded-md">
                                         No DNA data for chart

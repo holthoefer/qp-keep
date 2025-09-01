@@ -66,7 +66,7 @@ const CustomizedDot = (props: any) => {
 
 interface SampleChartProps {
     dnaData: DNA;
-    onPointClick: (sampleId: string, isLatest: boolean) => void;
+    onPointClick: (sampleId: string) => void;
 }
 
 export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
@@ -120,8 +120,7 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
     const handleChartClick = (e: any) => {
         if (e && e.activePayload && e.activePayload.length > 0) {
             const sampleId = e.activePayload[0].payload.id;
-            const isLatest = e.activePayload[0].payload.id === data[data.length -1]?.id;
-            onPointClick(sampleId, isLatest);
+            onPointClick(sampleId);
         }
     }
 
