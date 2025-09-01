@@ -178,7 +178,6 @@ function MerkmaleCardsPage() {
           );
         }
         
-        // Filter DNA data based on the active combination of WP, PO, and OP
         const relevantDna = allDna.filter(d => 
             d.WP === currentWorkstation.AP &&
             d.PO === currentWorkstation.POcurrent &&
@@ -228,8 +227,7 @@ function MerkmaleCardsPage() {
   }
   
   const handleNavigateToErfassung = (e: React.MouseEvent, url: string) => {
-    // This function is for the main card click
-     if ((e.target as HTMLElement).closest('a, button, [role="button"]')) {
+    if ((e.target as HTMLElement).closest('a, button, [role="button"]')) {
       return;
     }
     e.preventDefault();
@@ -277,11 +275,9 @@ function MerkmaleCardsPage() {
         <CardHeader className="bg-muted/50 rounded-t-lg">
           <div className="flex justify-between items-start gap-4">
             <div className="flex items-start gap-4 flex-grow">
-               <Button asChild variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')}>
-                    <Link href="/arbeitsplaetze">
-                        <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Zurück zu Arbeitsplätze</span>
-                    </Link>
+                <Button variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')}>
+                    <ArrowLeft className="h-4 w-4" />
+                    <span className="sr-only">Zurück zu Arbeitsplätze</span>
                 </Button>
                 {workstation?.imageUrl && (
                     <div className="flex-shrink-0">
@@ -371,6 +367,11 @@ function MerkmaleCardsPage() {
                                     <CardDescription className="text-sm">
                                         {formatSpec(char)}{char.frequency && ` / ${char.frequency} min`}
                                     </CardDescription>
+                                    {dnaForChar && (
+                                        <CardDescription className="text-xs font-mono text-muted-foreground/80 pt-1">
+                                            {dnaForChar.idDNA}
+                                        </CardDescription>
+                                    )}
                                 </div>
                                 {char.imageUrl && (
                                      <button onClick={(e) => handleImageClick(e, char.imageUrl!, `Bild für Merkmal ${char.itemNumber}`)} className="flex-shrink-0">
@@ -432,4 +433,3 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
-
