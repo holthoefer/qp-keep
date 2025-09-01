@@ -38,6 +38,17 @@ export function SChart({ dnaData, onPointClick }: SChartProps) {
         name: new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
         stddev: parseFloat(sample.stddev.toFixed(4)),
     })), [data]);
+
+    const yAxisDomain = React.useMemo(() => {
+        const allValues = formattedData.map(d => d.stddev);
+        if (dnaData.sUSL !== undefined && dnaData.sUSL !== null) allValues.push(dnaData.sUSL);
+        if (allValues.length === 0) return [0, 'auto'];
+        
+        const max = Math.max(...allValues);
+        const padding = max * 0.1 || 0.1;
+        
+        return [0, max + padding];
+    }, [formattedData, dnaData.sUSL]);
     
     if (isLoading) {
         return <Skeleton className="h-full w-full" />;
@@ -57,7 +68,7 @@ export function SChart({ dnaData, onPointClick }: SChartProps) {
             <LineChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" style={{ fontSize: '12px' }} />
-                <YAxis style={{ fontSize: '12px' }} width={50} />
+                <YAxis style={{ fontSize: '12px' }} width={50} domain={yAxisDomain} tickFormatter={(val) => val.toFixed(3)} />
                 <Tooltip 
                      contentStyle={{ fontSize: '12px', padding: '5px' }}
                     labelStyle={{ fontWeight: 'bold' }}
