@@ -37,6 +37,7 @@ import Image from 'next/image';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { useToast } from '@/hooks/use-toast';
 import { findThumbnailUrl } from '@/lib/image-utils';
+import { SampleChart } from '@/components/SampleChart';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,23 +75,6 @@ function DnaTimeTracker({ lastTimestamp, frequency, prefix }: { lastTimestamp?: 
             {prefix ? `${prefix}: ` : ''}{isOverdue ? `Overdue by ${Math.abs(timeLeft)} min` : `${timeLeft} min left`}
         </Badge>
     );
-}
-
-
-function MiniXBarChart({ dnaData, onClick }: { dnaData: DNA | undefined, onClick: (e: React.MouseEvent) => void }) {
-  if (!dnaData) {
-    return (
-      <div className="h-full flex items-center justify-center text-xs text-muted-foreground" onClick={onClick}>
-        Keine Chart-Daten
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full w-full mt-2 p-4 flex items-center justify-center text-xs text-muted-foreground bg-gray-50 rounded-md" onClick={onClick}>
-        Chart-Platzhalter
-    </div>
-  );
 }
 
 
@@ -276,6 +260,10 @@ function MerkmaleCardsPage() {
     return 'text-green-600';
   }
 
+  const handlePointClick = (sampleId: string) => {
+    router.push(`/probe/${encodeURIComponent(sampleId)}`);
+  };
+
 
   return (
     <DashboardClient>
@@ -362,8 +350,14 @@ function MerkmaleCardsPage() {
                                {dnaForChar && <DnaTimeTracker lastTimestamp={dnaForChar.lastCheckTimestamp} frequency={dnaForChar.Frequency} prefix={`M# ${dnaForChar.Char}`} />}
                                {dnaForChar?.checkStatus && <Badge variant="outline" className={cn(getStatusColorClass(dnaForChar.checkStatus))}>{dnaForChar.checkStatus}</Badge>}
                             </div>
-                            <div className="h-[200px] w-full">
-                              <MiniXBarChart dnaData={dnaForChar} onClick={(e) => e.stopPropagation()} />
+                            <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
+                                {dnaForChar ? (
+                                    <SampleChart dnaData={dnaForChar} onPointClick={handlePointClick} />
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-xs text-muted-foreground bg-gray-50 rounded-md">
+                                        No DNA data for chart
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
