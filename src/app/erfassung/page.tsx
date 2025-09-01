@@ -407,8 +407,8 @@ function ErfassungPage() {
   }, [isSaving, currentValues.length, requiredSampleSize]);
 
   const inputPlaceholder = requiredSampleSize > 0 
-    ? `${requiredSampleSize} Stichprobenwerte mit Dezimalpunkt eingeben...` 
-    : 'Stichprobenwerte mit Dezimalpunkt eingeben...';
+    ? `${requiredSampleSize} Werte eingeben...` 
+    : 'Dezimalwerte (.) mit Space, Semikolon oder Zeilenumbruch als Trenner...';
 
 
   const handlePointClick = (sampleId: string, isLatest: boolean) => {

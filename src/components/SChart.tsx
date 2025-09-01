@@ -3,15 +3,29 @@
 'use client';
 
 import * as React from 'react';
-import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer, Dot } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer, Dot, TooltipProps, ValueType, NameType } from 'recharts';
 import type { DNA, SampleData } from '@/types';
 import { getSamplesForDna } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
+import { format } from 'date-fns';
 
 interface SChartProps {
     dnaData: DNA;
     onPointClick: (sampleId: string, isLatest: boolean) => void;
 }
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+  if (active && payload && payload.length) {
+    const data: SampleData = payload[0].payload;
+    return (
+      <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
+        <p className="font-bold">{`s: ${payload[0].value}`}</p>
+        <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
 const CustomizedDot = (props: any) => {
   const { cx, cy, payload, dnaData } = props;
@@ -85,8 +99,7 @@ export function SChart({ dnaData, onPointClick }: SChartProps) {
                 <XAxis dataKey="name" style={{ fontSize: '12px' }} />
                 <YAxis style={{ fontSize: '12px' }} width={50} domain={yAxisDomain} tickFormatter={(val) => val.toFixed(3)} />
                 <Tooltip 
-                     contentStyle={{ fontSize: '12px', padding: '5px' }}
-                    labelStyle={{ fontWeight: 'bold' }}
+                    content={<CustomTooltip />}
                 />
                 {dnaData.sUSL !== undefined && (
                     <ReferenceLine 
