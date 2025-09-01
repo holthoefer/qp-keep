@@ -336,14 +336,14 @@ export default function DnaPage() {
                                         <CardHeader>
                                         <div className="flex justify-between items-start gap-2">
                                             <div className="flex items-center gap-2 flex-shrink min-w-0">
-                                                {dna.imageUrl && (
-                                                    <button
-                                                        onClick={(e) => handleImageClick(e, dna.imageUrl!, `Bild für Merkmal`)}
-                                                        className="relative flex-shrink-0"
+                                                {dna.imageUrlLatestSample && (
+                                                     <button
+                                                        onClick={(e) => handleImageClick(e, dna.imageUrlLatestSample!, `Letztes Sample Bild`)}
+                                                        className="relative"
                                                     >
                                                         <Image
-                                                            src={findThumbnailUrl(dna.imageUrl, storageFiles)}
-                                                            alt={`Bild für Merkmal`}
+                                                            src={findThumbnailUrl(dna.imageUrlLatestSample, storageFiles)}
+                                                            alt={`Letztes Sample Bild`}
                                                             width={32}
                                                             height={32}
                                                             className="rounded-md object-cover aspect-square border"
@@ -353,14 +353,14 @@ export default function DnaPage() {
                                                 <CardTitle className="text-sm font-mono break-all flex-1 pr-2">{dna.idDNA}</CardTitle>
                                             </div>
                                             <div className="flex-shrink-0">
-                                                {dna.imageUrlLatestSample && (
-                                                     <button
-                                                        onClick={(e) => handleImageClick(e, dna.imageUrlLatestSample!, `Letztes Sample Bild`)}
-                                                        className="relative"
+                                                 {dna.imageUrl && (
+                                                    <button
+                                                        onClick={(e) => handleImageClick(e, dna.imageUrl!, `Bild für Merkmal`)}
+                                                        className="relative flex-shrink-0"
                                                     >
                                                         <Image
-                                                            src={findThumbnailUrl(dna.imageUrlLatestSample, storageFiles)}
-                                                            alt={`Letztes Sample Bild`}
+                                                            src={findThumbnailUrl(dna.imageUrl, storageFiles)}
+                                                            alt={`Bild für Merkmal`}
                                                             width={32}
                                                             height={32}
                                                             className="rounded-md object-cover aspect-square border"
@@ -404,4 +404,3 @@ export default function DnaPage() {
     </DashboardClient>
   );
 }
-
