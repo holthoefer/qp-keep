@@ -179,9 +179,9 @@ function MerkmaleCardsPage() {
         }
 
         const relevantDna = allDna.filter(d => 
-            d.PO === currentWorkstation.POcurrent && 
-            d.OP === currentWorkstation.OPcurrent && 
-            d.WP === currentWorkstation.AP
+            d.WP === currentWorkstation.AP &&
+            d.PO === currentWorkstation.POcurrent &&
+            d.idPs === currentProcessStep.id
         );
         setDnaData(relevantDna);
 
@@ -248,6 +248,10 @@ function MerkmaleCardsPage() {
   };
 
   const handlePointClick = (sampleId: string) => {
+    if ((event?.target as HTMLElement).closest('a, button')) {
+      event?.stopPropagation();
+      event?.preventDefault();
+    }
     router.push(`/probe/${encodeURIComponent(sampleId)}`);
   };
   
@@ -347,7 +351,7 @@ function MerkmaleCardsPage() {
           ) : characteristics.length > 0 && processStep && auftrag ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
                 {characteristics.map((char) => {
-                  const dnaForChar = dnaData.find(d => d.Char === char.itemNumber);
+                  const dnaForChar = dnaData.find(d => d.idChar === char.id);
                   const erfassungUrl = getErfassungUrl(char);
                    return (
                      <Card 
