@@ -228,6 +228,9 @@ function MerkmaleCardsPage() {
   
   const handleNavigateToErfassung = (e: React.MouseEvent, url: string) => {
     // This function is for the main card click
+     if ((e.target as HTMLElement).closest('a, button, [role="button"]')) {
+      return;
+    }
     e.preventDefault();
     if (url === '#') return;
     
@@ -274,6 +277,17 @@ function MerkmaleCardsPage() {
                         <span className="sr-only">Zurück zu Arbeitsplätze</span>
                     </Link>
                 </Button>
+                {workstation?.imageUrl && (
+                    <div className="flex-shrink-0">
+                        <Image
+                            src={findThumbnailUrl(workstation.imageUrl, storageFiles)}
+                            alt={`Bild für Arbeitsplatz ${workstation.AP}`}
+                            width={40}
+                            height={40}
+                            className="rounded-md object-cover aspect-square border"
+                        />
+                    </div>
+                )}
                  <div className="flex-grow">
                   {isLoading ? (
                     <>
@@ -382,9 +396,11 @@ function MerkmaleCardsPage() {
                         </CardContent>
                         <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
                             <span>{char.sampleSize || 'N/A'}er Stichprobe</span>
-                            <Button variant="secondary" size="sm">
-                                <Edit className="mr-2 h-4 w-4" />
-                                Erfassen
+                            <Button asChild variant="secondary" size="sm">
+                                <Link href={erfassungUrl}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Erfassen
+                                </Link>
                             </Button>
                             <span>{char.gauge || 'N/A'}</span>
                         </CardFooter>
