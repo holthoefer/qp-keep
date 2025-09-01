@@ -247,11 +247,14 @@ function MerkmaleCardsPage() {
   };
 
   const handlePointClick = (sampleId: string) => {
+    // This function will be called from the chart
+    if (!sampleId) return;
+
+    // prevent default navigation if a point on chart is clicked
     if ((event?.target as HTMLElement).closest('a, button, [role="button"]')) {
       event?.preventDefault();
     }
-    if (!sampleId) return;
-
+    
     router.push(`/probe/${encodeURIComponent(sampleId)}`);
   };
   
@@ -274,10 +277,10 @@ function MerkmaleCardsPage() {
       <Card>
         <CardHeader className="bg-muted/50 rounded-t-lg">
           <div className="flex justify-between items-start gap-4">
-            <div className="flex items-start gap-4 flex-grow">
-                <Button variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')}>
+             <div className="flex items-start gap-4 flex-grow">
+                <Button variant="outline" size="icon" onClick={() => router.push('/notes')}>
                     <ArrowLeft className="h-4 w-4" />
-                    <span className="sr-only">Zurück zu Arbeitsplätze</span>
+                    <span className="sr-only">Zurück zu Notizen</span>
                 </Button>
                 {workstation?.imageUrl && (
                     <div className="flex-shrink-0">
@@ -346,10 +349,11 @@ function MerkmaleCardsPage() {
                 <h3 className="mt-2 text-lg font-medium">Fehler beim Laden der Daten</h3>
                 <p className="mt-1 text-sm">{error}</p>
             </div>
-          ) : characteristics.length > 0 && processStep && auftrag ? (
+          ) : characteristics.length > 0 && processStep && auftrag && controlPlan ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
                 {characteristics.map((char) => {
-                  const dnaForChar = dnaData.find(d => d.Char === char.itemNumber);
+                  const dnaId = `${controlPlan.planNumber}~${processStep.processNumber}~${char.itemNumber}~${workstation!.AP}~${auftrag!.PO}`;
+                  const dnaForChar = dnaData.find(d => d.idDNA === dnaId);
                   const erfassungUrl = getErfassungUrl(char);
                    return (
                      <Card 
@@ -367,11 +371,9 @@ function MerkmaleCardsPage() {
                                     <CardDescription className="text-sm">
                                         {formatSpec(char)}{char.frequency && ` / ${char.frequency} min`}
                                     </CardDescription>
-                                    {dnaForChar && (
-                                        <CardDescription className="text-xs font-mono text-muted-foreground/80 pt-1">
-                                            {dnaForChar.idDNA}
-                                        </CardDescription>
-                                    )}
+                                    <CardDescription className="text-xs font-mono text-muted-foreground/80 pt-1">
+                                        {dnaForChar?.idDNA}
+                                    </CardDescription>
                                 </div>
                                 {char.imageUrl && (
                                      <button onClick={(e) => handleImageClick(e, char.imageUrl!, `Bild für Merkmal ${char.itemNumber}`)} className="flex-shrink-0">
