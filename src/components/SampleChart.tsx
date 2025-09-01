@@ -1,7 +1,8 @@
+
 'use client';
 
 import * as React from 'react';
-import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer, TooltipProps, Dot } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer, TooltipProps, Dot, Label } from 'recharts';
 import type { DNA, SampleData } from '@/types';
 import { getSamplesForDna } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
@@ -30,9 +31,9 @@ const CustomizedDot = (props: any) => {
 
   let fill = "#8884d8"; // Default color
 
-  if ((USL !== undefined && mean > USL) || (LSL !== undefined && mean < LSL)) {
+  if ((USL !== undefined && USL !== null && mean > USL) || (LSL !== undefined && LSL !== null && mean < LSL)) {
     fill = "red";
-  } else if ((UCL !== undefined && mean > UCL) || (LCL !== undefined && mean < LCL)) {
+  } else if ((UCL !== undefined && UCL !== null && mean > UCL) || (LCL !== undefined && LCL !== null && mean < LCL)) {
     fill = "orange";
   }
 
@@ -96,11 +97,11 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
             onPointClick(sampleId, isLatest);
         }
     }
-
+    
     const renderLabel = (props: any) => {
-        const { x, y, value, textAnchor } = props;
+        const { x, y, stroke, value } = props;
         return (
-            <text x={x} y={y} dy={-4} dx={textAnchor === "start" ? 4 : -4} fill="#666" fontSize={10} textAnchor="start">
+            <text x={x} y={y} dy={-4} fill={stroke} fontSize={10} textAnchor="middle">
             {value}
             </text>
         );
@@ -114,13 +115,33 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
                 <YAxis domain={yAxisDomain} style={{ fontSize: '12px' }} width={50} />
                 <Tooltip content={<CustomTooltip />} />
                 
-                {dnaData.USL !== undefined && dnaData.USL !== null && <ReferenceLine y={dnaData.USL} label={{ value: "USL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeDasharray="3 3" ifOverflow="visible" />}
-                {dnaData.UCL !== undefined && dnaData.UCL !== null && <ReferenceLine y={dnaData.UCL} label={{ value: "UCL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeWidth={1.5} ifOverflow="visible" />}
-                {dnaData.CL !== undefined && dnaData.CL !== null && <ReferenceLine y={dnaData.CL} label={{ value: "CL", position: 'insideLeft', fontSize: 10 }} stroke="grey" ifOverflow="visible" />}
-                {dnaData.LCL !== undefined && dnaData.LCL !== null && <ReferenceLine y={dnaData.LCL} label={{ value: "LCL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeWidth={1.5} ifOverflow="visible" />}
-                {dnaData.LSL !== undefined && dnaData.LSL !== null && <ReferenceLine y={dnaData.LSL} label={{ value: "LSL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeDasharray="3 3" ifOverflow="visible" />}
+                {dnaData.USL !== undefined && dnaData.USL !== null && (
+                    <ReferenceLine y={dnaData.USL} stroke="red" strokeDasharray="3 3" ifOverflow="visible">
+                       <Label value="USL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
+                {dnaData.UCL !== undefined && dnaData.UCL !== null && (
+                    <ReferenceLine y={dnaData.UCL} stroke="red" strokeWidth={1.5} ifOverflow="visible">
+                        <Label value="UCL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
+                {dnaData.CL !== undefined && dnaData.CL !== null && (
+                    <ReferenceLine y={dnaData.CL} stroke="grey" ifOverflow="visible">
+                        <Label value="CL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
+                {dnaData.LCL !== undefined && dnaData.LCL !== null && (
+                     <ReferenceLine y={dnaData.LCL} stroke="red" strokeWidth={1.5} ifOverflow="visible">
+                        <Label value="LCL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
+                {dnaData.LSL !== undefined && dnaData.LSL !== null && (
+                    <ReferenceLine y={dnaData.LSL} stroke="red" strokeDasharray="3 3" ifOverflow="visible">
+                         <Label value="LSL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
                 
-                <Line type="linear" dataKey="mean" stroke="#8884d8" activeDot={{ r: 8 }} dot={<CustomizedDot dnaData={dnaData} />} />
+                <Line type="linear" dataKey="mean" stroke="#8884d8" activeDot={{ r: 8 }} dot={<CustomizedDot dnaData={dnaData} />} isAnimationActive={false} />
             </LineChart>
         </ResponsiveContainer>
     );

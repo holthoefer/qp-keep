@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -53,7 +54,7 @@ export function SChart({ dnaData, onPointClick }: SChartProps) {
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={formattedData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }} onClick={handleChartClick}>
+            <LineChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" style={{ fontSize: '12px' }} />
                 <YAxis style={{ fontSize: '12px' }} width={50} />
@@ -61,8 +62,14 @@ export function SChart({ dnaData, onPointClick }: SChartProps) {
                      contentStyle={{ fontSize: '12px', padding: '5px' }}
                     labelStyle={{ fontWeight: 'bold' }}
                 />
-                <Legend wrapperStyle={{fontSize: '12px'}} />
-                {dnaData.sUSL !== undefined && <ReferenceLine y={dnaData.sUSL} label={{ value: "sUSL", fontSize: 10, position: 'insideTopLeft' }} stroke="orange" strokeDasharray="3 3" />}
+                {dnaData.sUSL !== undefined && (
+                    <ReferenceLine 
+                        y={dnaData.sUSL} 
+                        label={{ value: "sUCL", position: 'right', fontSize: 10, fill: '#666' }} 
+                        stroke="orange" 
+                        strokeWidth={1.5}
+                    />
+                )}
                 <Line type="monotone" dataKey="stddev" name="StdDev" stroke="#82ca9d" dot={{ r: 2 }} activeDot={{ r: 6 }} />
             </LineChart>
         </ResponsiveContainer>

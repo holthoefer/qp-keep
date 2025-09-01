@@ -866,7 +866,9 @@ function ErfassungPage() {
           {dnaData && (
             <Card>
               <CardHeader className='p-4'>
-                <CardTitle className="text-lg">x&#x304;-Chart</CardTitle>
+                <CardTitle className="text-lg">
+                  x<span style={{ textDecoration: 'overline' }}>-</span>Chart
+                </CardTitle>
               </CardHeader>
               <CardContent className="h-[225px] w-full p-2">
                 <SampleChart key={chartRefreshKey} dnaData={dnaData} onPointClick={handlePointClick} />
