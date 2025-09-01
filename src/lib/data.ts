@@ -484,9 +484,6 @@ export const getSample = async (sampleId: string): Promise<SampleData | null> =>
 };
 
 export const getSamplesForDna = async (dnaId: string, count?: number): Promise<SampleData[]> => {
-    const user = auth.currentUser;
-    if (!user) return [];
-
     const q = query(
         collection(db, "samples"), 
         where("dnaId", "==", dnaId)
@@ -504,4 +501,3 @@ export const getSamplesForDna = async (dnaId: string, count?: number): Promise<S
     
     return samples;
 };
-

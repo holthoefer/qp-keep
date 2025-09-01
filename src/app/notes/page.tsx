@@ -166,7 +166,7 @@ export default function NotesPage() {
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
-                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || user?.email || ''} />
+                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || user?.email || ''} />
                     <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>

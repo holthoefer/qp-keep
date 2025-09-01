@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -22,14 +23,17 @@ Avatar.displayName = AvatarPrimitive.Root.displayName
 
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
+  Omit<React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>, 'src'> & {
+    src?: string | null;
+  }
+>(({ className, src, ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
     className={cn("aspect-square h-full w-full", className)}
+    src={src || undefined}
     {...props}
   />
-))
+));
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
 
 const AvatarFallback = React.forwardRef<
