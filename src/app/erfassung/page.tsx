@@ -693,9 +693,9 @@ function ErfassungPage() {
             return;
         }
         try {
-            const samples = await getSamplesForDna(dnaData.idDNA);
+            const samples = await getSamplesForDna(dnaData.idDNA, 1);
             if (samples.length > 0) {
-                const lastSampleId = `${dnaData.idDNA}_${new Date(samples[samples.length - 1].timestamp).getTime()}`;
+                const lastSampleId = samples[0].id;
                 handlePointClick(lastSampleId, true);
             } else {
                 toast({ title: "Keine Stichproben", description: "Für dieses Merkmal existieren noch keine Stichproben." });
@@ -866,7 +866,7 @@ function ErfassungPage() {
           {dnaData && (
             <Card>
               <CardHeader className='p-4'>
-                <CardTitle className="text-lg">x̄</CardTitle>
+                
               </CardHeader>
               <CardContent className="h-[225px] w-full p-2">
                 <SampleChart key={chartRefreshKey} dnaData={dnaData} onPointClick={handlePointClick} />
