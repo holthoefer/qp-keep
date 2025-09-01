@@ -1,11 +1,9 @@
-
-
 'use client';
 
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { getSample, saveSampleData, getAppStorage, getDnaData, getSamplesForDna, getControlPlan } from '@/lib/data';
+import { getSample, saveSampleData, getAppStorage, getDnaData, getControlPlan } from '@/lib/data';
 import type { SampleData, DNA, ControlPlan, ProcessStep, Characteristic } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,8 +31,6 @@ import {
 import { suggestResponsePlan } from '@/ai/flows/suggest-response-plan';
 import { SampleChart } from '@/components/SampleChart';
 import { SChart } from '@/components/SChart';
-// This flow does not exist, so it is commented out.
-// import { renderAnalyzeSamplePrompt } from '@/ai/flows/analyze-sample-flow';
 
 
 interface AnalysisResultDialogProps {
@@ -264,27 +260,44 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
   };
 
 
-  const handleSave = async () => {
-     if (!sample || !sampleId) return;
+  const handleSaveWithCallback = async (callback?: () => void) => {
+    if (!sample || !sampleId) return;
 
-     setIsSaving(true);
-     try {
+    setIsSaving(true);
+    try {
         const updatedSample: SampleData = { ...sample, imageUrl, note };
-
         await saveSampleData(updatedSample, sampleId, updateDna);
+        
+        // Update the original data to reset dirty state
+        setOriginalData({ imageUrl, note });
+        
+        toast({
+            title: "Gespeichert!",
+            description: "Ihre Änderungen wurden übernommen.",
+            duration: 2000,
+        });
 
-        router.back();
-
-     } catch(e: any) {
+        // Execute callback if provided
+        if (callback) {
+            callback();
+        }
+    } catch (e: any) {
         toast({
             title: "Fehler beim Speichern",
             description: e.message,
             variant: 'destructive'
         });
-     } finally {
+    } finally {
         setIsSaving(false);
-     }
+    }
+  };
+  
+  const handleSaveAndExit = () => {
+      handleSaveWithCallback(() => {
+          router.back();
+      });
   }
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -334,7 +347,6 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           setImageUrl(downloadURL);
-          setOriginalData(prev => prev ? { ...prev, imageUrl: 'stale' } : { imageUrl: 'stale', note: '' });
         } catch (e: any) {
            setUploadError('Fehler beim Abrufen der Download-URL nach dem Upload.');
         } finally {
@@ -366,17 +378,6 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     }
   }
 
-  const handleGeneratePrompt = async () => {
-    if (!sample || !dna) return;
-    toast({description: "Diese Funktion ist derzeit nicht verfügbar."});
-    // This flow does not exist, so it is commented out.
-    // try {
-    //     const generatedPrompt = await renderAnalyzeSamplePrompt(sample, dna, historicalSamples);
-    //     setPromptText(generatedPrompt);
-    // } catch (e: any) {
-    //     setPromptText("Error generating prompt: " + e.message);
-    // }
-  };
   
   const generateChartSVG = (
     chartType: 'mean' | 'stddev',
@@ -488,14 +489,32 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     `;
   };
 
-  const handleGenerateHtmlSkeleton = () => {
+ const handleGenerateHtmlSkeleton = async () => {
     if (!sample || !dna) return;
-    const allSamples = [...historicalSamples, sample].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    if (isDirty) {
+        await handleSaveWithCallback(() => {
+            // Callback after saving is finished, now we can generate HTML
+            generateHtmlWithCurrentData();
+        });
+    } else {
+        // If not dirty, just generate HTML
+        generateHtmlWithCurrentData();
+    }
+};
+
+const generateHtmlWithCurrentData = () => {
+    if (!sample || !dna) return;
+    const allSamples = [...historicalSamples, { ...sample, imageUrl, note }].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
     const xBarChartSVG = generateChartSVG('mean', allSamples, dna, sample.timestamp);
     const sChartSVG = generateChartSVG('stddev', allSamples, dna, sample.timestamp);
 
-    const historicalDataString = historicalSamples.length > 0 ? historicalSamples.map(s => `<tr><td>${new Date(s.timestamp).toLocaleString()}</td><td>${s.mean.toFixed(4)}</td><td>${s.stddev.toFixed(4)}</td><td>${s.values.join(', ')}</td><td>${s.note || ''}</td><td>${s.exception ? 'Ja' : 'Nein'}</td></tr>`).join('') : '<tr><td colspan="6">Keine historischen Daten</td></tr>';
+    const currentSampleWithLatestChanges = { ...sample, imageUrl, note };
+
+    const historicalDataString = historicalSamples.length > 0 
+        ? historicalSamples.map(s => `<tr><td>${new Date(s.timestamp).toLocaleString()}</td><td>${s.mean.toFixed(4)}</td><td>${s.stddev.toFixed(4)}</td><td>${s.values.join(', ')}</td><td>${s.note || ''}</td><td>${s.exception ? 'Ja' : 'Nein'}</td></tr>`).join('') 
+        : '<tr><td colspan="6">Keine historischen Daten</td></tr>';
 
     const skeleton = `<!DOCTYPE html>
 <html lang="de">
@@ -548,17 +567,17 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
             <h2>Aktuelle Stichprobe</h2>
             <div class="image-note-section">
                  <div class="image-container">
-                    ${sample.imageUrl ? `<img src="${sample.imageUrl}" alt="Stichprobenbild" class="sample-image" style="width: 300px;"/>` : ''}
+                    ${currentSampleWithLatestChanges.imageUrl ? `<img src="${currentSampleWithLatestChanges.imageUrl}" alt="Stichprobenbild" class="sample-image" style="width: 300px;"/>` : ''}
                  </div>
                  <div class="note-container">
                     <table class="data-table">
                         <tbody>
-                            <tr><th>Zeitstempel</th><td>${new Date(sample.timestamp).toLocaleString()}</td></tr>
-                            <tr><th>Mittelwert</th><td>${sample.mean.toFixed(4)}</td></tr>
-                            <tr><th>StdAbw</th><td>${sample.stddev.toFixed(4)}</td></tr>
-                            <tr><th>Werte</th><td>${sample.values.join(', ')}</td></tr>
-                            <tr><th>Ausnahme</th><td>${sample.exception ? 'Ja' : 'Nein'}</td></tr>
-                            <tr><th>Notiz</th><td>${sample.note || ''}</td></tr>
+                            <tr><th>Zeitstempel</th><td>${new Date(currentSampleWithLatestChanges.timestamp).toLocaleString()}</td></tr>
+                            <tr><th>Mittelwert</th><td>${currentSampleWithLatestChanges.mean.toFixed(4)}</td></tr>
+                            <tr><th>StdAbw</th><td>${currentSampleWithLatestChanges.stddev.toFixed(4)}</td></tr>
+                            <tr><th>Werte</th><td>${currentSampleWithLatestChanges.values.join(', ')}</td></tr>
+                            <tr><th>Ausnahme</th><td>${currentSampleWithLatestChanges.exception ? 'Ja' : 'Nein'}</td></tr>
+                            <tr><th>Notiz</th><td>${currentSampleWithLatestChanges.note || ''}</td></tr>
                         </tbody>
                     </table>
                  </div>
@@ -588,8 +607,14 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     </div>
 </body>
 </html>`;
-      setHtmlSkeleton(skeleton);
-  }
+    setHtmlSkeleton(skeleton);
+    toast({
+        title: "HTML-Grundgerüst generiert",
+        description: "Das HTML ist bereit für die AI-Analyse.",
+        duration: 2000,
+    });
+};
+
 
   const handleExport = (content: string | null, filename: string, extension: 'txt' | 'html') => {
       if (!content) {
@@ -704,7 +729,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
                             <CardTitle className="text-lg">Bild &amp; Notiz</CardTitle>
                             </div>
                             <div className="flex items-center gap-2">
-                            <Button onClick={handleSave} size="sm" disabled={isSaving || isUploading || !isDirty}>
+                            <Button onClick={handleSaveAndExit} size="sm" disabled={isSaving || isUploading || !isDirty}>
                                     <Save className="mr-2 h-4 w-4" />
                                     Save
                             </Button>
