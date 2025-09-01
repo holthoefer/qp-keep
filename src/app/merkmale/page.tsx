@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -97,10 +98,12 @@ function MerkmaleCardsPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalImageUrl, setModalImageUrl] = React.useState('');
+  const [modalImageAlt, setModalImageAlt] = React.useState('');
 
-  const handleImageClick = (e: React.MouseEvent, url: string) => {
+  const handleImageClick = (e: React.MouseEvent, url: string, alt: string) => {
     e.stopPropagation();
     setModalImageUrl(url);
+    setModalImageAlt(alt);
     setIsModalOpen(true);
   };
 
@@ -271,50 +274,61 @@ function MerkmaleCardsPage() {
             isOpen={isModalOpen}
             onOpenChange={setIsModalOpen}
             imageUrl={modalImageUrl}
-            imageAlt="Merkmalbild"
+            imageAlt={modalImageAlt}
         />
       <Card>
         <CardHeader className="bg-muted/50 rounded-t-lg">
-          <div className="flex justify-between items-start">
-            <div>
-              {isLoading ? (
-                <>
-                  <Skeleton className="h-7 w-48" />
-                  <Skeleton className="h-5 w-64 mt-2" />
-                </>
-              ) : workstation && processStep && controlPlan ? (
-                <>
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle className="text-lg">
-                                {workstation.AP}: {controlPlan.planNumber} / {processStep.processNumber} - {processStep.machineDevice}
-                            </CardTitle>
-                        </div>
-                        {processStep.imageUrl && (
-                            <button onClick={(e) => handleImageClick(e, processStep.imageUrl!)} className="ml-4 flex-shrink-0">
-                                <Image
-                                    src={findThumbnailUrl(processStep.imageUrl, storageFiles)}
-                                    alt={`Bild für Prozess ${processStep.processNumber}`}
-                                    width={40}
-                                    height={40}
-                                    className="rounded-md object-cover aspect-square border"
-                                />
-                            </button>
-                        )}
-                    </div>
-                </>
-              ) : (
-                 <>
-                  <CardTitle>Merkmalsübersicht (Karten)</CardTitle>
-                </>
-              )}
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex items-start gap-4 flex-grow">
+               <Button asChild variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')}>
+                    <Link href="/arbeitsplaetze">
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">Zurück zu Arbeitsplätze</span>
+                    </Link>
+                </Button>
+                 <div className="flex-grow">
+                  {isLoading ? (
+                    <>
+                      <Skeleton className="h-7 w-48" />
+                      <Skeleton className="h-5 w-64 mt-2" />
+                    </>
+                  ) : workstation && processStep && controlPlan ? (
+                    <>
+                        <CardTitle className="text-lg">
+                            {workstation.AP}: {controlPlan.planNumber} / {processStep.processNumber} - {processStep.machineDevice}
+                        </CardTitle>
+                    </>
+                  ) : (
+                    <>
+                      <CardTitle>Merkmalsübersicht (Karten)</CardTitle>
+                    </>
+                  )}
+                </div>
             </div>
-            <Button asChild variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')}>
-                <Link href="/arbeitsplaetze">
-                    <ArrowLeft className="h-4 w-4" />
-                    <span className="sr-only">Zurück zu Arbeitsplätze</span>
-                </Link>
-            </Button>
+            <div className="flex items-start gap-2 flex-shrink-0">
+                {controlPlan?.imageUrl && (
+                    <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
+                        <Image
+                            src={findThumbnailUrl(controlPlan.imageUrl, storageFiles)}
+                            alt={`Bild für Control Plan ${controlPlan.planNumber}`}
+                            width={40}
+                            height={40}
+                            className="rounded-md object-cover aspect-square border"
+                        />
+                    </button>
+                )}
+                {processStep?.imageUrl && (
+                    <button onClick={(e) => handleImageClick(e, processStep.imageUrl!, `Bild für Prozess ${processStep.processNumber}`)} className="flex-shrink-0">
+                        <Image
+                            src={findThumbnailUrl(processStep.imageUrl, storageFiles)}
+                            alt={`Bild für Prozess ${processStep.processNumber}`}
+                            width={40}
+                            height={40}
+                            className="rounded-md object-cover aspect-square border"
+                        />
+                    </button>
+                )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="bg-muted/30">
@@ -337,13 +351,28 @@ function MerkmaleCardsPage() {
                    <Link key={`${processStep.id}-${char.id}`} href={erfassungUrl} onClick={(e) => handleNavigateToErfassung(e, erfassungUrl)} className="block">
                      <Card className="h-full flex flex-col hover:border-primary transition-colors cursor-pointer">
                         <CardHeader>
-                            <CardTitle className="text-base flex items-center justify-between">
-                                <span className='truncate'>{`${char.itemNumber} (${char.charType}) - ${char.DesciptionSpec}`}</span>
-                                {char.ctq && <Badge variant="outline" className='text-amber-600 border-amber-600 flex-shrink-0'><Diamond className='w-3 h-3 mr-1'/>CTQ</Badge>}
-                            </CardTitle>
-                            <CardDescription className="text-sm">
-                                {formatSpec(char)}{char.frequency && ` / ${char.frequency} min`}
-                            </CardDescription>
+                             <div className="flex items-start justify-between gap-4">
+                                <div className="flex-grow">
+                                    <CardTitle className="text-base flex items-center justify-between">
+                                        <span className='truncate'>{`${char.itemNumber} (${char.charType}) - ${char.DesciptionSpec}`}</span>
+                                        {char.ctq && <Badge variant="outline" className='text-amber-600 border-amber-600 flex-shrink-0 ml-2'><Diamond className='w-3 h-3 mr-1'/>CTQ</Badge>}
+                                    </CardTitle>
+                                    <CardDescription className="text-sm">
+                                        {formatSpec(char)}{char.frequency && ` / ${char.frequency} min`}
+                                    </CardDescription>
+                                </div>
+                                {char.imageUrl && (
+                                     <button onClick={(e) => handleImageClick(e, char.imageUrl!, `Bild für Merkmal ${char.itemNumber}`)} className="flex-shrink-0">
+                                        <Image
+                                            src={findThumbnailUrl(char.imageUrl, storageFiles)}
+                                            alt={`Bild für Merkmal ${char.itemNumber}`}
+                                            width={40}
+                                            height={40}
+                                            className="rounded-md object-cover aspect-square border"
+                                        />
+                                    </button>
+                                )}
+                             </div>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-2 text-sm text-muted-foreground">
                             <div className="flex flex-wrap items-center gap-2">
@@ -391,3 +420,4 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
