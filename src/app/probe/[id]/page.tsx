@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -39,7 +40,7 @@ interface AnalysisResultDialogProps {
     onOpenChange: (open: boolean) => void;
     isLoading: boolean;
     analysisResult: string | null;
-    htmlSkeleton: string;
+    htmlSkeleton: string | null;
     error: string | null;
     dnaData: DNA | null;
     sample: SampleData | null;
@@ -115,7 +116,7 @@ const AnalysisResultDialog: React.FC<AnalysisResultDialogProps> = ({ isOpen, onO
                     </div>
                 </div>
                  <DialogFooter className="gap-2">
-                    <Button variant="outline" onClick={onCombinedExport} disabled={!analysisResult}>
+                    <Button variant="outline" onClick={onCombinedExport} disabled={!analysisResult || !htmlSkeleton}>
                         <FileDown className="mr-2 h-4 w-4" />
                         Kombinierten Report exportieren
                     </Button>
@@ -669,7 +670,7 @@ const generateHtmlWithCurrentData = () => {
         onOpenChange={setIsAnalysisDialogOpen}
         isLoading={isGeneratingAnalysis}
         analysisResult={analysisResult}
-        htmlSkeleton={htmlSkeleton || ''}
+        htmlSkeleton={htmlSkeleton}
         error={analysisError}
         dnaData={dna}
         sample={sample}
@@ -822,36 +823,35 @@ const generateHtmlWithCurrentData = () => {
                             </div>
                         </div>
                     </CardContent>
-                     <CardFooter className="flex justify-between items-center">
+                    <CardFooter className="flex justify-between items-center">
                         <div className="text-xs text-muted-foreground">
                             <p>Mittelwert: {sample.mean.toFixed(4)}</p>
                             <p>StdAbw: {sample.stddev.toFixed(4)}</p>
                             <p>Werte: {sample.values.join('; ')}</p>
                         </div>
-                        <Card className="max-w-2xl mx-auto w-full">
-                            <CardContent className="p-4">
-                                <div className="flex flex-wrap gap-2">
-                                    <Button onClick={handleGenerateHtmlSkeleton}>
-                                        HTML-Grundgerüst generieren
-                                    </Button>
-                                    <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis || !htmlSkeleton}>
-                                        {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                        Analyse an AI senden
-                                    </Button>
-                                </div>
-                                <div className="space-y-2 mt-4">
-                                    <div className="flex justify-between items-center">
-                                        <Label htmlFor="html-skeleton">HTML-Grundgerüst</Label>
-                                        <Button size="sm" variant="secondary" onClick={() => handleCombinedExport()} disabled={!htmlSkeleton}>
-                                            <FileDown className="mr-2 h-4 w-4"/>
-                                            HTML-Export
-                                        </Button>
-                                    </div>
-                                    <Textarea id="html-skeleton" value={htmlSkeleton ?? ''} readOnly placeholder="Klicken Sie auf 'HTML generieren', um das Grundgerüst zu erstellen." rows={10} className="font-mono text-xs"/>
-                                </div>
-                            </CardContent>
-                        </Card>
                     </CardFooter>
+                </Card>
+                <Card className="max-w-2xl mx-auto w-full">
+                    <CardHeader>
+                        <CardTitle>AI-Assistent</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                        <div className="flex flex-wrap gap-2">
+                            <Button onClick={handleGenerateHtmlSkeleton}>
+                                HTML-Grundgerüst generieren
+                            </Button>
+                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis || !htmlSkeleton}>
+                                {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                Analyse an AI senden
+                            </Button>
+                        </div>
+                        <div className="space-y-2 mt-4">
+                            <div className="flex justify-between items-center">
+                                <Label htmlFor="html-skeleton">HTML-Grundgerüst</Label>
+                            </div>
+                            <Textarea id="html-skeleton" value={htmlSkeleton ?? ''} readOnly placeholder="Klicken Sie auf 'HTML generieren', um das Grundgerüst zu erstellen." rows={10} className="font-mono text-xs"/>
+                        </div>
+                    </CardContent>
                 </Card>
             </div>
           ) : (
@@ -863,3 +863,4 @@ const generateHtmlWithCurrentData = () => {
       </>
   );
 }
+
