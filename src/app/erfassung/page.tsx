@@ -53,6 +53,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { cn } from '@/lib/utils';
 // import { DnaTimeTracker } from '../dna/page';
 import { findThumbnailUrl } from '@/lib/image-utils';
+import { Label } from '@/components/ui/label';
 
 export const dynamic = 'force-dynamic';
 
@@ -864,6 +865,9 @@ function ErfassungPage() {
       <div className='space-y-px mt-2'>
           {dnaData && (
             <Card>
+              <CardHeader className="p-4">
+                  <h3 className="text-lg font-semibold">x-quer Chart</h3>
+              </CardHeader>
               <CardContent className="h-[225px] w-full p-2">
                 <SampleChart key={chartRefreshKey} dnaData={dnaData} onPointClick={handlePointClick} />
               </CardContent>
