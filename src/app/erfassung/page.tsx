@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, AlertTriangle, Diamond, Database, ImageIcon, ChevronDown, Edit, Save, FileImage, RefreshCw, X, Network, Undo, StickyNote, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -405,6 +404,8 @@ function ErfassungPage() {
     return numValues === 0;
   }, [isSaving, currentValues.length, requiredSampleSize]);
 
+  const inputPlaceholder = requiredSampleSize > 0 ? `${requiredSampleSize} Werte eingeben...` : 'Werte eingeben...';
+
 
   const handlePointClick = (sampleId: string, isLatest: boolean) => {
     const url = `/probe/${encodeURIComponent(sampleId)}${isLatest ? '?new=true' : ''}`;
@@ -694,8 +695,8 @@ function ErfassungPage() {
         try {
             const samples = await getSamplesForDna(dnaData.idDNA);
             if (samples.length > 0) {
-                const lastSample = samples[samples.length - 1];
-                handlePointClick(lastSample.id, true);
+                const lastSampleId = `${dnaData.idDNA}_${new Date(samples[samples.length - 1].timestamp).getTime()}`;
+                handlePointClick(lastSampleId, true);
             } else {
                 toast({ title: "Keine Stichproben", description: "Für dieses Merkmal existieren noch keine Stichproben." });
             }
@@ -836,7 +837,7 @@ function ErfassungPage() {
                         id="sample-input"
                         value={sampleInput}
                         onChange={handleSampleInputChange}
-                        placeholder="Werte eingeben..."
+                        placeholder={inputPlaceholder}
                         rows={textareaRows}
                         style={{ height: `${textareaRows * 1.5 + 1}rem`}}
                     />
@@ -903,3 +904,178 @@ export default function ErfassungPageWrapper() {
     );
 }
 
+```
+- `src/components/SampleChart.tsx`:
+```tsx
+'use client';
+
+import * as React from 'react';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer, TooltipProps, Dot, Label } from 'recharts';
+import type { DNA, SampleData } from '@/types';
+import { getSamplesForDna } from '@/lib/data';
+import { Skeleton } from './ui/skeleton';
+import { format } from 'date-fns';
+import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+  if (active && payload && payload.length) {
+    const data: SampleData = payload[0].payload;
+    const note = data.note || '';
+    
+    // Wrap note text
+    const noteLines = [];
+    if (note) {
+        for (let i = 0; i < note.length; i += 20) {
+            noteLines.push(note.substring(i, i + 20));
+        }
+    }
+    
+    return (
+      <div className="bg-background border border-border p-2 rounded-md shadow-lg text-xs">
+        <p className="font-bold">{`Mittelwert: ${payload[0].value}`}</p>
+        <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
+        {data.values && <p className="text-muted-foreground mt-1">Werte: {data.values.join('; ')}</p>}
+        {note && (
+            <div className="text-muted-foreground mt-1">
+                Notiz:
+                {noteLines.map((line, index) => <p key={index} className="pl-2">{line}</p>)}
+            </div>
+        )}
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomizedDot = (props: any) => {
+  const { cx, cy, payload, dnaData } = props;
+
+  const { mean, note, imageUrl } = payload;
+  const { LSL, USL, LCL, UCL } = dnaData;
+
+  let fill = "#8884d8"; // Default color
+  
+  if ((USL !== undefined && USL !== null && mean > USL) || (LSL !== undefined && LSL !== null && mean < LSL)) {
+    fill = "red";
+  } else if ((UCL !== undefined && UCL !== null && mean > UCL) || (LCL !== undefined && LCL !== null && mean < LCL)) {
+    fill = "orange";
+  }
+  
+  const hasExtraInfo = note || imageUrl;
+
+  return (
+    <g>
+        <Dot cx={cx} cy={cy} r={3} fill={fill} />
+        {hasExtraInfo && (
+            <Dot cx={cx} cy={cy} r={7} fill="none" stroke={fill} strokeWidth={1} />
+        )}
+    </g>
+  );
+};
+
+
+interface SampleChartProps {
+    dnaData: DNA;
+    onPointClick: (sampleId: string, isLatest: boolean) => void;
+}
+
+export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
+    const [data, setData] = React.useState<SampleData[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchData = async () => {
+            if (!dnaData.idDNA) return;
+            setIsLoading(true);
+            try {
+                const samples = await getSamplesForDna(dnaData.idDNA, 50);
+                setData(samples);
+            } catch (error) {
+                console.error("Failed to fetch samples for chart", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, [dnaData.idDNA]);
+
+    const formattedData = React.useMemo(() => data.map(sample => ({
+        ...sample,
+        name: new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+        mean: parseFloat(sample.mean.toFixed(4)),
+    })), [data]);
+
+    const yAxisDomain = React.useMemo(() => {
+        const allValues = formattedData.map(d => d.mean);
+        if (dnaData.LSL !== undefined && dnaData.LSL !== null) allValues.push(dnaData.LSL);
+        if (dnaData.USL !== undefined && dnaData.USL !== null) allValues.push(dnaData.USL);
+        if (allValues.length === 0) return ['auto', 'auto'];
+        
+        const min = Math.min(...allValues);
+        const max = Math.max(...allValues);
+        const padding = (max - min) * 0.1 || 1;
+        
+        return [min - padding, max + padding];
+    }, [formattedData, dnaData.LSL, dnaData.USL]);
+
+    const yAxisTickFormatter = (value: number) => {
+        if (Math.abs(value) < 0.01 && value !== 0) {
+            return value.toExponential(1);
+        }
+        return value.toFixed(2);
+    };
+
+
+    if (isLoading) {
+        return <Skeleton className="h-full w-full" />;
+    }
+    
+    const handleChartClick = (e: any) => {
+        if (e && e.activePayload && e.activePayload.length > 0) {
+            const sampleId = e.activePayload[0].payload.id;
+            const isLatest = e.activePayload[0].payload.id === data[data.length -1]?.id;
+            onPointClick(sampleId, isLatest);
+        }
+    }
+    
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} onClick={handleChartClick}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" style={{ fontSize: '12px' }} />
+                <YAxis domain={yAxisDomain} style={{ fontSize: '12px' }} width={50} tickFormatter={yAxisTickFormatter} />
+                <Tooltip content={<CustomTooltip />} />
+                
+                {dnaData.USL !== undefined && dnaData.USL !== null && (
+                    <ReferenceLine y={dnaData.USL} stroke="red" strokeDasharray="3 3" ifOverflow="visible">
+                       <Label value="USL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
+                {dnaData.UCL !== undefined && dnaData.UCL !== null && (
+                    <ReferenceLine y={dnaData.UCL} stroke="red" strokeWidth={1.5} ifOverflow="visible">
+                        <Label value="UCL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
+                {dnaData.CL !== undefined && dnaData.CL !== null && (
+                    <ReferenceLine y={dnaData.CL} stroke="grey" ifOverflow="visible">
+                        <Label value="CL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
+                {dnaData.LCL !== undefined && dnaData.LCL !== null && (
+                     <ReferenceLine y={dnaData.LCL} stroke="red" strokeWidth={1.5} ifOverflow="visible">
+                        <Label value="LCL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
+                {dnaData.LSL !== undefined && dnaData.LSL !== null && (
+                    <ReferenceLine y={dnaData.LSL} stroke="red" strokeDasharray="3 3" ifOverflow="visible">
+                         <Label value="LSL" position="right" fontSize={10} fill="#666" />
+                    </ReferenceLine>
+                )}
+                
+                <Line type="linear" dataKey="mean" stroke="#8884d8" dot={<CustomizedDot dnaData={dnaData} />} isAnimationActive={false} />
+            </LineChart>
+        </ResponsiveContainer>
+    );
+}
+
+```
