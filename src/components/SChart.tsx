@@ -3,7 +3,7 @@
 'use client';
 
 import * as React from 'react';
-import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer, Dot } from 'recharts';
 import type { DNA, SampleData } from '@/types';
 import { getSamplesForDna } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
@@ -12,6 +12,21 @@ interface SChartProps {
     dnaData: DNA;
     onPointClick: (sampleId: string, isLatest: boolean) => void;
 }
+
+const CustomizedDot = (props: any) => {
+  const { cx, cy, payload, dnaData } = props;
+  const { stddev } = payload;
+  const { sUSL } = dnaData;
+
+  let fill = "#8884d8"; // Default blue color
+
+  if (sUSL !== undefined && sUSL !== null && stddev > sUSL) {
+    fill = "#ff79c6"; // Pink for violation
+  }
+  
+  return <Dot cx={cx} cy={cy} r={3} fill={fill} />;
+};
+
 
 export function SChart({ dnaData, onPointClick }: SChartProps) {
     const [data, setData] = React.useState<SampleData[]>([]);
@@ -44,7 +59,7 @@ export function SChart({ dnaData, onPointClick }: SChartProps) {
         if (dnaData.sUSL !== undefined && dnaData.sUSL !== null) allValues.push(dnaData.sUSL);
         if (allValues.length === 0) return [0, 'auto'];
         
-        const max = Math.max(...allValues);
+        const max = Math.max(...allValues, 0); // ensure max is at least 0
         const padding = max * 0.1 || 0.1;
         
         return [0, max + padding];
@@ -81,7 +96,14 @@ export function SChart({ dnaData, onPointClick }: SChartProps) {
                         strokeWidth={1.5}
                     />
                 )}
-                <Line type="monotone" dataKey="stddev" name="StdDev" stroke="#82ca9d" dot={{ r: 2 }} activeDot={{ r: 6 }} />
+                <Line 
+                    type="monotone" 
+                    dataKey="stddev" 
+                    name="StdDev" 
+                    stroke="#8884d8" 
+                    dot={<CustomizedDot dnaData={dnaData} />} 
+                    activeDot={{ r: 6 }} 
+                />
             </LineChart>
         </ResponsiveContainer>
     );
