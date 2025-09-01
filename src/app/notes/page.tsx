@@ -140,6 +140,10 @@ export default function NotesPage() {
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 WP
             </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                <BrainCircuit className="mr-2 h-4 w-4" />
+                DNA
+            </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
                 <FolderKanban className="mr-2 h-4 w-4" />
                 PO
@@ -147,10 +151,6 @@ export default function NotesPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                 <Target className="mr-2 h-4 w-4" />
                 CP
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                <BrainCircuit className="mr-2 h-4 w-4" />
-                DNA
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                 <Book className="mr-2 h-4 w-4" />

@@ -566,10 +566,6 @@ function ControlPlanRow({
                     <Printer className="mr-2 h-4 w-4" />
                     Print Control Plan
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onPrintV5(plan)}>
-                    <Printer className="mr-2 h-4 w-4" />
-                    Print (AI V5)
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => onExportCsv(plan)}>
                     <FileDown className="mr-2 h-4 w-4" />
@@ -967,13 +963,13 @@ export default function ControlPlansPage() {
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 WP
             </Button>
+             <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                <BrainCircuit className="mr-2 h-4 w-4" />
+                DNA
+            </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
                 <FolderKanban className="mr-2 h-4 w-4" />
                 PO
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                <BrainCircuit className="mr-2 h-4 w-4" />
-                DNA
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                 <Book className="mr-2 h-4 w-4" />
@@ -1079,22 +1075,6 @@ export default function ControlPlansPage() {
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Neuer Control Plan
                       </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-9 w-9">
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">Aktionen</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href="/prd/control-plan">
-                                <FileText className="mr-2 h-4 w-4" />
-                                PRD anzeigen
-                              </Link>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
               </div>
               <div className="relative mt-4">
