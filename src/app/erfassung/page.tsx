@@ -408,7 +408,7 @@ function ErfassungPage() {
 
   const inputPlaceholder = requiredSampleSize > 0 
     ? `${requiredSampleSize} Werte eingeben...` 
-    : 'Dezimalwerte (.) mit Space, Semikolon oder Zeilenumbruch als Trenner...';
+    : 'Dezimalzahlen (.) mit Space oder Semikolon oder Zeilenumbruch trennen ...';
 
 
   const handlePointClick = (sampleId: string, isLatest: boolean) => {

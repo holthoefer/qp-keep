@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
     const wrappedNote = wrapNote(note, 20);
 
     return (
-      <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
+      <div className="bg-background/85 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
         <p className="font-bold">{`x̄: ${payload[0].value}`}</p>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
         {data.values && <p className="text-muted-foreground mt-1">x: {data.values.join('; ')}</p>}
@@ -143,7 +143,7 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
                     </ReferenceLine>
                 )}
                 {dnaData.CL !== undefined && dnaData.CL !== null && (
-                    <ReferenceLine y={dnaData.CL} stroke="grey" ifOverflow="visible">
+                    <ReferenceLine y={dnaData.CL} stroke="grey" strokeDasharray="3 3" ifOverflow="visible">
                         <Label value="CL" position="right" fontSize={10} fill="#666" />
                     </ReferenceLine>
                 )}
