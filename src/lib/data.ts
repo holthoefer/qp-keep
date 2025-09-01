@@ -452,7 +452,7 @@ export const saveSampleData = async (sampleData: Omit<SampleData, 'id' | 'userEm
     const sampleRef = doc(db, 'samples', id);
     const user = auth.currentUser;
     
-    await setDoc(sampleRef, {...sampleData, userEmail: user?.email || 'unknown'}, { merge: !isNew });
+    await setDoc(sampleRef, {...sampleData, userId: user?.uid, userEmail: user?.email || 'unknown'}, { merge: !isNew });
 
     // Update DNA with last check info
     const dnaRef = doc(db, 'dna', sampleData.dnaId);
@@ -473,7 +473,7 @@ export const getSample = async (sampleId: string): Promise<SampleData | null> =>
 };
 
 export const getSamplesForDna = async (dnaId: string, count?: number): Promise<SampleData[]> => {
-    let q = query(collection(db, "samples"), where("dnaId", "==", dnaId));
+    const q = query(collection(db, "samples"), where("dnaId", "==", dnaId));
     
     const snapshot = await getDocs(q);
     let samples = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SampleData));

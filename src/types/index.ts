@@ -106,6 +106,7 @@ export interface SampleData {
   note?: string;
   imageUrl?: string;
   exception?: boolean;
+  userId?: string;
   userEmail?: string;
 }
 
