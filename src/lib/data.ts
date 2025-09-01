@@ -408,6 +408,7 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         throw new Error("Missing one or more required IDs to create or get DNA data.");
     }
     
+    // CP~OP~Char~WP~PO
     const idDNA = `${auftrag.CP}~${processStep.processNumber}~${characteristic.itemNumber}~${workstation.AP}~${auftrag.PO}`;
     const docRef = doc(db, 'dna', idDNA);
     const docSnap = await getDoc(docRef);
@@ -487,5 +488,3 @@ export const getSamplesForDna = async (dnaId: string, count?: number): Promise<S
     // The samples are now sorted from newest to oldest. Reverse them for chronological order in charts.
     return samples.reverse();
 };
-
-    

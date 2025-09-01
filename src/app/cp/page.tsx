@@ -32,6 +32,8 @@ import {
   Shield,
   LayoutGrid,
   FolderKanban,
+  BrainCircuit,
+  LogOut,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -957,25 +959,25 @@ export default function ControlPlansPage() {
             Control Plan
           </h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                 Notizen
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                 <LayoutGrid className="mr-2 h-4 w-4" />
-                Arbeitsplätze
+                WP
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
                 <FolderKanban className="mr-2 h-4 w-4" />
-                Aufträge
+                PO
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/controlplan')}>
-                <ListChecks className="mr-2 h-4 w-4" />
-                Control Plan (Legacy)
+            <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                <BrainCircuit className="mr-2 h-4 w-4" />
+                DNA
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                 <Book className="mr-2 h-4 w-4" />
-                Lenkungsplan (Legacy)
+                LP
             </Button>
             {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
@@ -983,9 +985,24 @@ export default function ControlPlansPage() {
                     Admin
                 </Button>
             )}
-          <Button onClick={handleLogout} variant="secondary">
-            Logout
-          </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="icon" className="rounded-full">
+                  <Avatar>
+                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || user?.email || ''} />
+                    <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Ausloggen</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </header>
       <main className="flex-1 p-4 md:p-6">

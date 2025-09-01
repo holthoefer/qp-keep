@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -56,6 +56,16 @@ import {
 } from '@/lib/data';
 import { ControlPlanStatus } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 type ControlPlanItemFormData = Omit<ControlPlanItem, 'id' | 'createdAt'>;
 
@@ -256,25 +266,25 @@ export default function LenkungsplanPage() {
             Lenkungsplan
           </h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                 Notizen
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                 <LayoutGrid className="mr-2 h-4 w-4" />
-                Arbeitsplätze
+                WP
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
                 <FolderKanban className="mr-2 h-4 w-4" />
-                Aufträge
+                PO
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                 <Target className="mr-2 h-4 w-4" />
                 CP
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/controlplan')}>
-                <ListChecks className="mr-2 h-4 w-4" />
-                Control Plan
+             <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                <BrainCircuit className="mr-2 h-4 w-4" />
+                DNA
             </Button>
             {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
@@ -282,9 +292,24 @@ export default function LenkungsplanPage() {
                     Admin
                 </Button>
             )}
-          <Button onClick={handleLogout} variant="secondary">
-            Logout
-          </Button>
+          <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="icon" className="rounded-full">
+                  <Avatar>
+                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || user?.email || ''} />
+                    <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Ausloggen</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </header>
       <main className="flex-1 p-4 md:p-6">

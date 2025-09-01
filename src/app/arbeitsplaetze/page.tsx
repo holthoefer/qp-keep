@@ -6,12 +6,21 @@ import { WorkstationGrid } from "@/components/workstations/WorkstationGrid";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
-import { Book, ListChecks, Shield, Target, FolderKanban } from "lucide-react";
+import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 export default function ArbeitsplaetzePage() {
     const router = useRouter();
-    const { logout, isAdmin } = useAuth();
+    const { user, logout, isAdmin } = useAuth();
     
     const handleLogout = async () => {
         await logout();
@@ -27,25 +36,25 @@ export default function ArbeitsplaetzePage() {
                     Arbeitsplätze
                 </h1>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                         Notizen
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
                         <FolderKanban className="mr-2 h-4 w-4" />
-                        Aufträge
+                        PO
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                         <Target className="mr-2 h-4 w-4" />
                         CP
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => router.push('/controlplan')}>
-                        <ListChecks className="mr-2 h-4 w-4" />
-                        Control Plan
+                    <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                        <BrainCircuit className="mr-2 h-4 w-4" />
+                        DNA
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                         <Book className="mr-2 h-4 w-4" />
-                        Lenkungsplan
+                        LP
                     </Button>
                     {isAdmin && (
                         <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
@@ -53,9 +62,24 @@ export default function ArbeitsplaetzePage() {
                             Admin
                         </Button>
                     )}
-                    <Button onClick={handleLogout} variant="secondary">
-                        Ausloggen
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="secondary" size="icon" className="rounded-full">
+                          <Avatar>
+                            <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || user?.email || ''} />
+                            <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Ausloggen</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </header>
             <main className="flex-1 p-4 md:p-6">
