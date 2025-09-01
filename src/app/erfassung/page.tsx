@@ -695,8 +695,7 @@ function ErfassungPage() {
             const samples = await getSamplesForDna(dnaData.idDNA);
             if (samples.length > 0) {
                 const lastSample = samples[samples.length - 1];
-                const sampleId = `${lastSample.dnaId}_${lastSample.timestamp}`;
-                handlePointClick(sampleId, true);
+                handlePointClick(lastSample.id, true);
             } else {
                 toast({ title: "Keine Stichproben", description: "Für dieses Merkmal existieren noch keine Stichproben." });
             }
@@ -866,9 +865,7 @@ function ErfassungPage() {
           {dnaData && (
             <Card>
               <CardHeader className='p-4'>
-                <CardTitle className="text-lg">
-                  x<span style={{ textDecoration: 'overline' }}>-</span>Chart
-                </CardTitle>
+                <CardTitle className="text-lg">x̄</CardTitle>
               </CardHeader>
               <CardContent className="h-[225px] w-full p-2">
                 <SampleChart key={chartRefreshKey} dnaData={dnaData} onPointClick={handlePointClick} />

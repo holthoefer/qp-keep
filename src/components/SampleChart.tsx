@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -12,11 +13,14 @@ import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipCont
 const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
     const data: SampleData = payload[0].payload;
+    const note = data.note || '';
+    const wrappedNote = note.length > 20 ? `${note.substring(0, 20)}...` : note;
     return (
       <div className="bg-background border border-border p-2 rounded-md shadow-lg text-xs">
         <p className="font-bold">{`Mittelwert: ${payload[0].value}`}</p>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
         {data.values && <p className="text-muted-foreground mt-1">Werte: {data.values.join('; ')}</p>}
+        {note && <p className="text-muted-foreground mt-1">Notiz: {wrappedNote}</p>}
       </div>
     );
   }
@@ -26,10 +30,11 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
 const CustomizedDot = (props: any) => {
   const { cx, cy, payload, dnaData } = props;
 
-  const { mean } = payload;
+  const { mean, note, imageUrl } = payload;
   const { LSL, USL, LCL, UCL } = dnaData;
 
   let fill = "#8884d8"; // Default color
+  let radius = 4;
 
   if ((USL !== undefined && USL !== null && mean > USL) || (LSL !== undefined && LSL !== null && mean < LSL)) {
     fill = "red";
@@ -37,7 +42,12 @@ const CustomizedDot = (props: any) => {
     fill = "orange";
   }
 
-  return <Dot cx={cx} cy={cy} r={4} fill={fill} />;
+  if (note || imageUrl) {
+      radius = 6;
+  }
+
+
+  return <Dot cx={cx} cy={cy} r={radius} fill={fill} />;
 };
 
 
@@ -85,6 +95,10 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
         return [min - padding, max + padding];
     }, [formattedData, dnaData.LSL, dnaData.USL]);
 
+    const yAxisTickFormatter = (value: number) => {
+        return value.toFixed(2);
+    };
+
 
     if (isLoading) {
         return <Skeleton className="h-full w-full" />;
@@ -112,7 +126,7 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
             <LineChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" style={{ fontSize: '12px' }} />
-                <YAxis domain={yAxisDomain} style={{ fontSize: '12px' }} width={50} />
+                <YAxis domain={yAxisDomain} style={{ fontSize: '12px' }} width={50} tickFormatter={yAxisTickFormatter} />
                 <Tooltip content={<CustomTooltip />} />
                 
                 {dnaData.USL !== undefined && dnaData.USL !== null && (
