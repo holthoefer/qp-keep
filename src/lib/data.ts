@@ -484,7 +484,13 @@ export const getSample = async (sampleId: string): Promise<SampleData | null> =>
 };
 
 export const getSamplesForDna = async (dnaId: string, count?: number): Promise<SampleData[]> => {
-    const q = query(collection(db, "samples"), where("dnaId", "==", dnaId));
+    const user = auth.currentUser;
+    if (!user) return [];
+
+    const q = query(
+        collection(db, "samples"), 
+        where("dnaId", "==", dnaId)
+    );
     
     const snapshot = await getDocs(q);
     let samples = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SampleData));
@@ -498,3 +504,4 @@ export const getSamplesForDna = async (dnaId: string, count?: number): Promise<S
     
     return samples;
 };
+
