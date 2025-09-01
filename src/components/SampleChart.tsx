@@ -2,10 +2,27 @@
 'use client';
 
 import * as React from 'react';
-import { Bar, BarChart, Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from 'recharts';
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer, TooltipProps } from 'recharts';
 import type { DNA, SampleData } from '@/types';
 import { getSamplesForDna } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
+import { format } from 'date-fns';
+import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+  if (active && payload && payload.length) {
+    const data: SampleData = payload[0].payload;
+    return (
+      <div className="bg-background border border-border p-2 rounded-md shadow-lg text-xs">
+        <p className="font-bold">{`Mittelwert: ${payload[0].value}`}</p>
+        <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
+        {data.values && <p className="text-muted-foreground mt-1">Werte: {data.values.join('; ')}</p>}
+      </div>
+    );
+  }
+  return null;
+};
+
 
 interface SampleChartProps {
     dnaData: DNA;
@@ -66,21 +83,18 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={formattedData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }} onClick={handleChartClick}>
+            <LineChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" style={{ fontSize: '12px' }} />
                 <YAxis domain={yAxisDomain} style={{ fontSize: '12px' }} width={50} />
-                <Tooltip 
-                    contentStyle={{ fontSize: '12px', padding: '5px' }}
-                    labelStyle={{ fontWeight: 'bold' }}
-                />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{fontSize: '12px'}} />
-                {dnaData.LSL !== undefined && <ReferenceLine y={dnaData.LSL} label={{ value: "LSL", fontSize: 10, position: 'insideBottomLeft' }} stroke="red" strokeDasharray="3 3" />}
-                {dnaData.LCL !== undefined && <ReferenceLine y={dnaData.LCL} label={{ value: "LCL", fontSize: 10, position: 'insideBottomLeft' }} stroke="blue" strokeDasharray="3 3" />}
-                {dnaData.CL !== undefined && <ReferenceLine y={dnaData.CL} label={{ value: "CL", fontSize: 10, position: 'insideBottomLeft' }} stroke="green" />}
-                {dnaData.UCL !== undefined && <ReferenceLine y={dnaData.UCL} label={{ value: "UCL", fontSize: 10, position: 'insideTopLeft' }} stroke="blue" strokeDasharray="3 3" />}
-                {dnaData.USL !== undefined && <ReferenceLine y={dnaData.USL} label={{ value: "USL", fontSize: 10, position: 'insideTopLeft' }} stroke="red" strokeDasharray="3 3" />}
-                <Line type="monotone" dataKey="mean" stroke="#8884d8" activeDot={{ r: 8 }} />
+                {dnaData.USL !== undefined && <ReferenceLine y={dnaData.USL} label={{ value: "USL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeDasharray="3 3" />}
+                {dnaData.UCL !== undefined && <ReferenceLine y={dnaData.UCL} label={{ value: "UCL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeWidth={2} />}
+                {dnaData.CL !== undefined && <ReferenceLine y={dnaData.CL} label={{ value: "CL", position: 'insideLeft', fontSize: 10 }} stroke="green" />}
+                {dnaData.LCL !== undefined && <ReferenceLine y={dnaData.LCL} label={{ value: "LCL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeWidth={2} />}
+                {dnaData.LSL !== undefined && <ReferenceLine y={dnaData.LSL} label={{ value: "LSL", position: 'insideLeft', fontSize: 10 }} stroke="red" strokeDasharray="3 3" />}
+                <Line type="linear" dataKey="mean" stroke="#8884d8" activeDot={{ r: 8 }} dot={{ r: 3 }} />
             </LineChart>
         </ResponsiveContainer>
     );
