@@ -466,6 +466,17 @@ export const saveSampleData = async (sampleData: Omit<SampleData, 'id' | 'userEm
     return { ...sampleData, id };
 };
 
+export const deleteSample = async (sampleId: string): Promise<void> => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Nicht authentifiziert.");
+    
+    const profile = await getProfile(user.uid);
+    if (profile?.role !== 'admin') {
+        throw new Error("Nur Administratoren dürfen Stichproben löschen.");
+    }
+    await deleteDoc(doc(db, 'samples', sampleId));
+};
+
 export const getSample = async (sampleId: string): Promise<SampleData | null> => {
     const docRef = doc(db, 'samples', sampleId);
     const docSnap = await getDoc(docRef);

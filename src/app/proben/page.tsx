@@ -1,18 +1,32 @@
+
 'use client';
 
 import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { getSamplesForDna, getDnaData, getControlPlans } from '@/lib/data';
+import { getSamplesForDna, getDnaData, getControlPlans, deleteSample } from '@/lib/data';
 import type { SampleData, DNA, ControlPlan, Characteristic } from '@/types';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, ArrowLeft, BarChart, Loader2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, BarChart, Loader2, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth-context';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,62 +34,86 @@ function ProbenPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const dnaId = searchParams.get('dnaId');
+    const { roles } = useAuth();
+    const { toast } = useToast();
+    const isAdmin = roles.includes('admin');
+    
     const [samples, setSamples] = React.useState<SampleData[]>([]);
     const [dna, setDna] = React.useState<DNA | null>(null);
     const [characteristic, setCharacteristic] = React.useState<Characteristic | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
+    const [itemToDelete, setItemToDelete] = React.useState<SampleData | null>(null);
 
-    React.useEffect(() => {
+    const fetchData = React.useCallback(async () => {
         if (!dnaId) {
             setError('Keine DNA-ID in der URL gefunden.');
             setIsLoading(false);
             return;
         }
 
-        const fetchData = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const [sampleData, dnaData] = await Promise.all([
-                    getSamplesForDna(dnaId),
-                    getDnaData(dnaId),
-                ]);
+        setIsLoading(true);
+        setError(null);
+        try {
+            const [sampleData, dnaData] = await Promise.all([
+                getSamplesForDna(dnaId),
+                getDnaData(dnaId),
+            ]);
 
-                if (dnaData.length === 0) {
-                    throw new Error(`Keine DNA-Daten für ID ${dnaId} gefunden.`);
-                }
-                const currentDna = dnaData[0];
-                setDna(currentDna);
-                setSamples(sampleData);
-
-                // Fetch Control Plan to find the characteristic
-                const allPlans = await getControlPlans();
-                const currentPlan = allPlans.find(p => p.planNumber === currentDna.CP);
-                if (currentPlan) {
-                    const currentStep = currentPlan.processSteps.find(ps => ps.processNumber === currentDna.OP);
-                    const currentChar = currentStep?.characteristics.find(c => c.itemNumber === currentDna.Char);
-                    if (currentChar) {
-                        setCharacteristic(currentChar);
-                    } else {
-                        console.warn(`Merkmal ${currentDna.Char} nicht im Prozessschritt ${currentDna.OP} gefunden.`);
-                    }
-                } else {
-                     console.warn(`Control Plan ${currentDna.CP} nicht gefunden.`);
-                }
-
-            } catch (e: any) {
-                setError(e.message);
-            } finally {
-                setIsLoading(false);
+            if (dnaData.length === 0) {
+                throw new Error(`Keine DNA-Daten für ID ${dnaId} gefunden.`);
             }
-        };
+            const currentDna = dnaData[0];
+            setDna(currentDna);
+            setSamples(sampleData);
 
-        fetchData();
+            // Fetch Control Plan to find the characteristic
+            const allPlans = await getControlPlans();
+            const currentPlan = allPlans.find(p => p.planNumber === currentDna.CP);
+            if (currentPlan) {
+                const currentStep = currentPlan.processSteps.find(ps => ps.processNumber === currentDna.OP);
+                const currentChar = currentStep?.characteristics.find(c => c.itemNumber === currentDna.Char);
+                if (currentChar) {
+                    setCharacteristic(currentChar);
+                } else {
+                    console.warn(`Merkmal ${currentDna.Char} nicht im Prozessschritt ${currentDna.OP} gefunden.`);
+                }
+            } else {
+                 console.warn(`Control Plan ${currentDna.CP} nicht gefunden.`);
+            }
+
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setIsLoading(false);
+        }
     }, [dnaId]);
+
+    React.useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleRowClick = (sample: SampleData) => {
         router.push(`/probe/${sample.id}`);
+    };
+    
+    const handleDelete = async () => {
+        if (!itemToDelete) return;
+        try {
+            await deleteSample(itemToDelete.id);
+            toast({
+                title: 'Stichprobe gelöscht',
+                description: `Die Stichprobe vom ${format(new Date(itemToDelete.timestamp), 'dd.MM.yyyy HH:mm')} wurde entfernt.`,
+            });
+            setItemToDelete(null);
+            fetchData(); // Refresh data
+        } catch (e: any) {
+            toast({
+                title: 'Fehler beim Löschen',
+                description: e.message,
+                variant: 'destructive',
+            });
+        }
     };
     
     const getErfassungUrl = () => {
@@ -112,74 +150,99 @@ function ProbenPage() {
 
     return (
         <DashboardClient>
-            <div className="flex items-center justify-between mb-4">
-                <Button variant="outline" onClick={() => router.back()}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Zurück
-                </Button>
-                 <Link href={getErfassungUrl()}>
-                    <Button variant="outline">
-                        <BarChart className="mr-2 h-4 w-4" />
-                        Zur Erfassung & Chart
+            <AlertDialog>
+                 <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Sind Sie sicher?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Diese Aktion kann nicht rückgängig gemacht werden. Die Stichprobe vom {itemToDelete && format(new Date(itemToDelete.timestamp), 'dd.MM.yyyy HH:mm')} wird dauerhaft gelöscht.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setItemToDelete(null)}>Abbrechen</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>Löschen</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+
+                <div className="flex items-center justify-between mb-4">
+                    <Button variant="outline" onClick={() => router.back()}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Zurück
                     </Button>
-                </Link>
-            </div>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Stichproben-Übersicht</CardTitle>
-                    <CardDescription>
-                        Alle erfassten Proben für <span className="font-mono font-medium">{dnaId}</span>
-                    </CardDescription>
-                     {characteristic && (
-                        <div className="text-sm text-muted-foreground pt-2">
-                           <p>
-                             <strong>Merkmal:</strong> {characteristic.itemNumber} - {characteristic.DesciptionSpec}
-                           </p>
-                           <p>
-                             <strong>Spezifikation:</strong> {characteristic.lsl} - {characteristic.usl} {characteristic.units || ''}
-                           </p>
-                        </div>
-                     )}
-                </CardHeader>
-                <CardContent>
-                   <div className="rounded-lg border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Zeitstempel</TableHead>
-                                <TableHead>Mittelwert</TableHead>
-                                <TableHead>StdAbw</TableHead>
-                                <TableHead>Werte</TableHead>
-                                <TableHead>Ausnahme</TableHead>
-                                <TableHead>Notiz</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {samples.length === 0 ? (
+                     <Link href={getErfassungUrl()}>
+                        <Button variant="outline">
+                            <BarChart className="mr-2 h-4 w-4" />
+                            Zur Erfassung & Chart
+                        </Button>
+                    </Link>
+                </div>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Stichproben-Übersicht</CardTitle>
+                        <CardDescription>
+                            Alle erfassten Proben für <span className="font-mono font-medium">{dnaId}</span>
+                        </CardDescription>
+                         {characteristic && (
+                            <div className="text-sm text-muted-foreground pt-2">
+                               <p>
+                                 <strong>Merkmal:</strong> {characteristic.itemNumber} - {characteristic.DesciptionSpec}
+                               </p>
+                               <p>
+                                 <strong>Spezifikation:</strong> {characteristic.lsl} - {characteristic.usl} {characteristic.units || ''}
+                               </p>
+                            </div>
+                         )}
+                    </CardHeader>
+                    <CardContent>
+                       <div className="rounded-lg border">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                                        Für diese ID wurden noch keine Stichproben erfasst.
-                                    </TableCell>
+                                    <TableHead>Zeitstempel</TableHead>
+                                    <TableHead>Mittelwert</TableHead>
+                                    <TableHead>StdAbw</TableHead>
+                                    <TableHead>Werte</TableHead>
+                                    <TableHead>Ausnahme</TableHead>
+                                    <TableHead>Notiz</TableHead>
+                                    {isAdmin && <TableHead className="text-right">Aktion</TableHead>}
                                 </TableRow>
-                            ) : (
-                                samples.map(sample => (
-                                    <TableRow key={sample.id} onClick={() => handleRowClick(sample)} className="cursor-pointer">
-                                        <TableCell>{format(new Date(sample.timestamp), 'dd.MM.yyyy HH:mm:ss')}</TableCell>
-                                        <TableCell>{sample.mean.toFixed(4)}</TableCell>
-                                        <TableCell>{sample.stddev.toFixed(4)}</TableCell>
-                                        <TableCell className="font-mono text-xs">{sample.values.join('; ')}</TableCell>
-                                        <TableCell>
-                                            {sample.exception && <Badge variant="destructive">Ja</Badge>}
+                            </TableHeader>
+                            <TableBody>
+                                {samples.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center text-muted-foreground">
+                                            Für diese ID wurden noch keine Stichproben erfasst.
                                         </TableCell>
-                                        <TableCell className="max-w-xs truncate">{sample.note}</TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                   </div>
-                </CardContent>
-            </Card>
+                                ) : (
+                                    samples.map(sample => (
+                                        <TableRow key={sample.id} onClick={() => handleRowClick(sample)} className="cursor-pointer">
+                                            <TableCell>{format(new Date(sample.timestamp), 'dd.MM.yyyy HH:mm:ss')}</TableCell>
+                                            <TableCell>{sample.mean.toFixed(4)}</TableCell>
+                                            <TableCell>{sample.stddev.toFixed(4)}</TableCell>
+                                            <TableCell className="font-mono text-xs">{sample.values.join('; ')}</TableCell>
+                                            <TableCell>
+                                                {sample.exception && <Badge variant="destructive">Ja</Badge>}
+                                            </TableCell>
+                                            <TableCell className="max-w-xs truncate">{sample.note}</TableCell>
+                                            {isAdmin && (
+                                                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="ghost" size="icon" onClick={() => setItemToDelete(sample)}>
+                                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                </TableCell>
+                                            )}
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                       </div>
+                    </CardContent>
+                </Card>
+            </AlertDialog>
         </DashboardClient>
     );
 }
