@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { DNA, Workstation, ControlPlan, ProcessStep, StorageFile } from '@/types';
 import { getDnaData, getWorkstations, getControlPlans, listStorageFiles } from '@/lib/data';
 import { getDb } from '@/lib/firebase';
-import { Search, ImageIcon, Clock, ArrowLeft } from 'lucide-react';
+import { Search, ImageIcon, Clock, ArrowLeft, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { findThumbnailUrl } from '@/lib/image-utils';
 import { useRouter } from 'next/navigation';
+import { SampleChart } from '@/components/SampleChart';
 
 export const DnaTimeTracker = ({ lastTimestamp, frequency, prefix }: { lastTimestamp?: string, frequency?: number, prefix?: string }) => {
   const [remainingMinutes, setRemainingMinutes] = React.useState<number | null>(null);
@@ -218,6 +219,17 @@ export default function DnaPage() {
     return 'text-green-600';
   }
 
+  const handlePointClick = (sampleId: string) => {
+    // This function will be called from the chart
+    if (!sampleId) return;
+
+    // prevent default navigation if a point on chart is clicked
+    if ((event?.target as HTMLElement).closest('a, button, [role="button"]')) {
+      event?.preventDefault();
+    }
+    
+    router.push(`/probe/${encodeURIComponent(sampleId)}`);
+  };
 
   const hasVisibleData = Object.keys(groupedAndFilteredDna).length > 0;
 
@@ -333,7 +345,7 @@ export default function DnaPage() {
                                 return (
                                     <Link key={dna.idDNA} href={erfassungUrl} className={`block group ${isLinkDisabled ? 'pointer-events-none' : ''}`}>
                                     <Card className="h-full flex flex-col hover:border-primary transition-colors cursor-pointer bg-gradient-to-br from-card to-muted/20">
-                                        <CardHeader>
+                                        <CardHeader className="pb-2">
                                         <div className="flex justify-between items-start gap-2">
                                             <div className="flex items-center gap-2 flex-shrink min-w-0">
                                                 {dna.imageUrlLatestSample && (
@@ -384,6 +396,9 @@ export default function DnaPage() {
                                                     <p className="text-muted-foreground line-clamp-3">{dna.Memo}</p>
                                                 </div>
                                             )}
+                                             <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
+                                                <SampleChart dnaData={dna} onPointClick={handlePointClick} />
+                                             </div>
                                             {isLinkDisabled && <Badge variant="destructive" className="mt-2">Unvollständige Daten für Link</Badge>}
                                         </CardContent>
                                     </Card>
