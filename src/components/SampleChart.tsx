@@ -24,11 +24,11 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
     const wrappedNote = wrapNote(note, 20);
 
     return (
-      <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
-        <p className="font-bold">{`Mittelwert: ${payload[0].value}`}</p>
+      <div className="bg-background/20 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
+        <p className="font-bold">{`x̄: ${payload[0].value}`}</p>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
-        {data.values && <p className="text-muted-foreground mt-1">Werte: {data.values.join('; ')}</p>}
-        {note && <p className="text-muted-foreground mt-1 whitespace-pre-wrap">Notiz: {wrappedNote}</p>}
+        {data.values && <p className="text-muted-foreground mt-1">x: {data.values.join('; ')}</p>}
+        {note && <p className="font-bold mt-1 whitespace-pre-wrap">{wrappedNote}</p>}
       </div>
     );
   }
@@ -42,10 +42,9 @@ const CustomizedDot = (props: any) => {
   const { LSL, USL, LCL, UCL } = dnaData;
 
   let fill = "#8884d8"; 
-  let stroke = "none";
 
   if ((USL !== undefined && USL !== null && mean > USL) || (LSL !== undefined && LSL !== null && mean < LSL)) {
-    fill = "red";
+    fill = "hsl(var(--destructive))";
   } else if ((UCL !== undefined && UCL !== null && mean > UCL) || (LCL !== undefined && LCL !== null && mean < LCL)) {
     fill = "orange";
   }
@@ -53,14 +52,14 @@ const CustomizedDot = (props: any) => {
   if (note || imageUrl) {
       return (
         <g>
-            <Dot cx={cx} cy={cy} r={4} fill={fill} />
-            <Dot cx={cx} cy={cy} r={8} fill="transparent" stroke={fill} strokeWidth={1} />
+            <Dot cx={cx} cy={cy} r={3} fill={fill} />
+            <Dot cx={cx} cy={cy} r={7} fill="transparent" stroke={fill} strokeWidth={1} />
         </g>
       );
   }
 
 
-  return <Dot cx={cx} cy={cy} r={4} fill={fill} />;
+  return <Dot cx={cx} cy={cy} r={3} fill={fill} />;
 };
 
 
@@ -124,15 +123,6 @@ export function SampleChart({ dnaData, onPointClick }: SampleChartProps) {
             onPointClick(sampleId, isLatest);
         }
     }
-    
-    const renderLabel = (props: any) => {
-        const { x, y, stroke, value } = props;
-        return (
-            <text x={x} y={y} dy={-4} fill={stroke} fontSize={10} textAnchor="middle">
-            {value}
-            </text>
-        );
-    };
 
     return (
         <ResponsiveContainer width="100%" height="100%">

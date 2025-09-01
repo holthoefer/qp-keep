@@ -404,7 +404,9 @@ function ErfassungPage() {
     return numValues === 0;
   }, [isSaving, currentValues.length, requiredSampleSize]);
 
-  const inputPlaceholder = requiredSampleSize > 0 ? `${requiredSampleSize} Werte eingeben...` : 'Werte eingeben...';
+  const inputPlaceholder = requiredSampleSize > 0 
+    ? `${requiredSampleSize} Stichprobenwerte mit Dezimalpunkt eingeben...` 
+    : 'Stichprobenwerte mit Dezimalpunkt eingeben...';
 
 
   const handlePointClick = (sampleId: string, isLatest: boolean) => {
@@ -514,7 +516,7 @@ function ErfassungPage() {
 
     let sanitizedValue = value
         .replace(/(\d),(\d)/g, '$1.$2')
-        .replace(/[,\/\\;a-zA-Z]/g, '\n'); 
+        .replace(/[,/\\;a-zA-Z]/g, '\n'); 
     
     setSampleInput(sanitizedValue);
     
@@ -840,6 +842,7 @@ function ErfassungPage() {
                         placeholder={inputPlaceholder}
                         rows={textareaRows}
                         style={{ height: `${textareaRows * 1.5 + 1}rem`}}
+                        className="bg-blue-500/10"
                     />
                     <div className="flex flex-col h-full">
                         <Textarea 
@@ -847,7 +850,7 @@ function ErfassungPage() {
                             value={sampleNote}
                             onChange={(e) => setSampleNote(e.target.value)}
                             placeholder="Note..."
-                            className="flex-grow"
+                            className="flex-grow bg-blue-500/10"
                         />
                          <Button onClick={handleSave} disabled={isSaveDisabled} className="mt-2 w-full">
                             <Save className="mr-2 h-4 w-4" />
@@ -865,9 +868,6 @@ function ErfassungPage() {
       <div className='space-y-px mt-2'>
           {dnaData && (
             <Card>
-              <CardHeader className="p-4">
-                  <h3 className="text-lg font-semibold">x-quer Chart</h3>
-              </CardHeader>
               <CardContent className="h-[225px] w-full p-2">
                 <SampleChart key={chartRefreshKey} dnaData={dnaData} onPointClick={handlePointClick} />
               </CardContent>

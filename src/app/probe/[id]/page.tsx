@@ -694,124 +694,124 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
           ) : sample ? (
             <div className="space-y-4">
                 <Card className={cn("max-w-2xl mx-auto transition-colors", getCardBackgroundColor())}>
-                <CardHeader>
-                    <div className="flex justify-between items-center gap-2">
-                        <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={handleBack}>
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                        <CardTitle className="text-lg">Bild &amp; Notiz</CardTitle>
-                        </div>
-                        <div className="flex items-center gap-2">
-                        <Button onClick={handleSave} size="sm" disabled={isSaving || isUploading || !isDirty}>
-                                <Save className="mr-2 h-4 w-4" />
-                                Save
-                        </Button>
-                        </div>
-                    </div>
-                    <CardDescription className="pt-2 pl-12">
-                        ID: <span className="font-mono text-xs bg-muted p-1 rounded">{sampleId}</span>
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Anmerkungen zur Stichprobe..." disabled={isSaving || isUploading} rows={6} className="w-full"/>
-
-                    <Button
-                        onClick={() => fileInputRef.current?.click()}
-                        variant="outline"
-                        className="w-full"
-                        disabled={isUploading || isSaving}
-                    >
-                        <UploadCloud className="mr-2 h-4 w-4" />
-                        {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Neues Bild hochladen'}
-                    </Button>
-                    <Input
-                        id="file-upload"
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
-                        accept="image/jpeg,image/png,image/gif"
-                        className="hidden"
-                        disabled={isUploading || isSaving}
-                    />
-                    {isUploading && <Progress value={uploadProgress} className="w-full" />}
-                    {uploadError && (
-                        <Alert variant="destructive">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertTitle>Upload Fehler</AlertTitle>
-                            <AlertDescription>{uploadError}</AlertDescription>
-                        </Alert>
-                    )}
-
-                    <div className="w-full flex flex-col items-center justify-center relative gap-2">
-                        {isInvalidSrc ? (
-                            <div className="w-64 h-64 flex items-center justify-center flex-shrink-0 bg-muted rounded-md">
-                                <Image
-                                    src="https://placehold.co/600x400.png"
-                                    alt="Error or no image placeholder"
-                                    width={256}
-                                    height={256}
-                                    className="rounded-md object-contain aspect-square"
-                                    data-ai-hint="placeholder"
-                                />
+                    <CardHeader>
+                        <div className="flex justify-between items-center gap-2">
+                            <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" onClick={handleBack}>
+                                <ArrowLeft className="h-4 w-4" />
+                            </Button>
+                            <CardTitle className="text-lg">Bild &amp; Notiz</CardTitle>
                             </div>
-                        ) : (
-                            <button onClick={() => setIsImageModalOpen(true)} className="block w-64 h-64 flex-shrink-0 cursor-pointer focus:outline-none group">
-                                <div className="w-64 h-64 relative mx-auto">
+                            <div className="flex items-center gap-2">
+                            <Button onClick={handleSave} size="sm" disabled={isSaving || isUploading || !isDirty}>
+                                    <Save className="mr-2 h-4 w-4" />
+                                    Save
+                            </Button>
+                            </div>
+                        </div>
+                        <CardDescription className="pt-2 pl-12">
+                            ID: <span className="font-mono text-xs bg-muted p-1 rounded">{sampleId}</span>
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Anmerkungen zur Stichprobe..." disabled={isSaving || isUploading} rows={6} className="w-full"/>
+
+                        <Button
+                            onClick={() => fileInputRef.current?.click()}
+                            variant="outline"
+                            className="w-full"
+                            disabled={isUploading || isSaving}
+                        >
+                            <UploadCloud className="mr-2 h-4 w-4" />
+                            {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Neues Bild hochladen'}
+                        </Button>
+                        <Input
+                            id="file-upload"
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
+                            accept="image/jpeg,image/png,image/gif"
+                            className="hidden"
+                            disabled={isUploading || isSaving}
+                        />
+                        {isUploading && <Progress value={uploadProgress} className="w-full" />}
+                        {uploadError && (
+                            <Alert variant="destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Upload Fehler</AlertTitle>
+                                <AlertDescription>{uploadError}</AlertDescription>
+                            </Alert>
+                        )}
+
+                        <div className="w-full flex flex-col items-center justify-center relative gap-2">
+                            {isInvalidSrc ? (
+                                <div className="w-64 h-64 flex items-center justify-center flex-shrink-0 bg-muted rounded-md">
                                     <Image
-                                        src={imageUrl}
-                                        alt={`Foto für Stichprobe`}
+                                        src="https://placehold.co/600x400.png"
+                                        alt="Error or no image placeholder"
                                         width={256}
                                         height={256}
-                                        className="rounded-md object-contain aspect-square group-hover:opacity-80 transition-opacity"
-                                        data-ai-hint="sample image"
-                                        onError={() => {
-                                            if (!hasImageError) setHasImageError(true);
-                                        }}
+                                        className="rounded-md object-contain aspect-square"
+                                        data-ai-hint="placeholder"
                                     />
                                 </div>
-                            </button>
+                            ) : (
+                                <button onClick={() => setIsImageModalOpen(true)} className="block w-64 h-64 flex-shrink-0 cursor-pointer focus:outline-none group">
+                                    <div className="w-64 h-64 relative mx-auto">
+                                        <Image
+                                            src={imageUrl}
+                                            alt={`Foto für Stichprobe`}
+                                            width={256}
+                                            height={256}
+                                            className="rounded-md object-contain aspect-square group-hover:opacity-80 transition-opacity"
+                                            data-ai-hint="sample image"
+                                            onError={() => {
+                                                if (!hasImageError) setHasImageError(true);
+                                            }}
+                                        />
+                                    </div>
+                                </button>
+                            )}
+                        </div>
+                        {hasImageError && (
+                            <Alert variant="destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Fehler beim Laden des Bildes</AlertTitle>
+                                <AlertDescription>Die angegebene URL ist ungültig.</AlertDescription>
+                            </Alert>
                         )}
-                    </div>
-                    {hasImageError && (
-                        <Alert variant="destructive">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertTitle>Fehler beim Laden des Bildes</AlertTitle>
-                            <AlertDescription>Die angegebene URL ist ungültig.</AlertDescription>
-                        </Alert>
-                    )}
 
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." disabled={isSaving || isUploading} className="text-xs text-muted-foreground flex-grow" />
-                            <Button onClick={handleCopyUrl} variant="outline" size="icon" disabled={isSaving || isUploading || !imageUrl} aria-label="URL kopieren">
-                                <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button onClick={handleClearUrl} variant="outline" size="icon" disabled={isSaving || isUploading || !imageUrl} aria-label="URL löschen">
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." disabled={isSaving || isUploading} className="text-xs text-muted-foreground flex-grow" />
+                                <Button onClick={handleCopyUrl} variant="outline" size="icon" disabled={isSaving || isUploading || !imageUrl} aria-label="URL kopieren">
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                                <Button onClick={handleClearUrl} variant="outline" size="icon" disabled={isSaving || isUploading || !imageUrl} aria-label="URL löschen">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="items-top flex space-x-2 pt-2">
-                        <Checkbox id="update-dna" checked={updateDna} onCheckedChange={(checked) => setUpdateDna(Boolean(checked))} />
-                        <div className="grid gap-1.5 leading-none">
-                            <Label htmlFor="update-dna">
-                            DNA-Datensatz aktualisieren
-                            </Label>
-                            <p className="text-sm text-muted-foreground">
-                            Aktualisiert den Zeitstempel und Status im Haupt-DNA-Datensatz.
-                            </p>
+                        <div className="items-top flex space-x-2 pt-2">
+                            <Checkbox id="update-dna" checked={updateDna} onCheckedChange={(checked) => setUpdateDna(Boolean(checked))} />
+                            <div className="grid gap-1.5 leading-none">
+                                <Label htmlFor="update-dna">
+                                DNA-Datensatz aktualisieren
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                Aktualisiert den Zeitstempel und Status im Haupt-DNA-Datensatz.
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <div className="text-xs text-muted-foreground">
-                        <p>Mittelwert: {sample.mean.toFixed(4)}</p>
-                        <p>StdAbw: {sample.stddev.toFixed(4)}</p>
-                        <p>Werte: {sample.values.join('; ')}</p>
-                    </div>
-                </CardFooter>
+                    </CardContent>
+                    <CardFooter>
+                        <div className="text-xs text-muted-foreground">
+                            <p>Mittelwert: {sample.mean.toFixed(4)}</p>
+                            <p>StdAbw: {sample.stddev.toFixed(4)}</p>
+                            <p>Werte: {sample.values.join('; ')}</p>
+                        </div>
+                    </CardFooter>
                 </Card>
 
                 <Card className="max-w-2xl mx-auto w-full">
@@ -819,7 +819,19 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
                         <CardTitle>AI-Assistent</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                            <Button onClick={handleGeneratePrompt}>
+                            Prompt für AI generieren
+                            </Button>
+                            <Button onClick={handleGenerateHtmlSkeleton}>
+                            HTML-Grundgerüst generieren
+                            </Button>
+                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis}>
+                                {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                Analyse an AI senden
+                            </Button>
+                        </div>
+                        <div className="space-y-2 mt-4">
                             <div className="flex justify-between items-center">
                                 <Label htmlFor="prompt-text">Text-Prompt für Gemini Canvas</Label>
                                 <Button size="sm" variant="secondary" onClick={() => handleExport(promptText, `${sample.dnaId}_prompt`, 'txt')} disabled={!promptText}>
@@ -838,18 +850,6 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
                                 </Button>
                             </div>
                             <Textarea id="html-skeleton" value={htmlSkeleton ?? ''} readOnly placeholder="Klicken Sie auf 'HTML generieren', um das Grundgerüst zu erstellen." rows={10} className="font-mono text-xs"/>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mt-4">
-                            <Button onClick={handleGeneratePrompt}>
-                            Prompt für AI generieren
-                            </Button>
-                            <Button onClick={handleGenerateHtmlSkeleton}>
-                            HTML-Grundgerüst generieren
-                            </Button>
-                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis}>
-                                {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                Analyse an AI senden
-                            </Button>
                         </div>
                     </CardContent>
                 </Card>
