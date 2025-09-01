@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { DNA, Workstation, ControlPlan, ProcessStep, StorageFile } from '@/types';
 import { getDnaData, getWorkstations, getControlPlans, listStorageFiles } from '@/lib/data';
 import { getDb } from '@/lib/firebase';
-import { Search, ImageIcon, Clock } from 'lucide-react';
+import { Search, ImageIcon, Clock, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { findThumbnailUrl } from '@/lib/image-utils';
+import { useRouter } from 'next/navigation';
 
 export const DnaTimeTracker = ({ lastTimestamp, frequency, prefix }: { lastTimestamp?: string, frequency?: number, prefix?: string }) => {
   const [remainingMinutes, setRemainingMinutes] = React.useState<number | null>(null);
@@ -90,8 +91,10 @@ export default function DnaPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalImageUrl, setModalImageUrl] = React.useState('');
+  const [modalImageAlt, setModalImageAlt] = React.useState('');
   const [searchTerm, setSearchTerm] = React.useState('');
   const { toast } = useToast();
+  const router = useRouter();
 
   React.useEffect(() => {
     async function fetchData() {
@@ -200,10 +203,11 @@ export default function DnaPage() {
       return `/erfassung?ap=${dna.WP}&po=${dna.PO}&op=${dna.OP}&charNum=${dna.Char}`;
   }
 
-  const handleImageClick = (e: React.MouseEvent, url: string) => {
+  const handleImageClick = (e: React.MouseEvent, url: string, alt: string) => {
     e.preventDefault();
     e.stopPropagation();
     setModalImageUrl(url);
+    setModalImageAlt(alt);
     setIsModalOpen(true);
   };
   
@@ -223,14 +227,19 @@ export default function DnaPage() {
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
         imageUrl={modalImageUrl}
-        imageAlt="DNA Image"
+        imageAlt={modalImageAlt}
       />
       <Card>
         <CardHeader>
            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-xl">DNA (Aktive Merkmale)</CardTitle>
-                <CardDescription>Gruppiert nach aktivem Arbeitsplatz, Auftrag & Prozess.</CardDescription>
+              <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" onClick={() => router.push('/notes')}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <div>
+                  <CardTitle className="text-xl">DNA (Aktive Merkmale)</CardTitle>
+                  <CardDescription>Gruppiert nach aktivem Arbeitsplatz, Auftrag & Prozess.</CardDescription>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -260,24 +269,61 @@ export default function DnaPage() {
              <div className="space-y-6">
                 {Object.entries(groupedAndFilteredDna).map(([groupKey, dnaItems]) => {
                     const processStep = getProcessStepForGroup(groupKey);
+                    const wpId = groupKey.split(' / ')[0];
+                    const workstation = workstations.find(ws => ws.AP === wpId);
+                    const cpId = dnaItems[0]?.CP;
+                    const controlPlan = controlPlans.find(cp => cp.planNumber === cpId);
+                    
                     return (
                     <div key={groupKey}>
                         <div className="flex justify-between items-center mb-2 p-2 bg-muted rounded-lg">
-                            <h3 className="font-semibold">{groupKey}</h3>
-                            {processStep?.imageUrl && (
-                                <button
-                                    onClick={(e) => handleImageClick(e, processStep.imageUrl!)}
-                                    className="relative flex-shrink-0"
-                                >
-                                    <Image
-                                        src={findThumbnailUrl(processStep.imageUrl, storageFiles)}
-                                        alt={`Bild für Prozess ${processStep.processNumber}`}
-                                        width={40}
-                                        height={40}
-                                        className="rounded-md object-cover aspect-square border"
-                                    />
-                                </button>
-                            )}
+                           <div className="flex items-center gap-3">
+                              {workstation?.imageUrl && (
+                                  <button
+                                      onClick={(e) => handleImageClick(e, workstation.imageUrl!, `Bild für Arbeitsplatz ${workstation.AP}`)}
+                                      className="relative flex-shrink-0"
+                                  >
+                                      <Image
+                                          src={findThumbnailUrl(workstation.imageUrl, storageFiles)}
+                                          alt={`Bild für Arbeitsplatz ${workstation.AP}`}
+                                          width={40}
+                                          height={40}
+                                          className="rounded-md object-cover aspect-square border"
+                                      />
+                                  </button>
+                              )}
+                              <h3 className="font-semibold">{groupKey}</h3>
+                           </div>
+                           <div className="flex items-center gap-3">
+                              {processStep?.imageUrl && (
+                                  <button
+                                      onClick={(e) => handleImageClick(e, processStep.imageUrl!, `Bild für Prozess ${processStep.processNumber}`)}
+                                      className="relative flex-shrink-0"
+                                  >
+                                      <Image
+                                          src={findThumbnailUrl(processStep.imageUrl, storageFiles)}
+                                          alt={`Bild für Prozess ${processStep.processNumber}`}
+                                          width={40}
+                                          height={40}
+                                          className="rounded-md object-cover aspect-square border"
+                                      />
+                                  </button>
+                              )}
+                              {controlPlan?.imageUrl && (
+                                  <button
+                                      onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für Control Plan ${controlPlan.planNumber}`)}
+                                      className="relative flex-shrink-0"
+                                  >
+                                      <Image
+                                          src={findThumbnailUrl(controlPlan.imageUrl, storageFiles)}
+                                          alt={`Bild für Control Plan ${controlPlan.planNumber}`}
+                                          width={40}
+                                          height={40}
+                                          className="rounded-md object-cover aspect-square border"
+                                      />
+                                  </button>
+                              )}
+                            </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {dnaItems.map((dna) => {
@@ -292,7 +338,7 @@ export default function DnaPage() {
                                             <div className="flex items-center gap-2 flex-shrink min-w-0">
                                                 {dna.imageUrl && (
                                                     <button
-                                                        onClick={(e) => handleImageClick(e, dna.imageUrl!)}
+                                                        onClick={(e) => handleImageClick(e, dna.imageUrl!, `Bild für Merkmal`)}
                                                         className="relative flex-shrink-0"
                                                     >
                                                         <Image
@@ -309,7 +355,7 @@ export default function DnaPage() {
                                             <div className="flex-shrink-0">
                                                 {dna.imageUrlLatestSample && (
                                                      <button
-                                                        onClick={(e) => handleImageClick(e, dna.imageUrlLatestSample!)}
+                                                        onClick={(e) => handleImageClick(e, dna.imageUrlLatestSample!, `Letztes Sample Bild`)}
                                                         className="relative"
                                                     >
                                                         <Image
@@ -358,3 +404,4 @@ export default function DnaPage() {
     </DashboardClient>
   );
 }
+
