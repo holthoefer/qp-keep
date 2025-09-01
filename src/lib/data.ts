@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { db, auth, getAppStorage as getFirebaseStorage } from './firebase';
@@ -439,9 +440,28 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
     }
 }
 
+const cleanDnaDataForSave = (data: Partial<DNA>): Partial<DNA> => {
+    const cleaned = { ...data };
+    const numericKeys: (keyof DNA)[] = ['LSL', 'LCL', 'CL', 'UCL', 'USL', 'sUSL', 'SampleSize', 'Frequency'];
+    
+    for (const key of numericKeys) {
+        const value = cleaned[key];
+        if (value === '' || value === null || value === undefined) {
+            cleaned[key] = undefined;
+        } else {
+            const num = Number(value);
+            cleaned[key] = isNaN(num) ? undefined : num;
+        }
+    }
+    
+    // Remove all top-level undefined properties
+    return Object.fromEntries(Object.entries(cleaned).filter(([, v]) => v !== undefined));
+}
+
 export async function saveDnaData(dnaData: Partial<DNA> & { idDNA: string }): Promise<DNA> {
     const docRef = doc(db, 'dna', dnaData.idDNA);
-    await setDoc(docRef, dnaData, { merge: true });
+    const cleanedData = cleanDnaDataForSave(dnaData);
+    await setDoc(docRef, cleanedData, { merge: true });
     const docSnap = await getDoc(docRef);
     return docSnap.data() as DNA;
 }
