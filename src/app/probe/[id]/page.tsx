@@ -1,9 +1,10 @@
+
 'use client';
 
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { getSample, saveSampleData, getAppStorage, getDnaData, getControlPlan } from '@/lib/data';
+import { getSample, saveSampleData, getAppStorage, getDnaData, getControlPlan, getSamplesForDna } from '@/lib/data';
 import type { SampleData, DNA, ControlPlan, ProcessStep, Characteristic } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -168,7 +169,6 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
   const [analysisResult, setAnalysisResult] = React.useState<string | null>(null);
   const [analysisError, setAnalysisError] = React.useState<string | null>(null);
 
-  const [promptText, setPromptText] = React.useState<string | null>(null);
   const [htmlSkeleton, setHtmlSkeleton] = React.useState<string | null>(null);
 
 
@@ -229,8 +229,8 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
   }, [sampleId]);
 
   const handleSendToAi = async () => {
-    if (!sample || !dna) {
-        toast({ title: 'Error', description: 'Nicht alle Daten für die Analyse geladen.', variant: 'destructive' });
+    if (!sample || !dna || !htmlSkeleton) {
+        toast({ title: 'Error', description: 'HTML-Grundgerüst muss zuerst generiert werden.', variant: 'destructive' });
         return;
     }
 
@@ -616,22 +616,6 @@ const generateHtmlWithCurrentData = () => {
 };
 
 
-  const handleExport = (content: string | null, filename: string, extension: 'txt' | 'html') => {
-      if (!content) {
-        toast({ title: 'Nichts zu exportieren', description: 'Bitte generieren Sie zuerst den Inhalt.', variant: 'destructive' });
-        return;
-      }
-      const blob = new Blob([content], { type: `text/${extension};charset=utf-8;` });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", `${filename}.${extension}`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-  }
-
   const handleCombinedExport = () => {
     if (!htmlSkeleton || !analysisResult || !sample) {
         toast({ title: "Fehler beim Export", description: "Es sind nicht alle Daten für den kombinierten Export vorhanden.", variant: 'destructive' });
@@ -642,8 +626,15 @@ const generateHtmlWithCurrentData = () => {
         '<!-- PLATZHALTER FÜR KI-ANALYSE -->',
         analysisResult
     );
-    
-    handleExport(finalHtml, `${sample.dnaId}_full_report`, 'html');
+    const blob = new Blob([finalHtml], { type: `text/html;charset=utf-8;` });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${sample.dnaId}_full_report.html`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const getCardBackgroundColor = (): string => {
@@ -831,40 +822,36 @@ const generateHtmlWithCurrentData = () => {
                             </div>
                         </div>
                     </CardContent>
-                    <CardFooter>
+                     <CardFooter className="flex justify-between items-center">
                         <div className="text-xs text-muted-foreground">
                             <p>Mittelwert: {sample.mean.toFixed(4)}</p>
                             <p>StdAbw: {sample.stddev.toFixed(4)}</p>
                             <p>Werte: {sample.values.join('; ')}</p>
                         </div>
+                        <Card className="max-w-2xl mx-auto w-full">
+                            <CardContent className="p-4">
+                                <div className="flex flex-wrap gap-2">
+                                    <Button onClick={handleGenerateHtmlSkeleton}>
+                                        HTML-Grundgerüst generieren
+                                    </Button>
+                                    <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis || !htmlSkeleton}>
+                                        {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                        Analyse an AI senden
+                                    </Button>
+                                </div>
+                                <div className="space-y-2 mt-4">
+                                    <div className="flex justify-between items-center">
+                                        <Label htmlFor="html-skeleton">HTML-Grundgerüst</Label>
+                                        <Button size="sm" variant="secondary" onClick={() => handleCombinedExport()} disabled={!htmlSkeleton}>
+                                            <FileDown className="mr-2 h-4 w-4"/>
+                                            HTML-Export
+                                        </Button>
+                                    </div>
+                                    <Textarea id="html-skeleton" value={htmlSkeleton ?? ''} readOnly placeholder="Klicken Sie auf 'HTML generieren', um das Grundgerüst zu erstellen." rows={10} className="font-mono text-xs"/>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </CardFooter>
-                </Card>
-                
-                <Card className="max-w-2xl mx-auto w-full">
-                    <CardHeader>
-                        <CardTitle>AI-Assistent</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                            <Button onClick={handleGenerateHtmlSkeleton}>
-                                HTML-Grundgerüst generieren
-                            </Button>
-                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis || !htmlSkeleton}>
-                                {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                Analyse an AI senden
-                            </Button>
-                        </div>
-                        <div className="space-y-2 mt-4">
-                            <div className="flex justify-between items-center">
-                                <Label htmlFor="html-skeleton">HTML-Grundgerüst</Label>
-                                <Button size="sm" variant="secondary" onClick={() => handleExport(htmlSkeleton, `${sample.dnaId}_skeleton`, 'html')} disabled={!htmlSkeleton}>
-                                    <FileDown className="mr-2 h-4 w-4"/>
-                                    HTML-Export
-                                </Button>
-                            </div>
-                            <Textarea id="html-skeleton" value={htmlSkeleton ?? ''} readOnly placeholder="Klicken Sie auf 'HTML generieren', um das Grundgerüst zu erstellen." rows={10} className="font-mono text-xs"/>
-                        </div>
-                    </CardContent>
                 </Card>
             </div>
           ) : (
