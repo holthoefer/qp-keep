@@ -369,6 +369,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
   const handleGeneratePrompt = async () => {
     if (!sample || !dna) return;
     toast({description: "Diese Funktion ist derzeit nicht verfügbar."});
+    // This flow does not exist, so it is commented out.
     // try {
     //     const generatedPrompt = await renderAnalyzeSamplePrompt(sample, dna, historicalSamples);
     //     setPromptText(generatedPrompt);
@@ -813,33 +814,20 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
                         </div>
                     </CardFooter>
                 </Card>
-
+                
                 <Card className="max-w-2xl mx-auto w-full">
                     <CardHeader>
                         <CardTitle>AI-Assistent</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-wrap gap-2">
-                            <Button onClick={handleGeneratePrompt}>
-                            Prompt für AI generieren
-                            </Button>
                             <Button onClick={handleGenerateHtmlSkeleton}>
-                            HTML-Grundgerüst generieren
+                                HTML-Grundgerüst generieren
                             </Button>
-                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis}>
+                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis || !htmlSkeleton}>
                                 {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                                 Analyse an AI senden
                             </Button>
-                        </div>
-                        <div className="space-y-2 mt-4">
-                            <div className="flex justify-between items-center">
-                                <Label htmlFor="prompt-text">Text-Prompt für Gemini Canvas</Label>
-                                <Button size="sm" variant="secondary" onClick={() => handleExport(promptText, `${sample.dnaId}_prompt`, 'txt')} disabled={!promptText}>
-                                    <FileDown className="mr-2 h-4 w-4"/>
-                                    Export
-                                </Button>
-                            </div>
-                            <Textarea id="prompt-text" value={promptText ?? ''} readOnly placeholder="Klicken Sie auf 'Prompt generieren', um die Daten für die AI vorzubereiten." rows={10} className="font-mono text-xs"/>
                         </div>
                         <div className="space-y-2 mt-4">
                             <div className="flex justify-between items-center">
