@@ -490,22 +490,22 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     `;
   };
 
- const handleGenerateHtmlSkeleton = async () => {
+ const handleGenerateHtmlSkeleton = async (andThen?: (html: string) => void) => {
     if (!sample || !dna) return;
 
     if (isDirty) {
         await handleSaveWithCallback(() => {
-            // Callback after saving is finished, now we can generate HTML
-            generateHtmlWithCurrentData();
+            const html = generateHtmlWithCurrentData();
+            if (html && andThen) andThen(html);
         });
     } else {
-        // If not dirty, just generate HTML
-        generateHtmlWithCurrentData();
+        const html = generateHtmlWithCurrentData();
+        if (html && andThen) andThen(html);
     }
 };
 
-const generateHtmlWithCurrentData = () => {
-    if (!sample || !dna) return;
+const generateHtmlWithCurrentData = (): string | null => {
+    if (!sample || !dna) return null;
     const allSamples = [...historicalSamples, { ...sample, imageUrl, note }].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
     const xBarChartSVG = generateChartSVG('mean', allSamples, dna, sample.timestamp);
@@ -609,10 +609,22 @@ const generateHtmlWithCurrentData = () => {
 </body>
 </html>`;
     setHtmlSkeleton(skeleton);
-    toast({
-        title: "HTML-Grundgerüst generiert",
-        description: "Das HTML ist bereit für die AI-Analyse.",
-        duration: 2000,
+    return skeleton;
+};
+
+const handleExportSkeleton = () => {
+    handleGenerateHtmlSkeleton((html) => {
+        if (!html || !sample) return;
+        const blob = new Blob([html], { type: `text/html;charset=utf-8;` });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${sample.dnaId}_report.html`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Export erfolgreich", description: "HTML-Grundgerüst wurde heruntergeladen." });
     });
 };
 
@@ -833,23 +845,25 @@ const generateHtmlWithCurrentData = () => {
                 </Card>
                 <Card className="max-w-2xl mx-auto w-full">
                     <CardHeader>
-                        <CardTitle>AI-Assistent</CardTitle>
+                        <CardTitle>AI-Assistent & Export</CardTitle>
                     </CardHeader>
                     <CardContent className="p-4">
                         <div className="flex flex-wrap gap-2">
-                            <Button onClick={handleGenerateHtmlSkeleton}>
-                                HTML-Grundgerüst generieren
+                            <Button onClick={handleExportSkeleton}>
+                                <FileDown className="mr-2 h-4 w-4" />
+                                Grundgerüst als HTML exportieren
                             </Button>
-                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis || !htmlSkeleton}>
+                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis || !htmlSkeleton} variant="secondary">
                                 {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                                 Analyse an AI senden
                             </Button>
                         </div>
-                        <div className="space-y-2 mt-4">
+                         <div className="space-y-2 mt-4">
                             <div className="flex justify-between items-center">
-                                <Label htmlFor="html-skeleton">HTML-Grundgerüst</Label>
+                                <Label htmlFor="html-skeleton">HTML-Grundgerüst (Vorschau)</Label>
+                                <Button size="sm" variant="outline" onClick={() => handleGenerateHtmlSkeleton()}>Grundgerüst jetzt generieren</Button>
                             </div>
-                            <Textarea id="html-skeleton" value={htmlSkeleton ?? ''} readOnly placeholder="Klicken Sie auf 'HTML generieren', um das Grundgerüst zu erstellen." rows={10} className="font-mono text-xs"/>
+                            <Textarea id="html-skeleton" value={htmlSkeleton ?? ''} readOnly placeholder="Klicken Sie auf 'Grundgerüst generieren', um das HTML zu erstellen und eine Vorschau anzuzeigen." rows={10} className="font-mono text-xs"/>
                         </div>
                     </CardContent>
                 </Card>
@@ -863,4 +877,3 @@ const generateHtmlWithCurrentData = () => {
       </>
   );
 }
-
