@@ -20,7 +20,7 @@ import { StorageBrowser } from '@/components/cp/StorageBrowser';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { findThumbnailUrl } from '@/lib/image-utils';
+import { generateThumbnailUrl } from '@/lib/image-utils';
 
 
 interface AuftragDetailPageProps {
@@ -37,7 +37,6 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
 
   const [auftrag, setAuftrag] = React.useState<Auftrag | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = React.useState('');
-  const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -62,15 +61,11 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
       setIsLoading(true);
       setError(null);
       try {
-        const [auftragData, files] = await Promise.all([
-            getAuftrag(po),
-            listStorageFiles('uploads/')
-        ]);
+        const auftragData = await getAuftrag(po);
         if (!auftragData) {
           throw new Error(`Auftrag mit PO ${po} nicht gefunden.`);
         }
         setAuftrag(auftragData);
-        setStorageFiles(files);
         setImageUrl(auftragData.imageUrl || '');
         setOriginalImageUrl(auftragData.imageUrl || '');
         setHasImageError(false);
@@ -237,7 +232,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
 
   const isInvalidSrc = !imageUrl || hasImageError || !imageUrl.startsWith('http');
   const isUrlChanged = imageUrl !== originalImageUrl;
-  const thumbnailUrl = findThumbnailUrl(imageUrl, storageFiles);
+  const thumbnailUrl = generateThumbnailUrl(imageUrl);
   
   const handleBack = () => {
     if(onClose) {
