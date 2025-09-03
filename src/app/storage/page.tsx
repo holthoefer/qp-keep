@@ -93,7 +93,7 @@ export default function StorageViewerPage() {
     if (pathParts.length > 1) {
       return pathParts.slice(0, -1).join('/');
     }
-    return 'root';
+    return '/'; // Use a single slash for root
   }
 
   const filteredFiles = React.useMemo(() => {
