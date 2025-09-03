@@ -106,7 +106,7 @@ const statusVariant: Record<
 
 const ALL_STATUSES: ControlPlanStatus[] = ['Draft', 'For Review', 'Approved', 'Active', 'Inactive', 'Rejected'];
 
-const generateControlPlanHtmlV3 = (plan: ControlPlan, allFiles: StorageFile[]): string => {
+const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: StorageFile[]): string => {
   const formatDate = (dateString?: string | null, emptyText: string = '') => {
     if (!dateString) return emptyText;
     try {
@@ -300,7 +300,7 @@ const generateControlPlanHtmlV3 = (plan: ControlPlan, allFiles: StorageFile[]): 
   `;
 };
 
-const generateControlPlanHtmlV4 = (plan: ControlPlan): string => {
+const generateControlPlanHtmlWithoutImages = (plan: ControlPlan): string => {
   const formatDate = (dateString?: string | null, emptyText: string = '') => {
     if (!dateString) return emptyText;
     try {
@@ -505,8 +505,8 @@ function ControlPlanRow({
   onDuplicate,
   onHistory,
   onImageClick,
-  onPrintV3,
-  onPrintV4,
+  onPrintV1,
+  onPrintV2,
   onExportCsv,
 }: {
   plan: ControlPlan;
@@ -517,8 +517,8 @@ function ControlPlanRow({
   onDuplicate: (plan: ControlPlan) => void;
   onHistory: (plan: ControlPlan) => void;
   onImageClick: (url: string, alt: string) => void;
-  onPrintV3: (plan: ControlPlan) => void;
-  onPrintV4: (plan: ControlPlan) => void;
+  onPrintV1: (plan: ControlPlan) => void;
+  onPrintV2: (plan: ControlPlan) => void;
   onExportCsv: (plan: ControlPlan) => void;
 }) {
 
@@ -556,13 +556,13 @@ function ControlPlanRow({
                     View History
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                   <DropdownMenuItem onClick={() => onPrintV3(plan)}>
+                   <DropdownMenuItem onClick={() => onPrintV1(plan)}>
                     <Printer className="mr-2 h-4 w-4" />
                     Druck Prüfplan
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onPrintV4(plan)}>
+                  <DropdownMenuItem onClick={() => onPrintV2(plan)}>
                     <Printer className="mr-2 h-4 w-4" />
-                    Print Control Plan
+                    Print CP
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => onExportCsv(plan)}>
@@ -831,8 +831,8 @@ export default function ControlPlansPage() {
     );
   };
   
-  const handlePrintV3 = (plan: ControlPlan) => {
-    const htmlContent = generateControlPlanHtmlV3(plan, storageFiles);
+  const handlePrintV1 = (plan: ControlPlan) => {
+    const htmlContent = generateControlPlanHtmlWithThumbnails(plan, storageFiles);
     const docWindow = window.open('about:blank', '_blank');
     if (docWindow) {
         docWindow.document.open();
@@ -847,8 +847,8 @@ export default function ControlPlansPage() {
     }
   };
 
-  const handlePrintV4 = (plan: ControlPlan) => {
-    const htmlContent = generateControlPlanHtmlV4(plan);
+  const handlePrintV2 = (plan: ControlPlan) => {
+    const htmlContent = generateControlPlanHtmlWithoutImages(plan);
     const docWindow = window.open('about:blank', '_blank');
     if (docWindow) {
         docWindow.document.open();
@@ -1097,8 +1097,8 @@ export default function ControlPlansPage() {
                             onDuplicate={handleDuplicatePlan}
                             onHistory={handleOpenHistory}
                             onImageClick={handleImageClick}
-                            onPrintV3={handlePrintV3}
-                            onPrintV4={handlePrintV4}
+                            onPrintV1={handlePrintV1}
+                            onPrintV2={handlePrintV2}
                             onExportCsv={handleExportCsv}
                         />
                         ))
