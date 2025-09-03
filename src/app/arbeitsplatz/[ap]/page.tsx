@@ -42,6 +42,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
   const [isBrowserOpen, setIsBrowserOpen] = React.useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
+  const [justUploaded, setJustUploaded] = React.useState(false);
   
   React.useEffect(() => {
     if (!ap) {
@@ -62,6 +63,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
         setImageUrl(wsData.imageUrl || '');
         setOriginalImageUrl(wsData.imageUrl || '');
         setHasImageError(false);
+        setJustUploaded(false);
       } catch (e: any) {
         setError(e.message);
       } finally {
@@ -82,6 +84,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
         setWorkstation(updatedWorkstation);
         setOriginalImageUrl(newImageUrl);
         setImageUrl(newImageUrl);
+        setJustUploaded(false);
         toast({ title: 'Gespeichert!', description: 'Die Änderungen wurden erfolgreich übernommen.' });
         router.push('/arbeitsplaetze');
     } catch(e: any) {
@@ -117,6 +120,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
     setIsUploading(true);
     setUploadProgress(0);
     setUploadError(null);
+    setJustUploaded(false);
 
     const storage = getAppStorage();
     if (!storage) {
@@ -145,6 +149,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           setImageUrl(downloadURL);
           setHasImageError(false);
+          setJustUploaded(true);
            toast({
             title: 'Upload erfolgreich',
             description: 'Klicken Sie auf Speichern, um die Änderung zu übernehmen.',
@@ -179,6 +184,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
   const handleImageSelectFromBrowser = async (url: string) => {
     setIsBrowserOpen(false);
     setImageUrl(url);
+    setJustUploaded(false);
   }
 
   const handleDragEvents = (e: React.DragEvent<HTMLDivElement>) => {
@@ -209,7 +215,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
 
   const isInvalidSrc = !imageUrl || hasImageError || !imageUrl.startsWith('http');
   const isUrlChanged = imageUrl !== originalImageUrl;
-  const thumbnailUrl = generateThumbnailUrl(imageUrl);
+  const displayUrl = justUploaded ? imageUrl : generateThumbnailUrl(imageUrl);
   
   const handleBack = () => {
     router.push('/arbeitsplaetze');
@@ -308,7 +314,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
                           ) : (
                               <button onClick={() => setIsImageModalOpen(true)} className="block w-full cursor-pointer focus:outline-none group">
                                   <Image
-                                      src={thumbnailUrl}
+                                      src={displayUrl}
                                       alt={`Foto für Arbeitsplatz ${workstation.AP}`}
                                       width={600}
                                       height={400}

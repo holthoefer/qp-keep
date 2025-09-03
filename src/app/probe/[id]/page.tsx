@@ -165,6 +165,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
   const [isBackAlertOpen, setIsBackAlertOpen] = React.useState(false);
+  const [justUploaded, setJustUploaded] = React.useState(false);
 
   const [isAnalysisDialogOpen, setIsAnalysisDialogOpen] = React.useState(false);
   const [isGeneratingAnalysis, setIsGeneratingAnalysis] = React.useState(false);
@@ -193,6 +194,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
           throw new Error(`Stichprobe mit ID ${sampleId} nicht gefunden.`);
         }
         setSample(sampleData);
+        setJustUploaded(false);
 
         const dnaData = (await getDnaData(sampleData.dnaId))[0] as DNA | null;
         if (!dnaData) throw new Error(`DNA-Daten für ${sampleData.dnaId} nicht gefunden.`);
@@ -323,6 +325,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     setIsUploading(true);
     setUploadProgress(0);
     setUploadError(null);
+    setJustUploaded(false);
 
     const storage = getAppStorage();
     if (!storage) {
@@ -349,6 +352,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           setImageUrl(downloadURL);
+          setJustUploaded(true);
         } catch (e: any) {
            setUploadError('Fehler beim Abrufen der Download-URL nach dem Upload.');
         } finally {
@@ -669,6 +673,8 @@ const handleExportSkeleton = () => {
   }
 
   const isInvalidSrc = !imageUrl || hasImageError || !imageUrl.startsWith('http');
+  const displayUrl = justUploaded ? imageUrl : generateThumbnailUrl(imageUrl);
+
 
   return (
       <>
@@ -790,7 +796,7 @@ const handleExportSkeleton = () => {
                                 <button onClick={() => setIsImageModalOpen(true)} className="block w-64 h-64 flex-shrink-0 cursor-pointer focus:outline-none group">
                                     <div className="w-64 h-64 relative mx-auto">
                                         <Image
-                                            src={generateThumbnailUrl(imageUrl)}
+                                            src={displayUrl}
                                             alt={`Foto für Stichprobe`}
                                             width={256}
                                             height={256}

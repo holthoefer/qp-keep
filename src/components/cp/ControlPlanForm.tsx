@@ -52,7 +52,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/hooks/use-auth-context';
-import { generateControlPlanDocV5Action } from '@/ai/flows/suggest-response-plan';
+import { suggestResponsePlan } from '@/ai/flows/suggest-response-plan';
 import { generateThumbnailUrl } from '@/lib/image-utils';
 
 // Custom Zod preprocessor to handle empty strings for number fields
@@ -1328,6 +1328,8 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
     const [uploadProgress, setUploadProgress] = React.useState(0);
     const [uploadError, setUploadError] = React.useState<string | null>(null);
     const { toast } = useToast();
+    const [justUploaded, setJustUploaded] = React.useState(false);
+
 
     const handleUpload = (file: File) => {
         // Use planNumber for new plans, fallback to entityId for existing ones
@@ -1349,6 +1351,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
         setIsUploading(true);
         setUploadProgress(0);
         setUploadError(null);
+        setJustUploaded(false);
 
         const storage = getAppStorage();
         if (!storage) {
@@ -1374,6 +1377,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
             async () => {
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                 form.setValue(fieldName, downloadURL, { shouldDirty: true });
+                setJustUploaded(true);
                 setIsUploading(false);
             }
         );
@@ -1386,7 +1390,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
     }
     
     const isInvalidSrc = !imageUrl || !imageUrl.startsWith('http');
-    const thumbnailUrl = generateThumbnailUrl(imageUrl);
+    const displayUrl = justUploaded ? imageUrl : generateThumbnailUrl(imageUrl);
 
     return (
         <Card className="mt-2 bg-background/50">
@@ -1415,7 +1419,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
                                             className="relative h-10 w-10 flex-shrink-0"
                                         >
                                             <Image
-                                                src={thumbnailUrl}
+                                                src={displayUrl}
                                                 alt={`Thumbnail für ${entityName}`}
                                                 fill
                                                 className="rounded-sm object-cover"

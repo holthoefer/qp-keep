@@ -49,6 +49,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
   const [isBrowserOpen, setIsBrowserOpen] = React.useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
+  const [justUploaded, setJustUploaded] = React.useState(false);
   
   React.useEffect(() => {
     if (!po) {
@@ -69,6 +70,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
         setImageUrl(auftragData.imageUrl || '');
         setOriginalImageUrl(auftragData.imageUrl || '');
         setHasImageError(false);
+        setJustUploaded(false);
       } catch (e: any) {
         setError(e.message);
       } finally {
@@ -89,6 +91,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
         setAuftrag(updatedAuftrag);
         setOriginalImageUrl(newImageUrl);
         setImageUrl(newImageUrl);
+        setJustUploaded(false);
         toast({ title: 'Gespeichert!', description: 'Die Änderungen wurden erfolgreich übernommen.' });
         if (isModal && onClose) {
           onClose();
@@ -128,6 +131,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
     setIsUploading(true);
     setUploadProgress(0);
     setUploadError(null);
+    setJustUploaded(false);
 
     const storage = getAppStorage();
     if (!storage) {
@@ -168,6 +172,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
           setImageUrl(downloadURL); // Set image url but don't save yet
           setHasImageError(false);
+          setJustUploaded(true);
            toast({
             title: 'Upload erfolgreich',
             description: 'Klicken Sie auf Speichern, um die Änderung zu übernehmen.',
@@ -202,6 +207,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
   const handleImageSelectFromBrowser = async (url: string) => {
     setIsBrowserOpen(false);
     setImageUrl(url); // Set image url but don't save yet
+    setJustUploaded(false);
   }
 
   const handleDragEvents = (e: React.DragEvent<HTMLDivElement>) => {
@@ -232,7 +238,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
 
   const isInvalidSrc = !imageUrl || hasImageError || !imageUrl.startsWith('http');
   const isUrlChanged = imageUrl !== originalImageUrl;
-  const thumbnailUrl = generateThumbnailUrl(imageUrl);
+  const displayUrl = justUploaded ? imageUrl : generateThumbnailUrl(imageUrl);
   
   const handleBack = () => {
     if(onClose) {
@@ -338,7 +344,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
                         ) : (
                             <button onClick={() => setIsImageModalOpen(true)} className="block w-full cursor-pointer focus:outline-none group">
                                  <Image
-                                    src={thumbnailUrl}
+                                    src={displayUrl}
                                     alt={`Foto für Auftrag ${auftrag.PO}`}
                                     width={600}
                                     height={400}
