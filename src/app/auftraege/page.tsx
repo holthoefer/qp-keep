@@ -71,7 +71,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 type AuftragFormData = Omit<Auftrag, 'id'>;
 
 export default function AuftraegePage() {
-  const { user, roles, loading: authLoading, logout } from useAuth();
+  const auth = useAuth();
   const router = useRouter();
   const [items, setItems] = useState<Auftrag[]>([]);
   const [controlPlans, setControlPlans] = useState<ControlPlan[]>([]);
@@ -86,12 +86,12 @@ export default function AuftraegePage() {
     imageUrl: '',
   });
   const { toast } = useToast();
-  const isAdmin = roles.includes('admin');
+  const isAdmin = auth.roles.includes('admin');
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
+    if (auth.loading) return;
+    if (!auth.user) {
       router.push('/');
       return;
     }
@@ -115,10 +115,10 @@ export default function AuftraegePage() {
     };
 
     fetchData();
-  }, [user, authLoading, router]);
+  }, [auth.user, auth.loading, router]);
 
   const handleLogout = async () => {
-    await logout();
+    await auth.logout();
     router.push('/');
   };
   
@@ -188,7 +188,7 @@ export default function AuftraegePage() {
     router.push(`/auftraege/${item.PO}`);
   };
 
-  if (loading || authLoading) {
+  if (loading || auth.loading) {
     return null; // AuthProvider shows LoadingScreen
   }
 
@@ -241,13 +241,13 @@ export default function AuftraegePage() {
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
-                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || user?.email || ''} />
-                    <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={auth.user?.photoURL || undefined} alt={auth.user?.displayName || auth.user?.email || ''} />
+                    <AvatarFallback>{auth.user?.email?.[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+                <DropdownMenuLabel>{auth.user?.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
