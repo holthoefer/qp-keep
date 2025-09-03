@@ -4,7 +4,7 @@ import type { StorageFile } from "@/types";
 export const findThumbnailUrl = (originalUrl?: string | null, allFiles?: StorageFile[]): string => {
     // Return a placeholder if no original URL is provided.
     if (!originalUrl) {
-        return '/placeholder.svg';
+        return 'https://placehold.co/200x200.png?text=No+Image';
     }
 
     // If the provided URL is already a thumbnail, just return it.
@@ -13,7 +13,7 @@ export const findThumbnailUrl = (originalUrl?: string | null, allFiles?: Storage
     }
 
     // If we don't have a list of files to search through, we can't find a thumbnail.
-    // Return the original URL as a fallback.
+    // Return the original URL as a fallback, which might be large.
     if (!allFiles || allFiles.length === 0) {
         return originalUrl;
     }
