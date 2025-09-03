@@ -38,12 +38,12 @@ import { PlusCircle, Trash2, FileText, ChevronDown, ChevronsDown, ChevronsUp, Ar
 import { Separator } from '../ui/separator';
 import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { ImageModal } from './ImageModal';
 import { StorageBrowser } from './StorageBrowser';
-import { getAppStorage, listStorageFiles } from '@/lib/data';
+import { getAppStorage } from '@/lib/data';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '../ui/progress';
 import { cn } from '@/lib/utils';
@@ -206,7 +206,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
     });
   };
   
-  const getDefaultValues = (): Partial<ControlPlanFormValues> => {
+  const getDefaultValues = React.useCallback((): Partial<ControlPlanFormValues> => {
     const defaultProcessStep: ProcessStep = { 
         id: generateTempId('ps'),
         processNumber: 'OP-10', 
@@ -272,13 +272,17 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
             }))
         }))
     }
-  }
+  }, [initialData, formatDateForInput]);
 
 
   const form = useForm<ControlPlanFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: getDefaultValues(),
   });
+  
+  useEffect(() => {
+    form.reset(getDefaultValues());
+  }, [initialData, form, getDefaultValues]);
 
   const { fields, append, remove, insert } = useFieldArray({
     control: form.control,
@@ -310,6 +314,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
     
     try {
         await onSubmit(dataToSubmit);
+        form.reset(dataToSubmit); // Reset form with submitted data to clear dirty state
     } catch (error: any) {
          toast({
             title: 'Error Saving Plan',
@@ -377,11 +382,16 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
     if (form.formState.isDirty) {
         setIsBackAlertOpen(true);
     } else {
-        router.push('/cp');
+        if(onClose) {
+            onClose();
+        } else {
+            router.push('/cp');
+        }
     }
   };
 
-  const { isDirty } = form.formState;
+  const { isDirty, isSubmitting } = form.formState;
+  const isSaveDisabled = !isAdmin || isSubmitting || !isDirty;
   const isReadOnly = !!initialData?.id;
 
   return (
@@ -422,7 +432,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
       >
         <header className="flex-shrink-0 px-4 flex justify-between items-center sticky top-0 bg-background z-10 py-3 border-b">
             <div className="flex items-center gap-1">
-                <Button type="button" variant="ghost" size="icon" onClick={onClose || handleBack} className="flex-shrink-0">
+                <Button type="button" variant="ghost" size="icon" onClick={handleBack} className="flex-shrink-0">
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div className='truncate'>
@@ -433,9 +443,9 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                 </div>
             </div>
             <div className="flex items-center gap-2">
-                <Button type="submit" disabled={!isAdmin || (initialData ? !isDirty : false)}>
+                <Button type="submit" disabled={isSaveDisabled}>
                     <Save className="mr-2 h-4 w-4" />
-                    Save
+                    {isSubmitting ? 'Saving...' : 'Save'}
                 </Button>
             </div>
         </header>
@@ -461,7 +471,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                                         <Input 
                                             {...field} 
                                             readOnly={isReadOnly}
-                                            disabled={isReadOnly}
+                                            disabled={isReadOnly || !isAdmin}
                                             className={cn(
                                                 'font-bold',
                                                 isReadOnly ? 'cursor-not-allowed' : 'bg-green-100 dark:bg-green-900/50'
@@ -474,49 +484,49 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                             <FormField control={form.control} name="partName" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Part Name</FormLabel>
-                                    <FormControl><Input placeholder="e.g., Main Gear Assembly" {...field} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., Main Gear Assembly" {...field} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="partNumber" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Part Number</FormLabel>
-                                    <FormControl><Input placeholder="e.g., PN-12345" {...field} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., PN-12345" {...field} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="supplierPlant" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Supplier/Plant (Optional)</FormLabel>
-                                    <FormControl><Input placeholder="e.g., Main Factory" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., Main Factory" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="supplierCode" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Supplier Code (Optional)</FormLabel>
-                                    <FormControl><Input placeholder="e.g., S-001" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., S-001" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="keyContact" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Key Contact (Optional)</FormLabel>
-                                    <FormControl><Input placeholder="e.g., John Doe" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., John Doe" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="coreTeam" render={({ field }) => (
                                 <FormItem className="lg:col-span-3">
                                     <FormLabel>Core Team (Optional)</FormLabel>
-                                    <FormControl><Input placeholder="e.g., J. Doe, A. Smith" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., J. Doe, A. Smith" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                              <FormField control={form.control} name="status" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Status</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isAdmin}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
                                         <SelectContent>
                                             {(['Draft', 'For Review', 'Approved', 'Active', 'Inactive', 'Rejected'] as ControlPlanStatus[]).map(status => (
@@ -530,70 +540,70 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                             <FormField control={form.control} name="version" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Version</FormLabel>
-                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="revisionDate" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Revision Date</FormLabel>
-                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="originalFirstDate" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Original First Date (Optional)</FormLabel>
-                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                              <FormField control={form.control} name="plantApprovalDate" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Plant Approval Date (Optional)</FormLabel>
-                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="customerEngineeringApprovalDate" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Customer Eng. Approval (Optional)</FormLabel>
-                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="customerQualityApprovalDate" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Customer Q. Approval (Optional)</FormLabel>
-                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                             <FormField control={form.control} name="otherApproval" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Other Approval (Optional)</FormLabel>
-                                    <FormControl><Input {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                              <FormField control={form.control} name="otherApprovalDate" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Other Approval Date (Optional)</FormLabel>
-                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input type="date" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                              <FormField control={form.control} name="planDescription" render={({ field }) => (
                                 <FormItem className="lg:col-span-3">
                                     <FormLabel>Plan Description (Optional)</FormLabel>
-                                    <FormControl><Textarea placeholder="Overall plan description..." {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Textarea placeholder="Overall plan description..." {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
                              <FormField control={form.control} name="generalInformation" render={({ field }) => (
                                 <FormItem className="lg:col-span-3">
                                     <FormLabel>General Information (Optional)</FormLabel>
-                                    <FormControl><Textarea placeholder="General notes about this control plan..." {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Textarea placeholder="General notes about this control plan..." {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )} />
@@ -653,7 +663,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                             ))}
                         </Accordion>
                         <div className="pt-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: generateTempId('ps'), processNumber: `OP-${((form.getValues('processSteps')?.length || 0) + 1) * 10}`, processName: '', processDescription: '', machineDevice: '', remark: '', imageUrl: '', characteristics: [getDefaultCharacteristic(String(fields.length + 1))] })}>
+                            <Button type="button" variant="outline" size="sm" onClick={() => append({ id: generateTempId('ps'), processNumber: `OP-${((form.getValues('processSteps')?.length || 0) + 1) * 10}`, processName: '', processDescription: '', machineDevice: '', remark: '', imageUrl: '', characteristics: [getDefaultCharacteristic(String(fields.length + 1))] })} disabled={!isAdmin}>
                               <PlusCircle className="mr-2 h-4 w-4" /> Add Process Step
                             </Button>
                         </div>
@@ -680,6 +690,9 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
 
 
 const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumber, onImageClick, onDuplicate }: { form: any, processStepIndex: number, controlPlanId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void }) => {
+    const { roles } = useAuth();
+    const isAdmin = roles.includes('admin');
+    
     const { fields, append, remove: removeCharacteristic, insert: insertCharacteristic } = useFieldArray({
         control: form.control,
         name: `processSteps.${processStepIndex}.characteristics`,
@@ -717,18 +730,18 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                              <AlertDialog>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button type="button" variant="ghost" size="icon">
+                                        <Button type="button" variant="ghost" size="icon" disabled={!isAdmin}>
                                             <MoreVertical className="h-5 w-5"/>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onSelect={onDuplicate}>
+                                        <DropdownMenuItem onSelect={onDuplicate} disabled={!isAdmin}>
                                             <CopyPlus className="mr-2 h-4 w-4" />
                                             <span>Duplicate</span>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive px-2 py-1.5 h-auto text-sm">
+                                            <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive px-2 py-1.5 h-auto text-sm" disabled={!isAdmin}>
                                                 <Trash2 className="mr-2 h-4 w-4" />
                                                 <span>Delete</span>
                                             </Button>
@@ -757,7 +770,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                                   render={({ field }) => (
                                       <FormItem>
                                           <FormLabel>Process Number</FormLabel>
-                                          <FormControl><Input placeholder="e.g., OP-10" {...field} /></FormControl>
+                                          <FormControl><Input placeholder="e.g., OP-10" {...field} disabled={!isAdmin}/></FormControl>
                                           <FormMessage />
                                       </FormItem>
                                   )}
@@ -768,7 +781,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                                   render={({ field }) => (
                                       <FormItem>
                                           <FormLabel>ProcessName (Optional)</FormLabel>
-                                          <FormControl><Input placeholder="e.g., Gear Cutting" {...field} value={field.value ?? ''} /></FormControl>
+                                          <FormControl><Input placeholder="e.g., Gear Cutting" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                           <FormMessage />
                                       </FormItem>
                                   )}
@@ -780,7 +793,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                               render={({ field }) => (
                                   <FormItem>
                                       <FormLabel>Process Description (Optional)</FormLabel>
-                                      <FormControl><Input placeholder="Describe the process step in more detail..." {...field} value={field.value ?? ''} /></FormControl>
+                                      <FormControl><Input placeholder="Describe the process step in more detail..." {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                       <FormMessage />
                                   </FormItem>
                               )}
@@ -792,7 +805,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                                   render={({ field }) => (
                                       <FormItem>
                                           <FormLabel>Machine / Device (Optional)</FormLabel>
-                                          <FormControl><Input placeholder="e.g., Hobbing Machine HM-12" {...field} value={field.value ?? ''} /></FormControl>
+                                          <FormControl><Input placeholder="e.g., Hobbing Machine HM-12" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                           <FormMessage />
                                       </FormItem>
                                   )}
@@ -803,7 +816,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                                   render={({ field }) => (
                                       <FormItem>
                                           <FormLabel>Remark (Optional)</FormLabel>
-                                          <FormControl><Textarea placeholder="e.g., Certified Operator" {...field} value={field.value ?? ''} /></FormControl>
+                                          <FormControl><Textarea placeholder="e.g., Certified Operator" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                           <FormMessage />
                                       </FormItem>
                                   )}
@@ -855,7 +868,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                         </Accordion>
                          <FormMessage>{form.formState.errors.processSteps?.[processStepIndex]?.characteristics?.message}</FormMessage>
 
-                        <Button type="button" variant="outline" size="sm" onClick={() => append(getDefaultCharacteristic(String(fields.length + 1)))} className="mt-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => append(getDefaultCharacteristic(String(fields.length + 1)))} className="mt-2" disabled={!isAdmin}>
                             <PlusCircle className="mr-2 h-4 w-4" /> Add Characteristic
                         </Button>
                     </div>
@@ -866,6 +879,9 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
 };
 
 const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, controlPlanId, planNumber, onImageClick, onDuplicate }: { form: any, processStepIndex: number, characteristicIndex: number, controlPlanId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void }) => {
+    const { roles } = useAuth();
+    const isAdmin = roles.includes('admin');
+    
     const characteristicId = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.id`);
     const itemNumber = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.itemNumber`);
     const description = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.DesciptionSpec`);
@@ -926,18 +942,18 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                     <AlertDialog>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button type="button" variant="ghost" size="icon">
+                                <Button type="button" variant="ghost" size="icon" disabled={!isAdmin}>
                                     <MoreVertical className="h-5 w-5"/>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onSelect={onDuplicate}>
+                                <DropdownMenuItem onSelect={onDuplicate} disabled={!isAdmin}>
                                 <CopyPlus className="mr-2 h-4 w-4" />
                                 <span>Duplicate</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                                <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} disabled={!isAdmin}>
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     <span>Delete</span>
                                 </DropdownMenuItem>
@@ -958,7 +974,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                         </AlertDialogContent>
                     </AlertDialog>
                  </div>
-                 <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-2 gap-y-4 items-start pt-2 border-t">
+                 <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-x-4 gap-y-4 items-start pt-2 border-t">
                 {/* Row 1 */}
                 <FormField
                     control={form.control}
@@ -966,7 +982,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Item #</FormLabel>
-                            <FormControl><Input placeholder="1" {...field} className="w-16 font-bold"/></FormControl>
+                            <FormControl><Input placeholder="1" {...field} className="w-24 font-bold" disabled={!isAdmin}/></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -978,7 +994,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                         render={({ field }) => (
                             <FormItem className="flex-grow">
                                 <FormLabel>Description Spec (Optional)</FormLabel>
-                                <FormControl><Input placeholder="e.g., Tooth Diameter" {...field} value={field.value ?? ''} /></FormControl>
+                                <FormControl><Input placeholder="e.g., Tooth Diameter" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -992,6 +1008,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                     <Checkbox
                                         checked={field.value}
                                         onCheckedChange={field.onChange}
+                                        disabled={!isAdmin}
                                     />
                                 </FormControl>
                                 <FormLabel>CTQ</FormLabel>
@@ -1009,7 +1026,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Product (Opt.)</FormLabel>
-                                    <FormControl><Input placeholder="e.g., Gear" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., Gear" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -1020,7 +1037,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Process (Opt.)</FormLabel>
-                                    <FormControl><Input placeholder="e.g., Cutting" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., Cutting" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -1044,6 +1061,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                             placeholder="e.g., 10.0"
                                             {...field}
                                             value={field.value ?? ''}
+                                            disabled={!isAdmin}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -1063,6 +1081,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                             placeholder="e.g., 9.95"
                                             {...field}
                                             value={field.value ?? ''}
+                                            disabled={!isAdmin}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -1082,6 +1101,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                             placeholder="e.g., 10.05"
                                             {...field}
                                             value={field.value ?? ''}
+                                            disabled={!isAdmin}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -1094,7 +1114,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Units (Opt.)</FormLabel>
-                                    <FormControl><Input placeholder="e.g., mm" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., mm" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -1118,6 +1138,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                             placeholder="e.g., 9.98"
                                             {...field}
                                             value={field.value ?? ''}
+                                            disabled={!isAdmin}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -1137,6 +1158,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                             placeholder="e.g., 10.0"
                                             {...field}
                                             value={field.value ?? ''}
+                                            disabled={!isAdmin}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -1156,6 +1178,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                             placeholder="e.g., 10.02"
                                             {...field}
                                             value={field.value ?? ''}
+                                            disabled={!isAdmin}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -1175,6 +1198,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                             placeholder="e.g., 1.88"
                                             {...field}
                                             value={field.value ?? ''}
+                                            disabled={!isAdmin}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -1201,6 +1225,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                             placeholder="e.g., 5"
                                             {...field}
                                             value={field.value ?? ''}
+                                            disabled={!isAdmin}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -1220,6 +1245,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                                             placeholder="e.g., 60"
                                             {...field}
                                             value={field.value ?? ''}
+                                            disabled={!isAdmin}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -1232,7 +1258,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Gauge (Opt.)</FormLabel>
-                                    <FormControl><Input placeholder="e.g., Caliper" {...field} value={field.value ?? ''} /></FormControl>
+                                    <FormControl><Input placeholder="e.g., Caliper" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -1243,7 +1269,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Char Type</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isAdmin}>
                                         <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                         <SelectContent>
                                             {(['A', 'L', 'P'] as CharType[]).map(type => (
@@ -1266,7 +1292,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Control Method (Opt.)</FormLabel>
-                                <FormControl><Input placeholder="e.g., SPC Chart, Visual Inspection" {...field} value={field.value ?? ''} /></FormControl>
+                                <FormControl><Input placeholder="e.g., SPC Chart, Visual Inspection" {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -1281,7 +1307,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Reaction Plan (Opt.)</FormLabel>
-                                <FormControl><Textarea placeholder="e.g., Stop process, quarantine parts..." {...field} value={field.value ?? ''} /></FormControl>
+                                <FormControl><Textarea placeholder="e.g., Stop process, quarantine parts..." {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -1296,7 +1322,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Instruction (Opt.)</FormLabel>
-                                <FormControl><Textarea placeholder="e.g., Detailed work instruction for operator..." {...field} value={field.value ?? ''} /></FormControl>
+                                <FormControl><Textarea placeholder="e.g., Detailed work instruction for operator..." {...field} value={field.value ?? ''} disabled={!isAdmin} /></FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -1322,6 +1348,8 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
 }
 
 const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onImageClick }: { form: any, fieldName: string, entityName: string, entityId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void }) => {
+    const { roles } = useAuth();
+    const isAdmin = roles.includes('admin');
     const imageUrl = form.watch(fieldName);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = React.useState(false);
@@ -1407,7 +1435,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
                                         onClick={() => fileInputRef.current?.click()}
                                         variant="outline"
                                         size="icon"
-                                        disabled={isUploading}
+                                        disabled={isUploading || !isAdmin}
                                         title="Bild hochladen"
                                     >
                                         <UploadCloud className="h-4 w-4" />
@@ -1434,7 +1462,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
                                         placeholder="https://... oder Bild hochladen"
                                         {...field}
                                         value={field.value ?? ''}
-                                        disabled={isUploading}
+                                        disabled={isUploading || !isAdmin}
                                         className="rounded-r-none"
                                     />
                                     <Button type="button" onClick={handleCopyUrl} variant="outline" size="icon" disabled={isUploading || !imageUrl} className="rounded-l-none border-l-0" title="URL kopieren">
@@ -1452,7 +1480,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
                     onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
                     accept="image/jpeg,image/png,image/gif"
                     className="hidden"
-                    disabled={isUploading}
+                    disabled={isUploading || !isAdmin}
                 />
                  {isUploading && <Progress value={uploadProgress} className="w-full" />}
                  {uploadError && (

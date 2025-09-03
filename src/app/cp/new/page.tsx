@@ -48,7 +48,8 @@ export default function NewControlPlanPage() {
         title: 'Control Plan Created',
         description: `Plan for ${data.partName} has been saved.`,
       });
-      router.push(`/cp/edit/${newPlanId}`);
+      // Instead of leaving, redirect to the new edit page to continue editing
+      router.replace(`/cp/edit/${newPlanId}`);
     } catch (error: any) {
       console.error('Error saving plan:', error);
       toast({

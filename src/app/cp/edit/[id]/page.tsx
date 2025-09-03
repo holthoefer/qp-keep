@@ -21,35 +21,34 @@ export default function EditControlPlanPage({ params }: { params: Promise<{ id: 
   const [error, setError] = useState<string | null>(null);
   const { id } = React.use(params);
 
+  const fetchPlan = React.useCallback(async () => {
+    try {
+        setLoading(true);
+        const plan = await getControlPlan(id);
+        if (plan) {
+            setInitialData(plan);
+        } else {
+            setError('Control plan not found.');
+            toast({ title: 'Error', description: 'Control plan not found.', variant: 'destructive' });
+            router.push('/cp');
+        }
+    } catch (err: any) {
+        console.error('Error fetching plan:', err);
+        setError(err.message || 'Failed to load control plan.');
+        toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+        setLoading(false);
+    }
+  }, [id, router, toast]);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
         router.push('/');
         return;
     }
-
-    const fetchPlan = async () => {
-        try {
-            setLoading(true);
-            const plan = await getControlPlan(id);
-            if (plan) {
-                setInitialData(plan);
-            } else {
-                setError('Control plan not found.');
-                toast({ title: 'Error', description: 'Control plan not found.', variant: 'destructive' });
-                router.push('/cp');
-            }
-        } catch (err: any) {
-            console.error('Error fetching plan:', err);
-            setError(err.message || 'Failed to load control plan.');
-            toast({ title: 'Error', description: err.message, variant: 'destructive' });
-        } finally {
-            setLoading(false);
-        }
-    };
-
     fetchPlan();
-  }, [id, router, toast, user, authLoading]);
+  }, [id, user, authLoading, router, fetchPlan]);
 
   const handleFormSubmit = async (data: ControlPlan) => {
     if (!user) {
@@ -62,8 +61,9 @@ export default function EditControlPlanPage({ params }: { params: Promise<{ id: 
         title: 'Control Plan Updated',
         description: `Plan for ${data.partName} has been saved.`,
       });
-      // Redirect on the client-side after saving
-      router.push('/cp'); 
+      // After saving, refetch the data to update the form's initial state
+      // This will reset the "dirty" state of the form
+      await fetchPlan();
     } catch (error: any) {
       console.error('Error saving plan:', error);
       toast({
