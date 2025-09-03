@@ -122,7 +122,7 @@ export function LoginForm() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="font-headline">Note-Keep-Know</CardTitle>
+        <CardTitle className="font-headline">qpLoop</CardTitle>
         <CardDescription>Melden Sie sich an oder erstellen Sie ein Konto.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

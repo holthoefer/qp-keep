@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/hooks/use-auth-context';
 
 export const metadata: Metadata = {
-  title: 'Note-Keep-Know',
+  title: 'qpLoop',
   description: 'Focus, Organize, Succeed.',
   icons: {
     icon: '/icon.png',
