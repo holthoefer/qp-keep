@@ -3,7 +3,7 @@
 'use client';
 
 import * as React from 'react';
-import type { ControlPlan, ControlPlanStatus, Characteristic, ProcessStep, StorageFile } from '@/types';
+import type { ControlPlan, ControlPlanStatus, Characteristic, ProcessStep } from '@/types';
 import {
   ChevronRight,
   FileDown,
@@ -89,7 +89,7 @@ import Image from 'next/image';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth-context';
-import { generateThumbnailUrl, findThumbnailUrl } from '@/lib/image-utils';
+import { generateThumbnailUrl } from '@/lib/image-utils';
 import { KeepKnowLogo } from '@/components/icons';
 
 
@@ -107,7 +107,7 @@ const statusVariant: Record<
 
 const ALL_STATUSES: ControlPlanStatus[] = ['Draft', 'For Review', 'Approved', 'Active', 'Inactive', 'Rejected'];
 
-const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: StorageFile[]): string => {
+const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan): string => {
   const formatDate = (dateString?: string | null, emptyText: string = '') => {
     if (!dateString) return emptyText;
     try {
@@ -138,7 +138,7 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
     return (numA || '').localeCompare((numB || ''), undefined, { numeric: true });
   });
 
-  const planThumbnailUrl = findThumbnailUrl(plan.imageUrl, allFiles);
+  const planThumbnailUrl = generateThumbnailUrl(plan.imageUrl);
   const headerHtml = `
     <div class="header-grid">
         <!-- Left Column: Image -->
@@ -189,7 +189,7 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
         return parts[0];
     };
     
-    const stepThumbnailUrl = findThumbnailUrl(step.imageUrl, allFiles);
+    const stepThumbnailUrl = generateThumbnailUrl(step.imageUrl);
     return `
     <div key="${step.id}" class="no-break-inside" style="margin-bottom: 24px;">
         <h3 class="text-base font-bold bg-gray-100 p-2 border border-black" style="margin-bottom: 0;">
@@ -232,7 +232,7 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
             </thead>
             <tbody>
                 ${(step.characteristics || []).sort((a,b) => a.itemNumber.localeCompare(b.itemNumber, undefined, { numeric: true })).map(char => {
-                    const charThumbnailUrl = findThumbnailUrl(char.imageUrl, allFiles);
+                    const charThumbnailUrl = generateThumbnailUrl(char.imageUrl);
                     return `
                     <tr key="${char.id}">
                         <td style="width: 120px; text-align: center; padding: 2px;">
@@ -848,7 +848,7 @@ export default function ControlPlansPage() {
   };
   
   const handlePrintV1 = (plan: ControlPlan) => {
-    const htmlContent = generateControlPlanHtmlWithThumbnails(plan, []); // Pass empty array as it's not used
+    const htmlContent = generateControlPlanHtmlWithThumbnails(plan);
     const docWindow = window.open('about:blank', '_blank');
     if (docWindow) {
         docWindow.document.open();

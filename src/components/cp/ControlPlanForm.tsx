@@ -53,7 +53,7 @@ import { SheetHeader, SheetTitle, SheetDescription } from '../ui/sheet';
 import { Timestamp } from 'firebase/firestore';
 import { useAuth } from '@/hooks/use-auth-context';
 import { generateControlPlanDocV5Action } from '@/ai/flows/suggest-response-plan';
-import { findThumbnailUrl } from '@/lib/image-utils';
+import { generateThumbnailUrl } from '@/lib/image-utils';
 
 // Custom Zod preprocessor to handle empty strings for number fields
 const emptyStringToUndefined = z.preprocess((val) => {
@@ -190,20 +190,8 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalImageUrl, setModalImageUrl] = React.useState('');
   const [modalImageAlt, setModalImageAlt] = React.useState('');
-  const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const { toast } = useToast();
 
-  React.useEffect(() => {
-    const fetchFiles = async () => {
-        try {
-            const files = await listStorageFiles('uploads/');
-            setStorageFiles(files);
-        } catch (error) {
-            console.error("Could not fetch storage files for form.", error);
-        }
-    }
-    fetchFiles();
-  }, []);
 
   const handleImageClick = (url: string, alt: string) => {
     setModalImageUrl(url);
@@ -617,7 +605,6 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                             entityId={form.getValues('id')}
                             planNumber={form.getValues('planNumber')}
                             onImageClick={handleImageClick}
-                            storageFiles={storageFiles}
                         />
                     </CardContent>
                  </Card>
@@ -649,7 +636,6 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
                                 controlPlanId={form.getValues('id')}
                                 planNumber={form.getValues('planNumber')}
                                 onImageClick={handleImageClick}
-                                storageFiles={storageFiles}
                                 onDuplicate={() => {
                                     const processStepToDuplicate = form.getValues(`processSteps.${field.originalIndex}`);
                                     const duplicatedStep = {
@@ -693,7 +679,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
 }
 
 
-const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumber, onImageClick, onDuplicate, storageFiles }: { form: any, processStepIndex: number, controlPlanId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void, storageFiles: StorageFile[] }) => {
+const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumber, onImageClick, onDuplicate }: { form: any, processStepIndex: number, controlPlanId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void }) => {
     const { fields, append, remove: removeCharacteristic, insert: insertCharacteristic } = useFieldArray({
         control: form.control,
         name: `processSteps.${processStepIndex}.characteristics`,
@@ -830,7 +816,6 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                             entityId={processStepId}
                             planNumber={planNumber}
                             onImageClick={onImageClick}
-                            storageFiles={storageFiles}
                            />
                         </div>
                          <Separator className="my-6" />
@@ -856,7 +841,6 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
                                     controlPlanId={controlPlanId}
                                     planNumber={planNumber}
                                     onImageClick={onImageClick}
-                                    storageFiles={storageFiles}
                                     onDuplicate={() => {
                                         const charToDuplicate = form.getValues(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}`);
                                         const duplicatedChar = {
@@ -881,7 +865,7 @@ const ProcessStepAccordion = ({ form, processStepIndex, controlPlanId, planNumbe
     );
 };
 
-const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, controlPlanId, planNumber, onImageClick, onDuplicate, storageFiles }: { form: any, processStepIndex: number, characteristicIndex: number, controlPlanId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void, storageFiles: StorageFile[] }) => {
+const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, controlPlanId, planNumber, onImageClick, onDuplicate }: { form: any, processStepIndex: number, characteristicIndex: number, controlPlanId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, onDuplicate: () => void }) => {
     const characteristicId = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.id`);
     const itemNumber = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.itemNumber`);
     const description = form.watch(`processSteps.${processStepIndex}.characteristics.${characteristicIndex}.DesciptionSpec`);
@@ -1328,7 +1312,6 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                         entityId={characteristicId}
                         planNumber={planNumber}
                         onImageClick={onImageClick}
-                        storageFiles={storageFiles}
                     />
                 </div>
             </div>
@@ -1338,7 +1321,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
     );
 }
 
-const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onImageClick, storageFiles }: { form: any, fieldName: string, entityName: string, entityId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void, storageFiles: StorageFile[] }) => {
+const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onImageClick }: { form: any, fieldName: string, entityName: string, entityId?: string, planNumber?: string, onImageClick: (url: string, alt: string) => void }) => {
     const imageUrl = form.watch(fieldName);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = React.useState(false);
@@ -1403,7 +1386,7 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
     }
     
     const isInvalidSrc = !imageUrl || !imageUrl.startsWith('http');
-    const thumbnailUrl = findThumbnailUrl(imageUrl, storageFiles);
+    const thumbnailUrl = generateThumbnailUrl(imageUrl);
 
     return (
         <Card className="mt-2 bg-background/50">

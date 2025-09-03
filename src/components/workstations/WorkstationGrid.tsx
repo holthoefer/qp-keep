@@ -19,7 +19,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -33,8 +32,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA, StorageFile } from '@/types';
-import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData, listStorageFiles } from '@/lib/data';
+import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA } from '@/types';
+import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData } from '@/lib/data';
 import { Pencil, PlusCircle, RefreshCw, ListChecks, MoreHorizontal, Image as ImageIcon, MoreVertical, FolderKanban, Clock, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -42,201 +41,12 @@ import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
-import { findThumbnailUrl } from '@/lib/image-utils';
-
-
-interface DueInfo {
-  timeRemaining: number;
-  charNum: string;
-  frequency: number;
-  lastCheckTimestamp?: string;
-  checkStatus?: string;
-  memo?: string;
-}
-
-const DnaTimeTracker = ({ lastTimestamp, frequency, prefix }: { lastTimestamp?: string | null, frequency?: number | null, prefix?: string }) => {
-    const [timeLeft, setTimeLeft] = React.useState<number | null>(null);
-
-    React.useEffect(() => {
-        if (!lastTimestamp || !frequency) {
-            setTimeLeft(null);
-            return;
-        }
-
-        const calculateTimeLeft = () => {
-            const lastCheckTime = new Date(lastTimestamp).getTime();
-            const dueTime = lastCheckTime + frequency * 60 * 1000;
-            const now = new Date().getTime();
-            const remaining = Math.floor((dueTime - now) / (1000 * 60));
-            setTimeLeft(remaining);
-        };
-
-        calculateTimeLeft();
-        const interval = setInterval(calculateTimeLeft, 60000); // Update every minute
-
-        return () => clearInterval(interval);
-    }, [lastTimestamp, frequency]);
-
-    if (timeLeft === null) {
-        return null;
-    }
-    
-    const isOverdue = timeLeft < 0;
-
-    return (
-        <Badge variant={isOverdue ? "destructive" : "default"}>
-            {prefix ? `${prefix}: ` : ''}{isOverdue ? `Overdue by ${Math.abs(timeLeft)} min` : `${timeLeft} min left`}
-        </Badge>
-    );
-};
-
-const WorkstationNextDue = ({ workstation }: { workstation: Workstation }) => {
-    const [dueInfos, setDueInfos] = React.useState<DueInfo[]>([]);
-    const [isLoading, setIsLoading] = React.useState(true);
-
-    React.useEffect(() => {
-        const findNextDue = async () => {
-             if (!workstation.POcurrent || !workstation.OPcurrent) {
-                setIsLoading(false);
-                return;
-            }
-            setIsLoading(true);
-            try {
-                const allDna = await getDnaData() as DNA[];
-                const relevantDna = allDna.filter(d => 
-                    d.PO === workstation.POcurrent && 
-                    d.OP === workstation.OPcurrent && 
-                    d.WP === workstation.AP
-                );
-
-                if (relevantDna.length === 0) {
-                    setDueInfos([]);
-                    return;
-                }
-                
-                const infos: DueInfo[] = relevantDna.map(dna => {
-                    if (dna.lastCheckTimestamp) {
-                        const freq = dna.Frequency || 60;
-                        const lastCheckTime = new Date(dna.lastCheckTimestamp).getTime();
-                        const dueTime = lastCheckTime + freq * 60 * 1000;
-                        
-                        const now = new Date().getTime();
-                        const timeRemaining = Math.floor((dueTime - now) / (1000 * 60));
-
-                        return {
-                            timeRemaining,
-                            charNum: dna.Char,
-                            frequency: freq,
-                            lastCheckTimestamp: dna.lastCheckTimestamp,
-                            checkStatus: dna.checkStatus,
-                            memo: dna.Memo,
-                        };
-                    }
-                    return null;
-                }).filter((info): info is DueInfo => info !== null);
-
-                setDueInfos(infos);
-
-            } catch (error) {
-                console.error("Error calculating next due date:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        findNextDue();
-    }, [workstation]);
-
-    if (isLoading) {
-        return <Skeleton className="h-5 w-24 mt-1" />;
-    }
-
-    if (dueInfos.length === 0) {
-        return null;
-    }
-
-    const exceptions = dueInfos.filter(d => d.checkStatus && (d.checkStatus.includes('Out of Spec') || d.checkStatus.includes('Out of Control')));
-    const overdue = dueInfos.filter(d => d.timeRemaining < 0 && !exceptions.some(ex => ex.charNum === d.charNum)).sort((a,b) => a.timeRemaining - b.timeRemaining);
-    const warnings = dueInfos.filter(d => {
-        if(d.timeRemaining < 0) return false; // already in overdue
-        if(exceptions.some(ex => ex.charNum === d.charNum)) return false; // already in exceptions
-        const percentageElapsed = (d.frequency - d.timeRemaining) / d.frequency;
-        return percentageElapsed >= 0.8;
-    }).sort((a, b) => a.timeRemaining - b.timeRemaining);
-    
-    const prioritizedInfos = new Map<string, DueInfo>();
-    exceptions.forEach(info => prioritizedInfos.set(info.charNum, info));
-    overdue.forEach(info => !prioritizedInfos.has(info.charNum) && prioritizedInfos.set(info.charNum, info));
-    warnings.forEach(info => !prioritizedInfos.has(info.charNum) && prioritizedInfos.set(info.charNum, info));
-
-    const badgesToShow = Array.from(prioritizedInfos.values()).slice(0, 3);
-    
-    const getErfassungUrl = (charNum: string) => {
-      if (!workstation.AP || !workstation.POcurrent || !workstation.OPcurrent) return '#';
-      return `/erfassung?ap=${encodeURIComponent(workstation.AP)}&po=${workstation.POcurrent}&op=${workstation.OPcurrent}&charNum=${charNum}`;
-    }
-
-    const renderBadge = (info: DueInfo) => {
-        const isException = info.checkStatus && (info.checkStatus.includes('Out of Spec') || info.checkStatus.includes('Out of Control'));
-        
-        const url = getErfassungUrl(info.charNum);
-
-        if (isException) {
-             const timeSinceException = info.lastCheckTimestamp ? Math.floor((new Date().getTime() - new Date(info.lastCheckTimestamp).getTime()) / (1000 * 60)) : 0;
-             const timeText = `vor ${timeSinceException} min`;
-            return (
-                 <div className="mt-2 space-y-1">
-                    <Link href={url} onClick={(e) => e.stopPropagation()}>
-                        <Badge variant="destructive" className="flex items-center gap-1.5 cursor-pointer hover:bg-destructive/80">
-                            <AlertTriangle className="h-3.5 w-3.5" />
-                            <span>{`${info.checkStatus} (${timeText}) (M# ${info.charNum})`}</span>
-                        </Badge>
-                    </Link>
-                    {info.memo && <p className="text-xs text-destructive p-2 bg-destructive/10 rounded-md line-clamp-5">{info.memo}</p>}
-                </div>
-            )
-        }
-        
-        return (
-            <Link href={url} className="inline-block" onClick={(e) => e.stopPropagation()}>
-                 <DnaTimeTracker 
-                    lastTimestamp={info.lastCheckTimestamp}
-                    frequency={info.frequency}
-                    prefix={`M# ${info.charNum}`}
-                />
-            </Link>
-        )
-    }
-
-    if (badgesToShow.length === 0) {
-        const nextDue = dueInfos.filter(d => d.timeRemaining >= 0).sort((a, b) => a.timeRemaining - b.timeRemaining)[0];
-        if (nextDue) {
-            return (
-                <div className="flex flex-col items-start gap-1 mt-2">
-                    {renderBadge(nextDue)}
-                </div>
-            );
-        }
-        return null;
-    }
-    
-    return (
-        <div className="flex flex-col items-start gap-1 mt-2">
-            {badgesToShow.map(info => (
-                <div key={info.charNum}>
-                    {renderBadge(info)}
-                </div>
-            ))}
-        </div>
-    );
-};
-
+import { generateThumbnailUrl } from '@/lib/image-utils';
 
 export function WorkstationGrid() {
   const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
   const [auftraege, setAuftraege] = React.useState<Auftrag[]>([]);
   const [controlPlans, setControlPlans] = React.useState<ControlPlan[]>([]);
-  const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [editingWorkstation, setEditingWorkstation] =
     React.useState<Workstation | null>(null);
@@ -257,16 +67,14 @@ export function WorkstationGrid() {
   const fetchData = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const [workstationsData, auftraegeData, controlPlansData, allFiles] = await Promise.all([
+      const [workstationsData, auftraegeData, controlPlansData] = await Promise.all([
         getWorkstations(),
         getAuftraege(),
         getControlPlans(),
-        listStorageFiles('uploads/'),
       ]);
       setWorkstations(workstationsData);
       setAuftraege(auftraegeData);
       setControlPlans(controlPlansData);
-      setStorageFiles(allFiles);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -422,18 +230,127 @@ export function WorkstationGrid() {
         imageUrl={modalImageUrl}
         imageAlt={modalImageAlt}
       />
-      <Dialog open={isWorkstationModalOpen} onOpenChange={setIsWorkstationModalOpen}>
-        <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0">
-           <DialogHeader className="p-6 pb-0">
-             <DialogTitle>Bild zum Arbeitsplatz</DialogTitle>
-           </DialogHeader>
-           {selectedWorkstationAp && (
-            <React.Suspense fallback={<Skeleton className="h-full w-full" />}>
-               <div className="p-4"><p>Workstation Detail Page Placeholder</p></div>
-            </React.Suspense>
-           )}
+      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+          if(!isOpen) {
+              setEditingWorkstation(null);
+              setSelectedPO(undefined);
+          }
+          setIsDialogOpen(isOpen);
+      }}>
+        <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>
+                {editingWorkstation ? 'Arbeitsplatz bearbeiten' : 'Neuen Arbeitsplatz anlegen'}
+                </DialogTitle>
+                <DialogDescription>
+                {editingWorkstation ? `Änderungen für ${editingWorkstation.AP} vornehmen.` : 'Füllen Sie die Details aus.'}
+                </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSave} ref={formRef}>
+            <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="AP" className="text-right">
+                    AP (Key)
+                </Label>
+                  <Input
+                    id="AP"
+                    name="AP"
+                    defaultValue={editingWorkstation?.AP}
+                    className={cn(
+                        'col-span-3',
+                        !editingWorkstation && 'bg-green-100 dark:bg-green-900/50 font-bold'
+                    )}
+                    readOnly={!!editingWorkstation}
+                />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="Beschreibung" className="text-right">
+                    Beschreibung
+                </Label>
+                <Input
+                    id="Beschreibung"
+                    name="Beschreibung"
+                    defaultValue={editingWorkstation?.Beschreibung}
+                    className="col-span-3"
+                />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="POcurrent" className="text-right">
+                        POcurrent
+                    </Label>
+                    <Select name="POcurrent" defaultValue={editingWorkstation?.POcurrent || 'none'} onValueChange={handlePoChange}>
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="Auftrag auswählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Kein Auftrag</SelectItem>
+                            {auftraege.map(auftrag => (
+                            <SelectItem key={auftrag.PO} value={auftrag.PO}>
+                                {auftrag.PO}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="CPcurrent" className="text-right">
+                        CPcurrent
+                    </Label>
+                    <Input
+                        id="CPcurrent"
+                        name="CPcurrent"
+                        value={selectedControlPlan?.planNumber || ''}
+                        className="col-span-3"
+                        readOnly
+                    />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="OPcurrent" className="text-right">
+                        OPcurrent
+                    </Label>
+                    <Select name="OPcurrent" defaultValue={editingWorkstation?.OPcurrent || 'none'} key={selectedControlPlan?.id || 'none'}>
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="Prozessschritt auswählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Kein Prozessschritt</SelectItem>
+                            {availableProcessSteps.map(step => (
+                            <SelectItem key={step.id} value={step.processNumber}>
+                                {step.processNumber} - {step.processName}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="LOTcurrent" className="text-right">
+                    LOTcurrent
+                </Label>
+                <Input
+                    id="LOTcurrent"
+                    name="LOTcurrent"
+                    defaultValue={editingWorkstation?.LOTcurrent}
+                    className="col-span-3"
+                />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="Bemerkung" className="text-right">
+                    Bemerkung
+                </Label>
+                <Input
+                    id="Bemerkung"
+                    name="Bemerkung"
+                    defaultValue={editingWorkstation?.Bemerkung}
+                    className="col-span-3"
+                />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button type="submit">Speichern</Button>
+            </DialogFooter>
+            </form>
         </DialogContent>
-     </Dialog>
+      </Dialog>
       <Card className="bg-transparent border-none shadow-none">
         <CardHeader className="py-2">
           <div className="flex items-center justify-between">
@@ -448,143 +365,20 @@ export function WorkstationGrid() {
                       <RefreshCw className="h-4 w-4" />
                       <span className="sr-only">Refresh</span>
                   </Button>
-                  <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-                      if(!isOpen) {
-                          setEditingWorkstation(null);
-                          setSelectedPO(undefined);
-                      }
-                      setIsDialogOpen(isOpen);
-                  }}>
-                      <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                  <span className="sr-only">Aktionen</span>
-                              </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openDialogForNew(); }}>
-                                  <PlusCircle className="mr-2 h-4 w-4" />
-                                  Neuer Arbeitsplatz
-                              </DropdownMenuItem>
-                            </DialogTrigger>
-                          </DropdownMenuContent>
-                      </DropdownMenu>
-                      <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                              <DialogTitle>
-                              {editingWorkstation ? 'Arbeitsplatz bearbeiten' : 'Neuen Arbeitsplatz anlegen'}
-                              </DialogTitle>
-                              <DialogDescription>
-                              {editingWorkstation ? `Änderungen für ${editingWorkstation.AP} vornehmen.` : 'Füllen Sie die Details aus.'}
-                              </DialogDescription>
-                          </DialogHeader>
-                          <form onSubmit={handleSave} ref={formRef}>
-                          <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="AP" className="text-right">
-                                  AP (Key)
-                              </Label>
-                               <Input
-                                  id="AP"
-                                  name="AP"
-                                  defaultValue={editingWorkstation?.AP}
-                                  className={cn(
-                                      'col-span-3',
-                                      !editingWorkstation && 'bg-green-100 dark:bg-green-900/50 font-bold'
-                                  )}
-                                  readOnly={!!editingWorkstation}
-                              />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="Beschreibung" className="text-right">
-                                  Beschreibung
-                              </Label>
-                              <Input
-                                  id="Beschreibung"
-                                  name="Beschreibung"
-                                  defaultValue={editingWorkstation?.Beschreibung}
-                                  className="col-span-3"
-                              />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="POcurrent" className="text-right">
-                                      POcurrent
-                                  </Label>
-                                  <Select name="POcurrent" defaultValue={editingWorkstation?.POcurrent || 'none'} onValueChange={handlePoChange}>
-                                      <SelectTrigger className="col-span-3">
-                                          <SelectValue placeholder="Auftrag auswählen" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                          <SelectItem value="none">Kein Auftrag</SelectItem>
-                                          {auftraege.map(auftrag => (
-                                          <SelectItem key={auftrag.PO} value={auftrag.PO}>
-                                              {auftrag.PO}
-                                          </SelectItem>
-                                          ))}
-                                      </SelectContent>
-                                  </Select>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="CPcurrent" className="text-right">
-                                      CPcurrent
-                                  </Label>
-                                  <Input
-                                      id="CPcurrent"
-                                      name="CPcurrent"
-                                      value={selectedControlPlan?.planNumber || ''}
-                                      className="col-span-3"
-                                      readOnly
-                                  />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                  <Label htmlFor="OPcurrent" className="text-right">
-                                      OPcurrent
-                                  </Label>
-                                  <Select name="OPcurrent" defaultValue={editingWorkstation?.OPcurrent || 'none'} key={selectedControlPlan?.id || 'none'}>
-                                      <SelectTrigger className="col-span-3">
-                                          <SelectValue placeholder="Prozessschritt auswählen" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                          <SelectItem value="none">Kein Prozessschritt</SelectItem>
-                                          {availableProcessSteps.map(step => (
-                                          <SelectItem key={step.id} value={step.processNumber}>
-                                              {step.processNumber} - {step.processName}
-                                          </SelectItem>
-                                          ))}
-                                      </SelectContent>
-                                  </Select>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="LOTcurrent" className="text-right">
-                                  LOTcurrent
-                              </Label>
-                              <Input
-                                  id="LOTcurrent"
-                                  name="LOTcurrent"
-                                  defaultValue={editingWorkstation?.LOTcurrent}
-                                  className="col-span-3"
-                              />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="Bemerkung" className="text-right">
-                                  Bemerkung
-                              </Label>
-                              <Input
-                                  id="Bemerkung"
-                                  name="Bemerkung"
-                                  defaultValue={editingWorkstation?.Bemerkung}
-                                  className="col-span-3"
-                              />
-                              </div>
-                          </div>
-                          <DialogFooter>
-                              <Button type="submit">Speichern</Button>
-                          </DialogFooter>
-                          </form>
-                      </DialogContent>
-                  </Dialog>
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                              <span className="sr-only">Aktionen</span>
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openDialogForNew(); }}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Neuer Arbeitsplatz
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
               </div>
           </div>
         </CardHeader>
@@ -619,7 +413,7 @@ export function WorkstationGrid() {
                             >
                               {ws.imageUrl ? (
                                   <Image
-                                      src={findThumbnailUrl(ws.imageUrl, storageFiles)}
+                                      src={generateThumbnailUrl(ws.imageUrl)}
                                       alt={`Foto für ${ws.AP}`}
                                       width={48}
                                       height={48}
@@ -648,7 +442,6 @@ export function WorkstationGrid() {
                                   <span className="text-left">{ws.LOTcurrent || 'N/A'}</span>
                               </div>
                                {ws.Bemerkung && <p className="text-xs text-muted-foreground pt-1">{ws.Bemerkung}</p>}
-                               <WorkstationNextDue workstation={ws} />
                           </div>
                       </CardContent>
                       <CardFooter className="flex justify-between items-center">
