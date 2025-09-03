@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import type { DNA, Workstation, ControlPlan, ProcessStep, StorageFile } from '@/types';
-import { getDnaData, getWorkstations, getControlPlans, listStorageFiles } from '@/lib/data';
+import { getDnaData, getWorkstations, getControlPlans } from '@/lib/data';
 import { getDb } from '@/lib/firebase';
 import { Search, ImageIcon, Clock, ArrowLeft, Loader2, Book, Shield, Target, LogOut, BrainCircuit, FolderKanban, LayoutGrid, FileImage } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -99,7 +99,6 @@ export default function DnaPage() {
   const [dnaData, setDnaData] = React.useState<DNA[]>([]);
   const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
   const [controlPlans, setControlPlans] = React.useState<ControlPlan[]>([]);
-  const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [modalImageUrl, setModalImageUrl] = React.useState('');
@@ -118,16 +117,14 @@ export default function DnaPage() {
       }
       setIsLoading(true);
       try {
-        const [dna, ws, cp, allFiles] = await Promise.all([
+        const [dna, ws, cp] = await Promise.all([
             getDnaData() as Promise<DNA[]>,
             getWorkstations(),
             getControlPlans(),
-            listStorageFiles('uploads/'),
         ]);
         setDnaData(dna);
         setWorkstations(ws);
         setControlPlans(cp);
-        setStorageFiles(allFiles);
       } catch (error) {
         console.error('Error fetching DNA data:', error);
         toast({
@@ -374,7 +371,7 @@ export default function DnaPage() {
                                           className="relative flex-shrink-0"
                                       >
                                           <Image
-                                              src={findThumbnailUrl(workstation.imageUrl, storageFiles)}
+                                              src={findThumbnailUrl(workstation.imageUrl)}
                                               alt={`Bild für Arbeitsplatz ${workstation.AP}`}
                                               width={40}
                                               height={40}
@@ -391,7 +388,7 @@ export default function DnaPage() {
                                           className="relative flex-shrink-0"
                                       >
                                           <Image
-                                              src={findThumbnailUrl(processStep.imageUrl, storageFiles)}
+                                              src={findThumbnailUrl(processStep.imageUrl)}
                                               alt={`Bild für Prozess ${processStep.processNumber}`}
                                               width={40}
                                               height={40}
@@ -405,7 +402,7 @@ export default function DnaPage() {
                                           className="relative flex-shrink-0"
                                       >
                                           <Image
-                                              src={findThumbnailUrl(controlPlan.imageUrl, storageFiles)}
+                                              src={findThumbnailUrl(controlPlan.imageUrl)}
                                               alt={`Bild für Control Plan ${controlPlan.planNumber}`}
                                               width={40}
                                               height={40}
@@ -432,7 +429,7 @@ export default function DnaPage() {
                                                             className="relative"
                                                         >
                                                             <Image
-                                                                src={findThumbnailUrl(dna.imageUrlLatestSample, storageFiles)}
+                                                                src={findThumbnailUrl(dna.imageUrlLatestSample)}
                                                                 alt={`Letztes Sample Bild`}
                                                                 width={32}
                                                                 height={32}
@@ -449,7 +446,7 @@ export default function DnaPage() {
                                                             className="relative flex-shrink-0"
                                                         >
                                                             <Image
-                                                                src={findThumbnailUrl(dna.imageUrl, storageFiles)}
+                                                                src={findThumbnailUrl(dna.imageUrl)}
                                                                 alt={`Bild für Merkmal`}
                                                                 width={32}
                                                                 height={32}
