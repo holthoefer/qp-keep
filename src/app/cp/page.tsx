@@ -143,7 +143,10 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
         <!-- Left Column: Image -->
         <div class="header-col-left">
             ${plan.imageUrl ? `
-                <img src="${planThumbnailUrl}" alt="Image for ${plan.partName}" style="max-height: 256px; width: auto; object-fit: contain;" />
+                <div class="image-container">
+                    <img src="${planThumbnailUrl}" alt="Image for ${plan.partName}" style="max-height: 256px; width: auto; object-fit: contain;" />
+                    <div class="image-url">${plan.imageUrl}</div>
+                </div>
             ` : ''}
         </div>
         <!-- Center Column: Main Data -->
@@ -197,7 +200,10 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
                 <tr>
                     <td class="image-cell" style="width: 140px; text-align: left; padding: 2px;">
                         ${step.imageUrl ? `
-                            <img src="${stepThumbnailUrl}" alt="Image for ${step.processName}" style="max-width: 128px; max-height: 128px; object-fit: contain;" />
+                            <div class="image-container">
+                                <img src="${stepThumbnailUrl}" alt="Image for ${step.processName}" style="max-width: 128px; max-height: 128px; object-fit: contain;" />
+                                <div class="image-url">${step.imageUrl}</div>
+                            </div>
                         ` : ''}
                     </td>
                     <td style="vertical-align: top; padding: 2px;">
@@ -232,7 +238,10 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
                     <tr key="${char.id}">
                         <td style="width: 120px; text-align: center; padding: 2px;">
                             ${char.imageUrl ? `
-                                <img src="${charThumbnailUrl}" alt="Image for ${char.DesciptionSpec}" style="max-width: 96px; max-height: 96px; object-fit: contain;" />
+                                <div class="image-container">
+                                    <img src="${charThumbnailUrl}" alt="Image for ${char.DesciptionSpec}" style="max-width: 96px; max-height: 96px; object-fit: contain;" />
+                                    <div class="image-url">${char.imageUrl}</div>
+                                </div>
                             ` : ''}
                         </td>
                         <td>${char.itemNumber} (${char.charType}) ${char.ctq ? '*' : ''}</td>
@@ -275,6 +284,8 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
           .header-col-left { flex-shrink: 0; width: 25%; }
           .header-col-center { flex-grow: 1; min-width: 350px; }
           .header-col-right { flex-grow: 1; flex-basis: 200px; display: flex; flex-direction: column; gap: 1rem; }
+          .image-url { font-size: 8px; color: #888; word-break: break-all; margin-top: 4px; }
+          .image-container { display: flex; flex-direction: column; align-items: center; text-align: center; }
           @media print { .no-print { display: none !important; } }
           @media (max-width: 768px) {
             .header-grid { flex-direction: column; }
