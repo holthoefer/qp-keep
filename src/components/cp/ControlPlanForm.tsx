@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -129,7 +128,7 @@ const formSchema = z.object({
   customerQualityApprovalDate: z.string().optional().nullable(),
   otherApprovalDate: z.string().optional().nullable(),
   generalInformation: z.string().optional().nullable(),
-  imageUrl: z.string().optional().nullable(),
+  imageUrl: z.string().optional(),
   createdAt: z.string().optional(),
   lastChangedBy: z.string().optional(),
 });
@@ -206,7 +205,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
     });
   };
   
-  const getDefaultValues = React.useCallback((): Partial<ControlPlanFormValues> => {
+  const getDefaultValues = React.useCallback((data: ControlPlan | null | undefined): Partial<ControlPlanFormValues> => {
     const defaultProcessStep: ProcessStep = { 
         id: generateTempId('ps'),
         processNumber: 'OP-10', 
@@ -218,7 +217,7 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
         characteristics: [getDefaultCharacteristic()] 
     };
     
-     if (!initialData) {
+     if (!data) {
         return {
             partName: '',
             partNumber: '',
@@ -230,29 +229,29 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
         };
     }
     
-     const sortedSteps = [...initialData.processSteps].sort((a, b) => {
+     const sortedSteps = [...data.processSteps].sort((a, b) => {
         if (!a.processNumber) return 1;
         if (!b.processNumber) return -1;
         return a.processNumber.localeCompare(b.processNumber, undefined, { numeric: true, sensitivity: 'base' });
     });
     
     return {
-        ...initialData,
-        id: initialData.id,
-        planDescription: initialData.planDescription || undefined,
-        imageUrl: initialData.imageUrl || undefined,
-        generalInformation: initialData.generalInformation || undefined,
-        supplierPlant: initialData.supplierPlant || undefined,
-        supplierCode: initialData.supplierCode || undefined,
-        keyContact: initialData.keyContact || undefined,
-        coreTeam: initialData.coreTeam || undefined,
-        otherApproval: initialData.otherApproval || undefined,
-        revisionDate: formatDateForInput(initialData.revisionDate),
-        plantApprovalDate: formatDateForInput(initialData.plantApprovalDate) || undefined,
-        originalFirstDate: formatDateForInput(initialData.originalFirstDate) || undefined,
-        customerEngineeringApprovalDate: formatDateForInput(initialData.customerEngineeringApprovalDate) || undefined,
-        customerQualityApprovalDate: formatDateForInput(initialData.customerQualityApprovalDate) || undefined,
-        otherApprovalDate: formatDateForInput(initialData.otherApprovalDate) || undefined,
+        ...data,
+        id: data.id,
+        planDescription: data.planDescription || undefined,
+        imageUrl: data.imageUrl || undefined,
+        generalInformation: data.generalInformation || undefined,
+        supplierPlant: data.supplierPlant || undefined,
+        supplierCode: data.supplierCode || undefined,
+        keyContact: data.keyContact || undefined,
+        coreTeam: data.coreTeam || undefined,
+        otherApproval: data.otherApproval || undefined,
+        revisionDate: formatDateForInput(data.revisionDate),
+        plantApprovalDate: formatDateForInput(data.plantApprovalDate) || undefined,
+        originalFirstDate: formatDateForInput(data.originalFirstDate) || undefined,
+        customerEngineeringApprovalDate: formatDateForInput(data.customerEngineeringApprovalDate) || undefined,
+        customerQualityApprovalDate: formatDateForInput(data.customerQualityApprovalDate) || undefined,
+        otherApprovalDate: formatDateForInput(data.otherApprovalDate) || undefined,
         processSteps: sortedSteps.map(ps => ({
             ...ps,
             id: ps.id || generateTempId('ps'),
@@ -272,16 +271,16 @@ export function ControlPlanForm({ onSubmit, initialData, onClose }: ControlPlanF
             }))
         }))
     }
-  }, [initialData, formatDateForInput]);
+  }, []);
 
 
   const form = useForm<ControlPlanFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues(initialData),
   });
   
   useEffect(() => {
-    form.reset(getDefaultValues());
+    form.reset(getDefaultValues(initialData));
   }, [initialData, form, getDefaultValues]);
 
   const { fields, append, remove, insert } = useFieldArray({
@@ -982,7 +981,7 @@ const CharacteristicAccordion = ({ form, processStepIndex, characteristicIndex, 
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Item #</FormLabel>
-                            <FormControl><Input placeholder="1" {...field} className="w-24 font-bold" disabled={!isAdmin}/></FormControl>
+                            <FormControl><Input placeholder="1" {...field} className="w-32 font-bold" disabled={!isAdmin}/></FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -1494,3 +1493,5 @@ const ImageUploader = ({ form, fieldName, entityName, entityId, planNumber, onIm
         </Card>
     );
 };
+
+    
