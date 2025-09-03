@@ -278,7 +278,7 @@ export default function LenkungsplanPage() {
                 <BrainCircuit className="mr-2 h-4 w-4" />
                 DNA
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
+            <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
                 <FolderKanban className="mr-2 h-4 w-4" />
                 PO
             </Button>

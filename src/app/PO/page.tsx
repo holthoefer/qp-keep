@@ -70,8 +70,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AuftragFormData = Omit<Auftrag, 'id'>;
 
-export default function AuftraegePage() {
-  const { user, roles, loading: authLoading, logout } from useAuth();
+export default function POPage() {
+  const { user, roles, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const [items, setItems] = useState<Auftrag[]>([]);
   const [controlPlans, setControlPlans] = useState<ControlPlan[]>([]);
@@ -198,7 +198,7 @@ export default function AuftraegePage() {
         <div className="flex items-center gap-2">
           <KeepKnowLogo className="h-8 w-8 text-primary" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
-            Aufträge (Legacy)
+            Aufträge
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -212,10 +212,6 @@ export default function AuftraegePage() {
              <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
                 <BrainCircuit className="mr-2 h-4 w-4" />
                 DNA
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
-                <FolderKanban className="mr-2 h-4 w-4" />
-                PO
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                 <Target className="mr-2 h-4 w-4" />
