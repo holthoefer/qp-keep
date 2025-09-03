@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -565,6 +566,10 @@ function ControlPlanRow({
                   <DropdownMenuItem onClick={() => onPrintV4(plan)}>
                     <Printer className="mr-2 h-4 w-4" />
                     Print Control Plan
+                  </DropdownMenuItem>
+                   <DropdownMenuItem onClick={() => onPrintV5(plan)}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print Document (AI)
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => onExportCsv(plan)}>
