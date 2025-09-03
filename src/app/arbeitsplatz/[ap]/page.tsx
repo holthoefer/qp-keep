@@ -4,8 +4,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getWorkstation, saveWorkstation, getAppStorage } from '@/lib/data';
-import type { Workstation } from '@/types';
+import { getWorkstation, saveWorkstation, getAppStorage, listStorageFiles } from '@/lib/data';
+import type { Workstation, StorageFile } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { StorageBrowser } from '@/components/cp/StorageBrowser';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { findThumbnailUrl } from '@/lib/image-utils';
 
 export default function WorkstationDetailPage({ params }: { params: Promise<{ ap: string }> }) {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
 
   const [workstation, setWorkstation] = React.useState<Workstation | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = React.useState('');
+  const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -53,11 +55,15 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
       setIsLoading(true);
       setError(null);
       try {
-        const wsData = await getWorkstation(ap);
+        const [wsData, files] = await Promise.all([
+          getWorkstation(ap),
+          listStorageFiles('uploads/')
+        ]);
         if (!wsData) {
           throw new Error(`Arbeitsplatz mit AP ${ap} nicht gefunden.`);
         }
         setWorkstation(wsData);
+        setStorageFiles(files);
         setImageUrl(wsData.imageUrl || '');
         setOriginalImageUrl(wsData.imageUrl || '');
         setHasImageError(false);
@@ -208,6 +214,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
 
   const isInvalidSrc = !imageUrl || hasImageError || !imageUrl.startsWith('http');
   const isUrlChanged = imageUrl !== originalImageUrl;
+  const thumbnailUrl = findThumbnailUrl(imageUrl, storageFiles);
   
   const handleBack = () => {
     router.push('/arbeitsplaetze');
@@ -306,7 +313,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
                           ) : (
                               <button onClick={() => setIsImageModalOpen(true)} className="block w-full cursor-pointer focus:outline-none group">
                                   <Image
-                                      src={imageUrl}
+                                      src={thumbnailUrl}
                                       alt={`Foto für Arbeitsplatz ${workstation.AP}`}
                                       width={600}
                                       height={400}

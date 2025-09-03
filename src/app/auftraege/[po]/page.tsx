@@ -4,8 +4,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getAuftrag, saveAuftrag, getAppStorage } from '@/lib/data';
-import type { Auftrag } from '@/types';
+import { getAuftrag, saveAuftrag, getAppStorage, listStorageFiles } from '@/lib/data';
+import type { Auftrag, StorageFile } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { StorageBrowser } from '@/components/cp/StorageBrowser';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { findThumbnailUrl } from '@/lib/image-utils';
 
 
 interface AuftragDetailPageProps {
@@ -36,6 +37,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
 
   const [auftrag, setAuftrag] = React.useState<Auftrag | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = React.useState('');
+  const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -60,11 +62,15 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
       setIsLoading(true);
       setError(null);
       try {
-        const auftragData = await getAuftrag(po);
+        const [auftragData, files] = await Promise.all([
+            getAuftrag(po),
+            listStorageFiles('uploads/')
+        ]);
         if (!auftragData) {
           throw new Error(`Auftrag mit PO ${po} nicht gefunden.`);
         }
         setAuftrag(auftragData);
+        setStorageFiles(files);
         setImageUrl(auftragData.imageUrl || '');
         setOriginalImageUrl(auftragData.imageUrl || '');
         setHasImageError(false);
@@ -231,6 +237,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
 
   const isInvalidSrc = !imageUrl || hasImageError || !imageUrl.startsWith('http');
   const isUrlChanged = imageUrl !== originalImageUrl;
+  const thumbnailUrl = findThumbnailUrl(imageUrl, storageFiles);
   
   const handleBack = () => {
     if(onClose) {
@@ -336,7 +343,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
                         ) : (
                             <button onClick={() => setIsImageModalOpen(true)} className="block w-full cursor-pointer focus:outline-none group">
                                  <Image
-                                    src={imageUrl}
+                                    src={thumbnailUrl}
                                     alt={`Foto für Auftrag ${auftrag.PO}`}
                                     width={600}
                                     height={400}

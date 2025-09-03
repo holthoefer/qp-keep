@@ -33,6 +33,7 @@ import {
 import { suggestResponsePlan } from '@/ai/flows/suggest-response-plan';
 import { SampleChart } from '@/components/SampleChart';
 import { SChart } from '@/components/SChart';
+import { findThumbnailUrl } from '@/lib/image-utils';
 
 
 interface AnalysisResultDialogProps {
@@ -107,7 +108,7 @@ const AnalysisResultDialog: React.FC<AnalysisResultDialogProps> = ({ isOpen, onO
                                     {sample.note && <p className="mt-2"><strong>Notiz:</strong> {sample.note}</p>}
                                      {sample.imageUrl && (
                                         <div className="mt-2">
-                                            <Image src={sample.imageUrl} alt="Stichprobenbild" width={200} height={200} className="rounded-md object-cover" />
+                                            <Image src={findThumbnailUrl(sample.imageUrl)} alt="Stichprobenbild" width={200} height={200} className="rounded-md object-cover" />
                                         </div>
                                     )}
                                 </CardContent>
@@ -568,7 +569,7 @@ const generateHtmlWithCurrentData = (): string | null => {
             <h2>Aktuelle Stichprobe</h2>
             <div class="image-note-section">
                  <div class="image-container">
-                    ${currentSampleWithLatestChanges.imageUrl ? `<img src="${currentSampleWithLatestChanges.imageUrl}" alt="Stichprobenbild" class="sample-image" style="width: 300px;"/>` : ''}
+                    ${currentSampleWithLatestChanges.imageUrl ? `<img src="${findThumbnailUrl(currentSampleWithLatestChanges.imageUrl)}" alt="Stichprobenbild" class="sample-image" style="width: 300px;"/>` : ''}
                  </div>
                  <div class="note-container">
                     <table class="data-table">
@@ -789,7 +790,7 @@ const handleExportSkeleton = () => {
                                 <button onClick={() => setIsImageModalOpen(true)} className="block w-64 h-64 flex-shrink-0 cursor-pointer focus:outline-none group">
                                     <div className="w-64 h-64 relative mx-auto">
                                         <Image
-                                            src={imageUrl}
+                                            src={findThumbnailUrl(imageUrl)}
                                             alt={`Foto für Stichprobe`}
                                             width={256}
                                             height={256}
