@@ -6,7 +6,7 @@ import { WorkstationGrid } from "@/components/workstations/WorkstationGrid";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
-import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit } from "lucide-react";
+import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit, FileImage } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,6 +55,10 @@ export default function ArbeitsplaetzePage() {
                     <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                         <Book className="mr-2 h-4 w-4" />
                         LP
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+                      <FileImage className="mr-2 h-4 w-4" />
+                      Storage
                     </Button>
                     {isAdmin && (
                         <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>

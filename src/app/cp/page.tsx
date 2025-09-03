@@ -35,6 +35,7 @@ import {
   FolderKanban,
   BrainCircuit,
   LogOut,
+  FileImage,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -131,7 +132,7 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
     return `<span style="display: inline-block; padding: 2px 8px; font-size: 10px; font-weight: bold; border-radius: 9999px; background-color: ${style.bg}; color: ${style.text}; border: 1px solid ${style.bg === '#f8fafc' ? '#e2e8f0' : 'transparent'};">${status}</span>`;
   };
   
-  const sortedSteps = [...plan.processSteps].sort((a, b) => {
+  const sortedSteps = [...(plan.processSteps || [])].sort((a, b) => {
     const numA = a.processNumber ? a.processNumber.match(/\d+/g)?.join('') : '';
     const numB = b.processNumber ? b.processNumber.match(/\d+/g)?.join('') : '';
     return (numA || '').localeCompare((numB || ''), undefined, { numeric: true });
@@ -234,7 +235,7 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
                  </tr>
             </thead>
             <tbody>
-                ${step.characteristics.sort((a,b) => a.itemNumber.localeCompare(b.itemNumber, undefined, { numeric: true })).map(char => {
+                ${(step.characteristics || []).sort((a,b) => a.itemNumber.localeCompare(b.itemNumber, undefined, { numeric: true })).map(char => {
                     const charThumbnailUrl = findThumbnailUrl(char.imageUrl, allFiles);
                     return `
                     <tr key="${char.id}">
@@ -356,7 +357,7 @@ const generateControlPlanHtmlWithoutImages = (plan: ControlPlan): string => {
     return spec || char.DesciptionSpec || '';
   };
   
-  const sortedSteps = [...plan.processSteps].sort((a, b) => {
+  const sortedSteps = [...(plan.processSteps || [])].sort((a, b) => {
     const numA = a.processNumber ? a.processNumber.match(/\d+/g)?.join('') : '';
     const numB = b.processNumber ? b.processNumber.match(/\d+/g)?.join('') : '';
     return (numA || '').localeCompare((numB || ''), undefined, { numeric: true });
@@ -398,7 +399,7 @@ const generateControlPlanHtmlWithoutImages = (plan: ControlPlan): string => {
   `;
 
   const bodyRows = sortedSteps.map(step => {
-    const stepChars = step.characteristics.sort((a,b) => a.itemNumber.localeCompare(b.itemNumber, undefined, { numeric: true }));
+    const stepChars = (step.characteristics || []).sort((a,b) => a.itemNumber.localeCompare(b.itemNumber, undefined, { numeric: true }));
     const rowSpan = Math.max(1, stepChars.length);
     if (stepChars.length > 0) {
       return stepChars.map((char, charIndex) => {
@@ -898,8 +899,8 @@ export default function ControlPlansPage() {
             ...characteristicHeaderKeys.map(k => `char_${k}`)
         ].join(';');
 
-        const rows = plan.processSteps.flatMap(step => 
-            step.characteristics.map(char => {
+        const rows = (plan.processSteps || []).flatMap(step => 
+            (step.characteristics || []).map(char => {
                 const planData = planHeaderKeys.map(key => escapeCsvField(plan[key as keyof typeof plan]));
                 const stepData = processStepHeaderKeys.map(key => escapeCsvField(step[key as keyof typeof step]));
                 const charData = characteristicHeaderKeys.map(key => escapeCsvField(char[key as keyof typeof char]));
@@ -953,6 +954,10 @@ export default function ControlPlansPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                 <Book className="mr-2 h-4 w-4" />
                 LP
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+              <FileImage className="mr-2 h-4 w-4" />
+              Storage
             </Button>
             {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>

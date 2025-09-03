@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { DNA, Workstation, ControlPlan, ProcessStep, StorageFile } from '@/types';
 import { getDnaData, getWorkstations, getControlPlans, listStorageFiles } from '@/lib/data';
 import { getDb } from '@/lib/firebase';
-import { Search, ImageIcon, Clock, ArrowLeft, Loader2, Book, Shield, Target, LogOut, BrainCircuit, FolderKanban, LayoutGrid } from 'lucide-react';
+import { Search, ImageIcon, Clock, ArrowLeft, Loader2, Book, Shield, Target, LogOut, BrainCircuit, FolderKanban, LayoutGrid, FileImage } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -278,6 +278,10 @@ export default function DnaPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                 <Book className="mr-2 h-4 w-4" />
                 LP
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+              <FileImage className="mr-2 h-4 w-4" />
+              Storage
             </Button>
             {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>

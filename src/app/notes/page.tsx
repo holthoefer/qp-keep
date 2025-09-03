@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -155,6 +155,10 @@ export default function NotesPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                 <Book className="mr-2 h-4 w-4" />
                 LP
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+              <FileImage className="mr-2 h-4 w-4" />
+              Storage
             </Button>
             {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>

@@ -30,7 +30,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2, Book, Shield, Target, LogOut, LayoutGrid, FolderKanban, BrainCircuit } from 'lucide-react';
+import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2, Book, Shield, Target, LogOut, LayoutGrid, FolderKanban, BrainCircuit, FileImage } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { cn } from '@/lib/utils';
@@ -315,6 +315,10 @@ function MerkmaleCardsPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                 <Book className="mr-2 h-4 w-4" />
                 LP
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+              <FileImage className="mr-2 h-4 w-4" />
+              Storage
             </Button>
             {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
