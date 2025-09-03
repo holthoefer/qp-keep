@@ -79,7 +79,7 @@ export default function HomePage() {
         <div className="mb-8 flex flex-col items-center justify-center space-y-4">
           <KeepKnowLogo className="h-16 w-16 text-primary" />
           <h1 className="font-headline text-5xl font-bold tracking-tighter">
-            qpLoop
+            qp Loop
           </h1>
           <p className="text-muted-foreground">Focus, Organize, Succeed.</p>
         </div>
