@@ -21,7 +21,7 @@ import {
   writeBatch,
   limit,
 } from 'firebase/firestore';
-import { ref, listAll, getDownloadURL } from "firebase/storage";
+import { ref, listAll, getDownloadURL, type StorageReference } from "firebase/storage";
 import { suggestTags } from '@/ai/flows/suggest-tags';
 import type { User } from 'firebase/auth';
 import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA, SampleData, ProcessStep, Characteristic } from '@/types';
@@ -284,46 +284,57 @@ export async function deleteControlPlan(planId: string): Promise<void> {
     await batch.commit();
 }
 
+// Recursive function to list all files in a directory and its subdirectories
+const listAllFilesRecursive = async (dirRef: StorageReference): Promise<StorageReference[]> => {
+    let allFiles: StorageReference[] = [];
+    const res = await listAll(dirRef);
+
+    allFiles.push(...res.items);
+
+    for (const folderRef of res.prefixes) {
+        const subFiles = await listAllFilesRecursive(folderRef);
+        allFiles.push(...subFiles);
+    }
+
+    return allFiles;
+};
+
 export async function listStorageFiles(path: string): Promise<StorageFile[]> {
     const storage = getAppStorage();
     if (!storage) return [];
 
     const listRef = ref(storage, path);
-    const res = await listAll(listRef);
-    const files: StorageFile[] = [];
+    
+    // Get all files recursively
+    const allItemRefs = await listAllFilesRecursive(listRef);
 
-    for (const itemRef of res.items) {
+    const filesMap = new Map<string, Partial<StorageFile>>();
+
+    // Process all files to get their URLs
+    for (const itemRef of allItemRefs) {
         try {
             const url = await getDownloadURL(itemRef);
             const isThumbnail = itemRef.name.includes('_200x200.');
-            
-            if (!isThumbnail) {
-                const originalName = itemRef.name;
-                const extensionIndex = originalName.lastIndexOf('.');
-                const nameWithoutExt = originalName.substring(0, extensionIndex);
-                const extension = originalName.substring(extensionIndex);
-                const thumbnailName = `${nameWithoutExt}_200x200${extension}`;
-                
-                // Find corresponding thumbnail in the full list
-                const thumbRef = res.items.find(i => i.name === thumbnailName);
-                let thumbnailUrl: string | undefined = undefined;
-                if (thumbRef) {
-                    try {
-                        thumbnailUrl = await getDownloadURL(thumbRef);
-                    } catch (e) {
-                         console.warn(`Could not get thumbnail URL for ${thumbnailName}`, e);
-                    }
-                }
+            const originalName = isThumbnail 
+                ? itemRef.name.replace('_200x200.', '.') 
+                : itemRef.name;
 
-                files.push({ url, name: itemRef.name, thumbnailUrl });
+            const existing = filesMap.get(originalName) || {};
+
+            if (isThumbnail) {
+                filesMap.set(originalName, { ...existing, thumbnailUrl: url, name: originalName });
+            } else {
+                 filesMap.set(originalName, { ...existing, url: url, name: originalName });
             }
         } catch (error) {
             console.error(`Failed to get download URL for ${itemRef.fullPath}`, error);
         }
     }
-
-    return files;
+    
+    // Filter out entries that don't have an original URL (e.g., lone thumbnails)
+    return Array.from(filesMap.values()).filter(file => file.url).map(file => file as StorageFile);
 }
+
 
 // Workstation data
 export async function getWorkstations(): Promise<Workstation[]> {
