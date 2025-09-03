@@ -20,6 +20,7 @@ interface AuthContextType {
     profile: UserProfile | null;
     roles: string[];
     loading: boolean;
+    isAdmin: boolean;
     loginWithGoogle: () => Promise<void>;
     loginWithEmail: (email: string, pass: string) => Promise<any>;
     signupWithEmail: (email: string, pass: string) => Promise<any>;
@@ -92,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         profile,
         roles,
+        isAdmin: roles.includes('admin'),
         loading, 
         loginWithGoogle,
         loginWithEmail,
