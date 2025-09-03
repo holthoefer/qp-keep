@@ -37,9 +37,8 @@ export default function HomePage() {
             <div className="mb-8 flex flex-col items-center justify-center space-y-4">
                 <KeepKnowLogo className="h-16 w-16 text-primary" />
                 <h1 className="font-headline text-3xl font-bold tracking-tighter">
-                    Angemeldet
+                    Start qp Loop
                 </h1>
-                <p className="text-muted-foreground">Sie sind erfolgreich angemeldet.</p>
             </div>
           
             <div className="space-y-4">
