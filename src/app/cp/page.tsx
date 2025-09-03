@@ -144,8 +144,9 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
         <div class="header-col-left">
             ${plan.imageUrl ? `
                 <div class="image-container">
+                    <div class="image-url"><b>Rendered:</b> ${planThumbnailUrl}</div>
                     <img src="${planThumbnailUrl}" alt="Image for ${plan.partName}" style="max-height: 256px; width: auto; object-fit: contain;" />
-                    <div class="image-url">${plan.imageUrl}</div>
+                    <div class="image-url"><b>Original:</b> ${plan.imageUrl}</div>
                 </div>
             ` : ''}
         </div>
@@ -201,8 +202,9 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
                     <td class="image-cell" style="width: 140px; text-align: left; padding: 2px;">
                         ${step.imageUrl ? `
                             <div class="image-container">
+                                <div class="image-url"><b>Rendered:</b> ${stepThumbnailUrl}</div>
                                 <img src="${stepThumbnailUrl}" alt="Image for ${step.processName}" style="max-width: 128px; max-height: 128px; object-fit: contain;" />
-                                <div class="image-url">${step.imageUrl}</div>
+                                <div class="image-url"><b>Original:</b> ${step.imageUrl}</div>
                             </div>
                         ` : ''}
                     </td>
@@ -239,8 +241,9 @@ const generateControlPlanHtmlWithThumbnails = (plan: ControlPlan, allFiles: Stor
                         <td style="width: 120px; text-align: center; padding: 2px;">
                             ${char.imageUrl ? `
                                 <div class="image-container">
+                                    <div class="image-url"><b>Rendered:</b> ${charThumbnailUrl}</div>
                                     <img src="${charThumbnailUrl}" alt="Image for ${char.DesciptionSpec}" style="max-width: 96px; max-height: 96px; object-fit: contain;" />
-                                    <div class="image-url">${char.imageUrl}</div>
+                                    <div class="image-url"><b>Original:</b> ${char.imageUrl}</div>
                                 </div>
                             ` : ''}
                         </td>
@@ -1131,3 +1134,4 @@ export default function ControlPlansPage() {
     </div>
   );
 }
+
