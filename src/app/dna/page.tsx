@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import type { DNA, Workstation, ControlPlan, ProcessStep, StorageFile } from '@/types';
+import type { DNA, Workstation, ControlPlan, ProcessStep } from '@/types';
 import { getDnaData, getWorkstations, getControlPlans } from '@/lib/data';
 import { getDb } from '@/lib/firebase';
 import { Search, ImageIcon, Clock, ArrowLeft, Loader2, Book, Shield, Target, LogOut, BrainCircuit, FolderKanban, LayoutGrid, FileImage } from 'lucide-react';
@@ -24,7 +24,7 @@ import { DashboardClient } from '@/components/cp/DashboardClient';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { findThumbnailUrl } from '@/lib/image-utils';
+import { generateThumbnailUrl } from '@/lib/image-utils';
 import { useRouter } from 'next/navigation';
 import { SampleChart } from '@/components/SampleChart';
 import { KeepKnowLogo } from '@/components/icons';
@@ -371,7 +371,7 @@ export default function DnaPage() {
                                           className="relative flex-shrink-0"
                                       >
                                           <Image
-                                              src={findThumbnailUrl(workstation.imageUrl)}
+                                              src={generateThumbnailUrl(workstation.imageUrl)}
                                               alt={`Bild für Arbeitsplatz ${workstation.AP}`}
                                               width={40}
                                               height={40}
@@ -388,7 +388,7 @@ export default function DnaPage() {
                                           className="relative flex-shrink-0"
                                       >
                                           <Image
-                                              src={findThumbnailUrl(processStep.imageUrl)}
+                                              src={generateThumbnailUrl(processStep.imageUrl)}
                                               alt={`Bild für Prozess ${processStep.processNumber}`}
                                               width={40}
                                               height={40}
@@ -402,7 +402,7 @@ export default function DnaPage() {
                                           className="relative flex-shrink-0"
                                       >
                                           <Image
-                                              src={findThumbnailUrl(controlPlan.imageUrl)}
+                                              src={generateThumbnailUrl(controlPlan.imageUrl)}
                                               alt={`Bild für Control Plan ${controlPlan.planNumber}`}
                                               width={40}
                                               height={40}
@@ -429,7 +429,7 @@ export default function DnaPage() {
                                                             className="relative"
                                                         >
                                                             <Image
-                                                                src={findThumbnailUrl(dna.imageUrlLatestSample)}
+                                                                src={generateThumbnailUrl(dna.imageUrlLatestSample)}
                                                                 alt={`Letztes Sample Bild`}
                                                                 width={32}
                                                                 height={32}
@@ -446,7 +446,7 @@ export default function DnaPage() {
                                                             className="relative flex-shrink-0"
                                                         >
                                                             <Image
-                                                                src={findThumbnailUrl(dna.imageUrl)}
+                                                                src={generateThumbnailUrl(dna.imageUrl)}
                                                                 alt={`Bild für Merkmal`}
                                                                 width={32}
                                                                 height={32}

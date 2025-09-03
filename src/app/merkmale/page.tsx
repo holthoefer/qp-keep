@@ -8,7 +8,6 @@ import {
   getAuftraege,
   getControlPlans,
   getDnaData,
-  listStorageFiles,
 } from '@/lib/data';
 import type {
   Workstation,
@@ -17,7 +16,6 @@ import type {
   Characteristic,
   ProcessStep,
   DNA,
-  StorageFile,
 } from '@/types';
 import {
   Card,
@@ -37,7 +35,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { useToast } from '@/hooks/use-toast';
-import { findThumbnailUrl } from '@/lib/image-utils';
+import { generateThumbnailUrl } from '@/lib/image-utils';
 import { SampleChart } from '@/components/SampleChart';
 import { KeepKnowLogo } from '@/components/icons';
 import { useAuth } from '@/hooks/use-auth-context';
@@ -105,7 +103,6 @@ function MerkmaleCardsPage() {
   const [processStep, setProcessStep] = React.useState<ProcessStep | null>(null);
   const [characteristics, setCharacteristics] = React.useState<Characteristic[]>([]);
   const [dnaData, setDnaData] = React.useState<DNA[]>([]);
-  const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -131,15 +128,12 @@ function MerkmaleCardsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const [workstations, auftraege, controlPlansData, allDna, allFiles] = await Promise.all([
+        const [workstations, auftraege, controlPlansData, allDna] = await Promise.all([
           getWorkstations(),
           getAuftraege(),
           getControlPlans(),
           getDnaData(),
-          listStorageFiles('uploads/'),
         ]);
-
-        setStorageFiles(allFiles);
 
         const currentWorkstation = workstations.find((ws) => ws.AP === decodedApId);
         if (!currentWorkstation) {
@@ -367,7 +361,7 @@ function MerkmaleCardsPage() {
                     {workstation?.imageUrl && (
                         <div className="flex-shrink-0">
                             <Image
-                                src={findThumbnailUrl(workstation.imageUrl, storageFiles)}
+                                src={generateThumbnailUrl(workstation.imageUrl)}
                                 alt={`Bild für Arbeitsplatz ${workstation.AP}`}
                                 width={40}
                                 height={40}
@@ -398,7 +392,7 @@ function MerkmaleCardsPage() {
                     {controlPlan?.imageUrl && (
                         <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
                             <Image
-                                src={findThumbnailUrl(controlPlan.imageUrl, storageFiles)}
+                                src={generateThumbnailUrl(controlPlan.imageUrl)}
                                 alt={`Bild für Control Plan ${controlPlan.planNumber}`}
                                 width={40}
                                 height={40}
@@ -409,7 +403,7 @@ function MerkmaleCardsPage() {
                     {processStep?.imageUrl && (
                         <button onClick={(e) => handleImageClick(e, processStep.imageUrl!, `Bild für Prozess ${processStep.processNumber}`)} className="flex-shrink-0">
                             <Image
-                                src={findThumbnailUrl(processStep.imageUrl, storageFiles)}
+                                src={generateThumbnailUrl(processStep.imageUrl)}
                                 alt={`Bild für Prozess ${processStep.processNumber}`}
                                 width={40}
                                 height={40}
@@ -460,7 +454,7 @@ function MerkmaleCardsPage() {
                                     {char.imageUrl && (
                                          <button onClick={(e) => handleImageClick(e, char.imageUrl!, `Bild für Merkmal ${char.itemNumber}`)} className="flex-shrink-0">
                                             <Image
-                                                src={findThumbnailUrl(char.imageUrl, storageFiles)}
+                                                src={generateThumbnailUrl(char.imageUrl)}
                                                 alt={`Bild für Merkmal ${char.itemNumber}`}
                                                 width={40}
                                                 height={40}

@@ -28,7 +28,6 @@ import {
   saveDnaData,
   getSample,
   getSamplesForDna,
-  listStorageFiles,
   auth,
 } from '@/lib/data';
 import type {
@@ -39,7 +38,6 @@ import type {
   ProcessStep,
   SampleData,
   DNA,
-  StorageFile,
 } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
 import { SampleChart } from '@/components/SampleChart';
@@ -54,7 +52,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 // import ProbenPage from '@/app/proben/page';
 import { cn } from '@/lib/utils';
 // import { DnaTimeTracker } from '../dna/page';
-import { findThumbnailUrl } from '@/lib/image-utils';
+import { generateThumbnailUrl } from '@/lib/image-utils';
 import { Label } from '@/components/ui/label';
 
 export const dynamic = 'force-dynamic';
@@ -96,7 +94,7 @@ function DnaTimeTracker({ lastTimestamp, frequency, prefix }: { lastTimestamp?: 
     );
 }
 
-function DnaCard({ dnaData, onSave, storageFiles }: { dnaData: DNA, onSave: (data: Partial<DNA>) => Promise<void>, storageFiles: StorageFile[] }) {
+function DnaCard({ dnaData, onSave }: { dnaData: DNA, onSave: (data: Partial<DNA>) => Promise<void> }) {
     const [isSaving, setIsSaving] = React.useState(false);
     const [formData, setFormData] = React.useState(dnaData);
     const [isCharModalOpen, setIsCharModalOpen] = React.useState(false);
@@ -212,7 +210,7 @@ function DnaCard({ dnaData, onSave, storageFiles }: { dnaData: DNA, onSave: (dat
                                                     className="flex-shrink-0"
                                                 >
                                                     <Image 
-                                                        src={findThumbnailUrl(formData.imageUrl, storageFiles)} 
+                                                        src={generateThumbnailUrl(formData.imageUrl)} 
                                                         alt="Merkmalbild" 
                                                         width={40} 
                                                         height={40} 
@@ -233,7 +231,7 @@ function DnaCard({ dnaData, onSave, storageFiles }: { dnaData: DNA, onSave: (dat
                                                     className="flex-shrink-0"
                                                 >
                                                     <Image 
-                                                        src={findThumbnailUrl(formData.imageUrlLatestSample, storageFiles)} 
+                                                        src={generateThumbnailUrl(formData.imageUrlLatestSample)} 
                                                         alt="Letztes Sample Bild" 
                                                         width={40} 
                                                         height={40} 
@@ -273,7 +271,7 @@ function DnaCard({ dnaData, onSave, storageFiles }: { dnaData: DNA, onSave: (dat
     );
 }
 
-function ProcessStepCard({ processStep, onImageClick, storageFiles }: { processStep: ProcessStep | null, onImageClick: (url: string, alt: string) => void, storageFiles: StorageFile[] }) {
+function ProcessStepCard({ processStep, onImageClick }: { processStep: ProcessStep | null, onImageClick: (url: string, alt: string) => void }) {
     if (!processStep) return null;
     return (
         <Card className="bg-muted/50">
@@ -287,7 +285,7 @@ function ProcessStepCard({ processStep, onImageClick, storageFiles }: { processS
                  {processStep.imageUrl && (
                     <button type="button" onClick={() => onImageClick(processStep.imageUrl!, `Bild für ${processStep.processNumber}`)} className="w-16 h-16 flex-shrink-0">
                         <Image
-                            src={findThumbnailUrl(processStep.imageUrl, storageFiles)}
+                            src={generateThumbnailUrl(processStep.imageUrl)}
                             alt={`Bild für ${processStep.processNumber}`}
                             width={64}
                             height={64}
@@ -312,7 +310,7 @@ function ProcessStepCard({ processStep, onImageClick, storageFiles }: { processS
     )
 }
 
-function ControlPlanCard({ controlPlan, onImageClick, storageFiles }: { controlPlan: ControlPlan | null, onImageClick: (url: string, alt: string) => void, storageFiles: StorageFile[] }) {
+function ControlPlanCard({ controlPlan, onImageClick }: { controlPlan: ControlPlan | null, onImageClick: (url: string, alt: string) => void }) {
     if (!controlPlan) return null;
     return (
         <Card className="bg-muted/50">
@@ -326,7 +324,7 @@ function ControlPlanCard({ controlPlan, onImageClick, storageFiles }: { controlP
                 {controlPlan.imageUrl && (
                     <button type="button" onClick={() => onImageClick(controlPlan.imageUrl!, `Bild für ${controlPlan.planNumber}`)} className="w-16 h-16 flex-shrink-0">
                         <Image
-                            src={findThumbnailUrl(controlPlan.imageUrl, storageFiles)}
+                            src={generateThumbnailUrl(controlPlan.imageUrl)}
                             alt={`Bild für ${controlPlan.planNumber}`}
                             width={64}
                             height={64}
@@ -369,7 +367,6 @@ function ErfassungPage() {
   const [characteristic, setCharacteristic] = React.useState<Characteristic | null>(null);
   const [processStep, setProcessStep] = React.useState<ProcessStep | null>(null);
   const [dnaData, setDnaData] = React.useState<DNA | null>(null);
-  const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -449,14 +446,11 @@ function ErfassungPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const [workstations, auftraege, controlPlans, allFiles] = await Promise.all([
+        const [workstations, auftraege, controlPlans] = await Promise.all([
           getWorkstations(),
           getAuftraege(),
           getControlPlans(),
-          listStorageFiles('uploads/'),
         ]);
-
-        setStorageFiles(allFiles);
 
         const currentWorkstation = workstations.find((ws) => ws.AP === decodedApId);
         if (!currentWorkstation) {
@@ -774,7 +768,7 @@ function ErfassungPage() {
                     <div className="absolute top-0 right-0 flex-shrink-0">
                         <button type="button" onClick={() => handleImageClick(characteristic.imageUrl!, `Bild für Merkmal ${characteristic.DesciptionSpec}`)} className="w-16 h-16">
                             <Image 
-                                src={findThumbnailUrl(characteristic.imageUrl, storageFiles)} 
+                                src={generateThumbnailUrl(characteristic.imageUrl)} 
                                 alt="Merkmalbild" 
                                 width={64} 
                                 height={64} 
@@ -889,9 +883,9 @@ function ErfassungPage() {
       </div>
 
        <div className="mt-4 pt-4 space-y-4">
-          {dnaData && <DnaCard dnaData={dnaData} onSave={handleDnaSave} storageFiles={storageFiles} />}
-          <ProcessStepCard processStep={processStep} onImageClick={handleImageClick} storageFiles={storageFiles} />
-          <ControlPlanCard controlPlan={controlPlan} onImageClick={handleImageClick} storageFiles={storageFiles} />
+          {dnaData && <DnaCard dnaData={dnaData} onSave={handleDnaSave} />}
+          <ProcessStepCard processStep={processStep} onImageClick={handleImageClick} />
+          <ControlPlanCard controlPlan={controlPlan} onImageClick={handleImageClick} />
       </div>
     </div>
     </DashboardClient>

@@ -1,30 +1,4 @@
 
-
-import type { StorageFile } from "@/types";
-
-export const findThumbnailUrl = (originalUrl?: string | null, allFiles?: StorageFile[]): string => {
-    // This function is kept for legacy support (e.g. printing) but is no longer
-    // the primary method for displaying thumbnails in the UI to avoid slow queries.
-    if (!originalUrl) {
-        return 'https://placehold.co/200x200.png?text=No+Image';
-    }
-
-    if (!allFiles || allFiles.length === 0) {
-        return generateThumbnailUrl(originalUrl);
-    }
-
-    try {
-        const originalFile = allFiles.find(file => file.url === originalUrl);
-        if (originalFile && originalFile.thumbnailUrl) {
-            return originalFile.thumbnailUrl;
-        }
-        return generateThumbnailUrl(originalUrl);
-    } catch (e) {
-        console.error("Error finding thumbnail URL:", e);
-        return 'https://placehold.co/200x200.png?text=Error';
-    }
-};
-
 export const generateThumbnailUrl = (originalUrl?: string | null): string => {
     if (!originalUrl) {
         return 'https://placehold.co/200x200.png?text=No+Image';
