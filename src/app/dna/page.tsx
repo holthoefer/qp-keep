@@ -317,6 +317,9 @@ export default function DnaPage() {
             <CardHeader>
                <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
+                     <Button variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')} className="h-8 w-8">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
                     <div>
                       <CardTitle className="text-xl">DNA (Aktive Merkmale)</CardTitle>
                       <CardDescription>Gruppiert nach aktivem Arbeitsplatz, Auftrag & Prozess.</CardDescription>
