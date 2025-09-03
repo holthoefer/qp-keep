@@ -81,7 +81,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { getControlPlans, deleteControlPlan as deletePlanFromDb, listStorageFiles } from '@/lib/data';
+import { getControlPlans, deleteControlPlan as deletePlanFromDb } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { DashboardClient } from '@/components/cp/DashboardClient';
@@ -89,7 +89,7 @@ import Image from 'next/image';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth-context';
-import { findThumbnailUrl } from '@/lib/image-utils';
+import { generateThumbnailUrl, findThumbnailUrl } from '@/lib/image-utils';
 import { KeepKnowLogo } from '@/components/icons';
 
 
@@ -508,7 +508,6 @@ const generateControlPlanHtmlWithoutImages = (plan: ControlPlan): string => {
 function ControlPlanRow({
   plan,
   isAdmin,
-  allFiles,
   onEdit,
   onDelete,
   onDuplicate,
@@ -520,7 +519,6 @@ function ControlPlanRow({
 }: {
   plan: ControlPlan;
   isAdmin: boolean;
-  allFiles: StorageFile[];
   onEdit: (plan: ControlPlan) => void;
   onDelete: (planId: string) => void;
   onDuplicate: (plan: ControlPlan) => void;
@@ -531,7 +529,19 @@ function ControlPlanRow({
   onExportCsv: (plan: ControlPlan) => void;
 }) {
 
-  const thumbnailUrl = findThumbnailUrl(plan.imageUrl, allFiles);
+  const [thumbnailUrl, setThumbnailUrl] = React.useState(generateThumbnailUrl(plan.imageUrl));
+  const [hasError, setHasError] = React.useState(false);
+
+  const handleImageError = () => {
+    // If the thumbnail fails, try the original URL
+    if (plan.imageUrl && thumbnailUrl !== plan.imageUrl) {
+        setThumbnailUrl(plan.imageUrl);
+    } else {
+        // If the original also fails (or there was no thumbnail), mark as error
+        setHasError(true);
+    }
+  };
+
 
   return (
     <React.Fragment>
@@ -614,20 +624,22 @@ function ControlPlanRow({
         </TableCell>
         <TableCell>
             {plan.imageUrl ? (
-              <div>
-                <button
-                    onClick={(e) => { e.stopPropagation(); onImageClick(plan.imageUrl!, `Vollbildansicht für ${plan.planNumber}`); }}
-                    className="disabled:cursor-not-allowed"
-                >
-                    <Image
-                        src={thumbnailUrl}
-                        alt={`Thumbnail für ${plan.planNumber}`}
-                        width={40}
-                        height={40}
-                        className="rounded object-cover aspect-square"
-                    />
-                </button>
-              </div>
+                <div>
+                  <button
+                      onClick={(e) => { e.stopPropagation(); onImageClick(plan.imageUrl!, `Vollbildansicht für ${plan.planNumber}`); }}
+                      className="disabled:cursor-not-allowed"
+                      disabled={hasError}
+                  >
+                      <Image
+                          src={hasError ? 'https://placehold.co/40x40/png?text=Error' : thumbnailUrl}
+                          alt={`Thumbnail für ${plan.planNumber}`}
+                          width={40}
+                          height={40}
+                          className="rounded object-cover aspect-square"
+                          onError={handleImageError}
+                      />
+                  </button>
+                </div>
             ) : null}
         </TableCell>
         <TableCell>
@@ -688,7 +700,6 @@ export default function ControlPlansPage() {
   const [historyPlan, setHistoryPlan] = React.useState<ControlPlan | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
   const [isGeneratingDoc, setIsGeneratingDoc] = React.useState(false);
-  const [storageFiles, setStorageFiles] = React.useState<StorageFile[]>([]);
   const [isExampleData, setIsExampleData] = React.useState(false);
 
 
@@ -696,10 +707,7 @@ export default function ControlPlansPage() {
     setIsLoading(true);
     setIsExampleData(false);
     try {
-      const [plansFromDb, allFiles] = await Promise.all([
-          getControlPlans(),
-          listStorageFiles('uploads/')
-      ]);
+      const plansFromDb = await getControlPlans();
       
       if (plansFromDb.length === 0) {
         setPlans(getExamplePlans());
@@ -707,7 +715,6 @@ export default function ControlPlansPage() {
       } else {
         setPlans(plansFromDb);
       }
-      setStorageFiles(allFiles);
     } catch (error: any) {
         if (error.code === 'permission-denied') {
             console.warn("Could not fetch control plans. This is expected if the collection doesn't exist or rules are new. Displaying example data.");
@@ -841,7 +848,7 @@ export default function ControlPlansPage() {
   };
   
   const handlePrintV1 = (plan: ControlPlan) => {
-    const htmlContent = generateControlPlanHtmlWithThumbnails(plan, storageFiles);
+    const htmlContent = generateControlPlanHtmlWithThumbnails(plan, []); // Pass empty array as it's not used
     const docWindow = window.open('about:blank', '_blank');
     if (docWindow) {
         docWindow.document.open();
@@ -1106,7 +1113,6 @@ export default function ControlPlansPage() {
                             key={plan.id}
                             plan={plan}
                             isAdmin={isAdmin}
-                            allFiles={storageFiles}
                             onEdit={() => handleOpenEdit(plan)}
                             onDelete={handleDeletePlan}
                             onDuplicate={handleDuplicatePlan}
