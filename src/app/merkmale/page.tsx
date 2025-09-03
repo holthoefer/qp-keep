@@ -30,7 +30,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2 } from 'lucide-react';
+import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2, Book, Shield, Target, LogOut, LayoutGrid, FolderKanban, BrainCircuit } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { cn } from '@/lib/utils';
@@ -39,6 +39,17 @@ import { ImageModal } from '@/components/cp/ImageModal';
 import { useToast } from '@/hooks/use-toast';
 import { findThumbnailUrl } from '@/lib/image-utils';
 import { SampleChart } from '@/components/SampleChart';
+import { KeepKnowLogo } from '@/components/icons';
+import { useAuth } from '@/hooks/use-auth-context';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +96,7 @@ function MerkmaleCardsPage() {
   const { toast } = useToast();
   const apId = searchParams.get('ap');
   const decodedApId = apId ? decodeURIComponent(apId) : null;
+  const { user, logout, isAdmin } = useAuth();
 
 
   const [workstation, setWorkstation] = React.useState<Workstation | null>(null);
@@ -265,166 +277,232 @@ function MerkmaleCardsPage() {
     return 'text-green-600';
   }
 
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
+
 
   return (
-    <DashboardClient>
-        <ImageModal
-            isOpen={isModalOpen}
-            onOpenChange={setIsModalOpen}
-            imageUrl={modalImageUrl}
-            imageAlt={modalImageAlt}
-        />
-      <Card>
-        <CardHeader className="bg-muted/50 rounded-t-lg">
-          <div className="flex justify-between items-start gap-4">
-             <div className="flex items-start gap-4 flex-grow">
-                <Button variant="outline" size="icon" onClick={() => router.push('/notes')}>
-                    <ArrowLeft className="h-4 w-4" />
-                    <span className="sr-only">Zurück zu Notizen</span>
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
+        <div className="flex items-center gap-2">
+          <KeepKnowLogo className="h-8 w-8 text-primary" />
+          <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
+            Merkmale
+          </h1>
+        </div>
+        <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                Notizen
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                WP
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                <BrainCircuit className="mr-2 h-4 w-4" />
+                DNA
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/auftraege')}>
+                <FolderKanban className="mr-2 h-4 w-4" />
+                PO
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
+                <Target className="mr-2 h-4 w-4" />
+                CP
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                <Book className="mr-2 h-4 w-4" />
+                LP
+            </Button>
+            {isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin
                 </Button>
-                {workstation?.imageUrl && (
-                    <div className="flex-shrink-0">
-                        <Image
-                            src={findThumbnailUrl(workstation.imageUrl, storageFiles)}
-                            alt={`Bild für Arbeitsplatz ${workstation.AP}`}
-                            width={40}
-                            height={40}
-                            className="rounded-md object-cover aspect-square border"
-                        />
+            )}
+           <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="icon" className="rounded-full">
+                  <Avatar>
+                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || user?.email || ''} />
+                    <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Ausloggen</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+      </header>
+      <main className="flex-1 p-4 md:p-6">
+        <DashboardClient>
+            <ImageModal
+                isOpen={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                imageUrl={modalImageUrl}
+                imageAlt={modalImageAlt}
+            />
+          <Card>
+            <CardHeader className="bg-muted/50 rounded-t-lg">
+              <div className="flex justify-between items-start gap-4">
+                 <div className="flex items-start gap-4 flex-grow">
+                    <Button variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')}>
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">Zurück zu Arbeitsplätze</span>
+                    </Button>
+                    {workstation?.imageUrl && (
+                        <div className="flex-shrink-0">
+                            <Image
+                                src={findThumbnailUrl(workstation.imageUrl, storageFiles)}
+                                alt={`Bild für Arbeitsplatz ${workstation.AP}`}
+                                width={40}
+                                height={40}
+                                className="rounded-md object-cover aspect-square border"
+                            />
+                        </div>
+                    )}
+                     <div className="flex-grow">
+                      {isLoading ? (
+                        <>
+                          <Skeleton className="h-7 w-48" />
+                          <Skeleton className="h-5 w-64 mt-2" />
+                        </>
+                      ) : workstation && processStep && controlPlan ? (
+                        <>
+                            <CardTitle className="text-lg">
+                                {workstation.AP}: {controlPlan.planNumber} / {processStep.processNumber} - {processStep.machineDevice}
+                            </CardTitle>
+                        </>
+                      ) : (
+                        <>
+                          <CardTitle>Merkmalsübersicht (Karten)</CardTitle>
+                        </>
+                      )}
                     </div>
-                )}
-                 <div className="flex-grow">
-                  {isLoading ? (
-                    <>
-                      <Skeleton className="h-7 w-48" />
-                      <Skeleton className="h-5 w-64 mt-2" />
-                    </>
-                  ) : workstation && processStep && controlPlan ? (
-                    <>
-                        <CardTitle className="text-lg">
-                            {workstation.AP}: {controlPlan.planNumber} / {processStep.processNumber} - {processStep.machineDevice}
-                        </CardTitle>
-                    </>
-                  ) : (
-                    <>
-                      <CardTitle>Merkmalsübersicht (Karten)</CardTitle>
-                    </>
-                  )}
                 </div>
-            </div>
-            <div className="flex items-start gap-2 flex-shrink-0">
-                {controlPlan?.imageUrl && (
-                    <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
-                        <Image
-                            src={findThumbnailUrl(controlPlan.imageUrl, storageFiles)}
-                            alt={`Bild für Control Plan ${controlPlan.planNumber}`}
-                            width={40}
-                            height={40}
-                            className="rounded-md object-cover aspect-square border"
-                        />
-                    </button>
-                )}
-                {processStep?.imageUrl && (
-                    <button onClick={(e) => handleImageClick(e, processStep.imageUrl!, `Bild für Prozess ${processStep.processNumber}`)} className="flex-shrink-0">
-                        <Image
-                            src={findThumbnailUrl(processStep.imageUrl, storageFiles)}
-                            alt={`Bild für Prozess ${processStep.processNumber}`}
-                            width={40}
-                            height={40}
-                            className="rounded-md object-cover aspect-square border"
-                        />
-                    </button>
-                )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="bg-muted/30">
-          {isLoading ? (
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
-                {Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-80 w-full" />)}
-             </div>
-          ) : error ? (
-            <div className="text-center py-10 text-red-600 bg-red-50 rounded-md">
-                <AlertTriangle className="mx-auto h-12 w-12" />
-                <h3 className="mt-2 text-lg font-medium">Fehler beim Laden der Daten</h3>
-                <p className="mt-1 text-sm">{error}</p>
-            </div>
-          ) : characteristics.length > 0 && processStep && auftrag && controlPlan ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
-                {characteristics.map((char) => {
-                  const dnaId = `${controlPlan.planNumber}~${processStep.processNumber}~${char.itemNumber}~${workstation!.AP}~${auftrag!.PO}`;
-                  const dnaForChar = dnaData.find(d => d.idDNA === dnaId);
-                  const erfassungUrl = getErfassungUrl(char);
-                   return (
-                     <Card 
-                        key={`${processStep.id}-${char.id}`}
-                        onClick={(e) => handleNavigateToErfassung(e, erfassungUrl)} 
-                        className="h-full flex flex-col hover:border-primary transition-colors cursor-pointer"
-                     >
-                        <CardHeader>
-                             <div className="flex items-start justify-between gap-4">
-                                <div className="flex-grow">
-                                    <CardTitle className="text-base flex items-center justify-between">
-                                        <span className='truncate'>{`${char.itemNumber} (${char.charType}) - ${char.DesciptionSpec}`}</span>
-                                        {char.ctq && <Badge variant="outline" className='text-amber-600 border-amber-600 flex-shrink-0 ml-2'><Diamond className='w-3 h-3 mr-1'/>CTQ</Badge>}
-                                    </CardTitle>
-                                    <CardDescription className="text-sm">
-                                        {formatSpec(char)}{char.frequency && ` / ${char.frequency} min`}
-                                    </CardDescription>
-                                    <CardDescription className="text-xs font-mono text-muted-foreground/80 pt-1">
-                                        {dnaForChar?.idDNA}
-                                    </CardDescription>
-                                </div>
-                                {char.imageUrl && (
-                                     <button onClick={(e) => handleImageClick(e, char.imageUrl!, `Bild für Merkmal ${char.itemNumber}`)} className="flex-shrink-0">
-                                        <Image
-                                            src={findThumbnailUrl(char.imageUrl, storageFiles)}
-                                            alt={`Bild für Merkmal ${char.itemNumber}`}
-                                            width={40}
-                                            height={40}
-                                            className="rounded-md object-cover aspect-square border"
-                                        />
-                                    </button>
-                                )}
-                             </div>
-                        </CardHeader>
-                        <CardContent className="flex-grow space-y-2 text-sm text-muted-foreground">
-                            <div className="flex flex-wrap items-center gap-2">
-                               {dnaForChar && <DnaTimeTracker lastTimestamp={dnaForChar.lastCheckTimestamp} frequency={dnaForChar.Frequency} prefix={`M# ${dnaForChar.Char}`} />}
-                               {dnaForChar?.checkStatus && <Badge variant="outline" className={cn(getStatusColorClass(dnaForChar.checkStatus))}>{dnaForChar.checkStatus}</Badge>}
-                            </div>
-                            <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
-                                {dnaForChar ? (
-                                    <SampleChart dnaData={dnaForChar} onPointClick={(sampleId) => handlePointClick(sampleId)} />
-                                ) : (
-                                    <div className="h-full flex items-center justify-center text-xs text-muted-foreground bg-gray-50 rounded-md">
-                                        No DNA data for chart
+                <div className="flex items-start gap-2 flex-shrink-0">
+                    {controlPlan?.imageUrl && (
+                        <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
+                            <Image
+                                src={findThumbnailUrl(controlPlan.imageUrl, storageFiles)}
+                                alt={`Bild für Control Plan ${controlPlan.planNumber}`}
+                                width={40}
+                                height={40}
+                                className="rounded-md object-cover aspect-square border"
+                            />
+                        </button>
+                    )}
+                    {processStep?.imageUrl && (
+                        <button onClick={(e) => handleImageClick(e, processStep.imageUrl!, `Bild für Prozess ${processStep.processNumber}`)} className="flex-shrink-0">
+                            <Image
+                                src={findThumbnailUrl(processStep.imageUrl, storageFiles)}
+                                alt={`Bild für Prozess ${processStep.processNumber}`}
+                                width={40}
+                                height={40}
+                                className="rounded-md object-cover aspect-square border"
+                            />
+                        </button>
+                    )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="bg-muted/30">
+              {isLoading ? (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+                    {Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-80 w-full" />)}
+                 </div>
+              ) : error ? (
+                <div className="text-center py-10 text-red-600 bg-red-50 rounded-md">
+                    <AlertTriangle className="mx-auto h-12 w-12" />
+                    <h3 className="mt-2 text-lg font-medium">Fehler beim Laden der Daten</h3>
+                    <p className="mt-1 text-sm">{error}</p>
+                </div>
+              ) : characteristics.length > 0 && processStep && auftrag && controlPlan ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+                    {characteristics.map((char) => {
+                      const dnaId = `${controlPlan.planNumber}~${processStep.processNumber}~${char.itemNumber}~${workstation!.AP}~${auftrag!.PO}`;
+                      const dnaForChar = dnaData.find(d => d.idDNA === dnaId);
+                      const erfassungUrl = getErfassungUrl(char);
+                       return (
+                         <Card 
+                            key={`${processStep.id}-${char.id}`}
+                            onClick={(e) => handleNavigateToErfassung(e, erfassungUrl)} 
+                            className="h-full flex flex-col hover:border-primary transition-colors cursor-pointer"
+                         >
+                            <CardHeader>
+                                 <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-grow">
+                                        <CardTitle className="text-base flex items-center justify-between">
+                                            <span className='truncate'>{`${char.itemNumber} (${char.charType}) - ${char.DesciptionSpec}`}</span>
+                                            {char.ctq && <Badge variant="outline" className='text-amber-600 border-amber-600 flex-shrink-0 ml-2'><Diamond className='w-3 h-3 mr-1'/>CTQ</Badge>}
+                                        </CardTitle>
+                                        <CardDescription className="text-sm">
+                                            {formatSpec(char)}{char.frequency && ` / ${char.frequency} min`}
+                                        </CardDescription>
+                                        <CardDescription className="text-xs font-mono text-muted-foreground/80 pt-1">
+                                            {dnaForChar?.idDNA}
+                                        </CardDescription>
                                     </div>
-                                )}
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
-                            <span>{char.sampleSize || 'N/A'}er Stichprobe</span>
-                            <Button asChild variant="secondary" size="sm">
-                                <Link href={erfassungUrl}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Erfassen
-                                </Link>
-                            </Button>
-                            <span>{char.gauge || 'N/A'}</span>
-                        </CardFooter>
-                     </Card>
-                   )
-                })}
-            </div>
-          ) : (
-            <div className="text-center py-10 text-gray-500">
-              <p>Für diesen Prozessschritt sind keine Merkmale definiert.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </DashboardClient>
+                                    {char.imageUrl && (
+                                         <button onClick={(e) => handleImageClick(e, char.imageUrl!, `Bild für Merkmal ${char.itemNumber}`)} className="flex-shrink-0">
+                                            <Image
+                                                src={findThumbnailUrl(char.imageUrl, storageFiles)}
+                                                alt={`Bild für Merkmal ${char.itemNumber}`}
+                                                width={40}
+                                                height={40}
+                                                className="rounded-md object-cover aspect-square border"
+                                            />
+                                        </button>
+                                    )}
+                                 </div>
+                            </CardHeader>
+                            <CardContent className="flex-grow space-y-2 text-sm text-muted-foreground">
+                                <div className="flex flex-wrap items-center gap-2">
+                                   {dnaForChar && <DnaTimeTracker lastTimestamp={dnaForChar.lastCheckTimestamp} frequency={dnaForChar.Frequency} prefix={`M# ${dnaForChar.Char}`} />}
+                                   {dnaForChar?.checkStatus && <Badge variant="outline" className={cn(getStatusColorClass(dnaForChar.checkStatus))}>{dnaForChar.checkStatus}</Badge>}
+                                </div>
+                                <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
+                                    {dnaForChar ? (
+                                        <SampleChart dnaData={dnaForChar} onPointClick={(sampleId) => handlePointClick(sampleId)} />
+                                    ) : (
+                                        <div className="h-full flex items-center justify-center text-xs text-muted-foreground bg-gray-50 rounded-md">
+                                            No DNA data for chart
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                            <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
+                                <span>{char.sampleSize || 'N/A'}er Stichprobe</span>
+                                <Button asChild variant="secondary" size="sm">
+                                    <Link href={erfassungUrl}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Erfassen
+                                    </Link>
+                                </Button>
+                                <span>{char.gauge || 'N/A'}</span>
+                            </CardFooter>
+                         </Card>
+                       )
+                    })}
+                </div>
+              ) : (
+                <div className="text-center py-10 text-gray-500">
+                  <p>Für diesen Prozessschritt sind keine Merkmale definiert.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </DashboardClient>
+      </main>
+    </div>
   );
 }
 

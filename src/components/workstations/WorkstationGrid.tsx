@@ -35,7 +35,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA, StorageFile } from '@/types';
 import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData, listStorageFiles } from '@/lib/data';
-import { Pencil, PlusCircle, RefreshCw, ListChecks, MoreHorizontal, Image as ImageIcon, MoreVertical, FolderKanban, Clock, AlertTriangle, Loader2 } from 'lucide-react';
+import { Pencil, PlusCircle, RefreshCw, ListChecks, MoreHorizontal, Image as ImageIcon, MoreVertical, FolderKanban, Clock, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -437,8 +437,11 @@ export function WorkstationGrid() {
       <Card className="bg-transparent border-none shadow-none">
         <CardHeader className="py-2">
           <div className="flex items-center justify-between">
-              <div>
-                  <CardTitle className="text-lg">Arbeitsplätze</CardTitle>
+              <div className="flex items-center gap-2">
+                   <Button variant="outline" size="icon" onClick={() => router.push('/notes')} className="h-8 w-8">
+                    <ArrowLeft className="h-4 w-4" />
+                </Button>
+                  <CardTitle className="text-lg">Workstations</CardTitle>
               </div>
                <div className="flex items-center gap-2">
                   <Button size="icon" variant="outline" onClick={fetchData} className="h-8 w-8">
