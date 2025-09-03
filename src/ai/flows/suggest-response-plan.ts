@@ -94,36 +94,3 @@ const suggestResponsePlanFlow = ai.defineFlow(
     return output!;
   }
 );
-
-
-const GenerateControlPlanDocV5OutputSchema = z.object({
-    htmlContent: z.string().describe("The full HTML content of the control plan document."),
-});
-
-export async function generateControlPlanDocV5Action(plan: ControlPlan): Promise<z.infer<typeof GenerateControlPlanDocV5OutputSchema>> {
-    return generateControlPlanDocV5Flow(plan);
-}
-
-const generateControlPlanDocV5Flow = ai.defineFlow(
-    {
-        name: 'generateControlPlanDocV5Flow',
-        inputSchema: z.any(), // Using z.any() for complex ControlPlan object
-        outputSchema: GenerateControlPlanDocV5OutputSchema,
-    },
-    async (plan) => {
-        const { output } = await ai.generate({
-            prompt: `Generate a full HTML document for the given Control Plan JSON object.
-            The HTML should be styled professionally for printing, using inline CSS or a <style> block.
-            It must be a complete, self-contained HTML document starting with <html> and ending with </html>.
-            The response must be in German.
-            Use tables to structure the data clearly.
-            The plan data is:
-            ${JSON.stringify(plan, null, 2)}
-            `,
-            output: {
-                schema: GenerateControlPlanDocV5OutputSchema,
-            }
-        });
-        return output!;
-    }
-);

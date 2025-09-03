@@ -87,7 +87,6 @@ import { DashboardClient } from '@/components/cp/DashboardClient';
 import Image from 'next/image';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose, DialogFooter } from '@/components/ui/dialog';
-import { generateControlPlanDocV5Action } from '@/ai/flows/suggest-response-plan';
 import { useAuth } from '@/hooks/use-auth-context';
 import { findThumbnailUrl } from '@/lib/image-utils';
 import { KeepKnowLogo } from '@/components/icons';
@@ -508,7 +507,6 @@ function ControlPlanRow({
   onImageClick,
   onPrintV3,
   onPrintV4,
-  onPrintV5,
   onExportCsv,
 }: {
   plan: ControlPlan;
@@ -521,7 +519,6 @@ function ControlPlanRow({
   onImageClick: (url: string, alt: string) => void;
   onPrintV3: (plan: ControlPlan) => void;
   onPrintV4: (plan: ControlPlan) => void;
-  onPrintV5: (plan: ControlPlan) => void;
   onExportCsv: (plan: ControlPlan) => void;
 }) {
 
@@ -566,10 +563,6 @@ function ControlPlanRow({
                   <DropdownMenuItem onClick={() => onPrintV4(plan)}>
                     <Printer className="mr-2 h-4 w-4" />
                     Print Control Plan
-                  </DropdownMenuItem>
-                   <DropdownMenuItem onClick={() => onPrintV5(plan)}>
-                    <Printer className="mr-2 h-4 w-4" />
-                    Print Document (AI)
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => onExportCsv(plan)}>
@@ -870,39 +863,6 @@ export default function ControlPlansPage() {
     }
   }
 
-  const handlePrintV5 = async (plan: ControlPlan) => {
-    if (isGeneratingDoc) return;
-    setIsGeneratingDoc(true);
-
-    const docWindow = window.open('about:blank', '_blank');
-    if (!docWindow) {
-      toast({
-        title: "Could not open new window",
-        description: "Please disable your pop-up blocker to generate the document.",
-        variant: "destructive"
-      });
-      setIsGeneratingDoc(false);
-      return;
-    }
-    docWindow.document.write('<html><head><title>Generating Document...</title><style>body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .loader { border: 8px solid #f3f3f3; border-radius: 50%; border-top: 8px solid #3498db; width: 60px; height: 60px; animation: spin 2s linear infinite; } @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style></head><body><div class="loader"></div><p style="margin-left: 20px;">Generating your document, please wait...</p></body></html>');
-
-    try {
-      const result = await generateControlPlanDocV5Action(plan);
-      docWindow.document.open();
-      docWindow.document.write(result.htmlContent);
-      docWindow.document.close();
-    } catch (e: any) {
-      const errorMessage = e.message || "An unknown error occurred during generation.";
-      docWindow.document.open();
-      docWindow.document.write(`<html><head><title>Error</title></head><body><h1>Error Generating Document</h1><pre>${errorMessage}</pre></body></html>`);
-      docWindow.document.close();
-      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
-    } finally {
-      setIsGeneratingDoc(false);
-    }
-  }
-
-
   const handleExportCsv = (plan: ControlPlan) => {
     try {
         const escapeCsvField = (field: any): string => {
@@ -1139,7 +1099,6 @@ export default function ControlPlansPage() {
                             onImageClick={handleImageClick}
                             onPrintV3={handlePrintV3}
                             onPrintV4={handlePrintV4}
-                            onPrintV5={handlePrintV5}
                             onExportCsv={handleExportCsv}
                         />
                         ))
