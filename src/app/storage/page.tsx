@@ -25,6 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { listStorageFiles, type StorageFile } from '@/lib/data';
 import { AlertTriangle } from 'lucide-react';
@@ -37,15 +44,27 @@ export default function StorageViewerPage() {
   const [files, setFiles] = React.useState<StorageFile[]>([]);
   const [loadingFiles, setLoadingFiles] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [directories, setDirectories] = React.useState<string[]>(['Alle']);
+  const [selectedDirectory, setSelectedDirectory] = React.useState('Alle');
   const { toast } = useToast();
 
   const fetchData = React.useCallback(async () => {
     setLoadingFiles(true);
     try {
       const allFiles = await listStorageFiles('uploads/');
-      // Sort files alphabetically by name
       allFiles.sort((a, b) => a.name.localeCompare(b.name));
       setFiles(allFiles);
+
+      // Extract unique directories
+      const dirs = new Set<string>(['Alle']);
+      allFiles.forEach(file => {
+          const pathParts = file.name.split('/');
+          if (pathParts.length > 1) {
+              dirs.add(pathParts.slice(0, -1).join('/'));
+          }
+      });
+      setDirectories(Array.from(dirs));
+
       setError(null);
     } catch (err: any) {
       console.error(err);
@@ -68,6 +87,22 @@ export default function StorageViewerPage() {
     await logout();
     router.push('/');
   };
+  
+  const getDirectory = (filePath: string) => {
+    const pathParts = filePath.split('/');
+    if (pathParts.length > 1) {
+      return pathParts.slice(0, -1).join('/');
+    }
+    return 'root';
+  }
+
+  const filteredFiles = React.useMemo(() => {
+    if (selectedDirectory === 'Alle') {
+        return files;
+    }
+    return files.filter(file => file.name.startsWith(selectedDirectory + '/'));
+  }, [files, selectedDirectory]);
+
 
   if (authLoading) {
     return null; // AuthProvider shows loading screen
@@ -135,15 +170,27 @@ export default function StorageViewerPage() {
       <main className="flex-1 p-4 md:p-6">
         <Card className="mx-auto w-full max-w-7xl">
             <CardHeader>
-                <div className="flex justify-between items-center">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <CardTitle>Firebase Storage Dateien</CardTitle>
                         <CardDescription>Übersicht aller Originalbilder und der generierten Thumbnails.</CardDescription>
                     </div>
-                    <Button variant="outline" size="sm" onClick={fetchData}>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Neu laden
-                    </Button>
+                     <div className="flex items-center gap-2">
+                        <Select value={selectedDirectory} onValueChange={setSelectedDirectory}>
+                            <SelectTrigger className="w-[280px]">
+                                <SelectValue placeholder="Verzeichnis auswählen" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {directories.map(dir => (
+                                    <SelectItem key={dir} value={dir}>{dir}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button variant="outline" size="sm" onClick={fetchData}>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Neu laden
+                        </Button>
+                     </div>
                 </div>
             </CardHeader>
             <CardContent>
@@ -159,9 +206,9 @@ export default function StorageViewerPage() {
                         <TableHeader>
                             <TableRow>
                             <TableHead>Thumbnail</TableHead>
-                            <TableHead>Original</TableHead>
                             <TableHead>Thumbnail URL</TableHead>
                             <TableHead>Original URL</TableHead>
+                            <TableHead>Verzeichnis</TableHead>
                             <TableHead>Dateiname</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -172,14 +219,14 @@ export default function StorageViewerPage() {
                                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                                     </TableCell>
                                 </TableRow>
-                            ) : files.length === 0 ? (
+                            ) : filteredFiles.length === 0 ? (
                                  <TableRow>
                                     <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                        Keine Dateien im 'uploads/' Verzeichnis gefunden.
+                                        Keine Dateien im Verzeichnis '{selectedDirectory}' gefunden.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                files.map((file) => (
+                                filteredFiles.map((file) => (
                                     <TableRow key={file.url}>
                                         <TableCell>
                                             {file.thumbnailUrl ? (
@@ -188,12 +235,10 @@ export default function StorageViewerPage() {
                                                 <div className="w-16 h-16 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">No thumb</div>
                                             )}
                                         </TableCell>
-                                        <TableCell>
-                                            <Image src={file.url} alt={file.name} width={64} height={64} className="rounded object-cover aspect-square" />
-                                        </TableCell>
                                         <TableCell className="text-xs text-muted-foreground break-all max-w-xs font-mono">{file.thumbnailUrl || 'N/A'}</TableCell>
                                         <TableCell className="text-xs text-muted-foreground break-all max-w-xs font-mono">{file.url}</TableCell>
-                                        <TableCell className="font-medium text-xs">{file.name}</TableCell>
+                                        <TableCell className="font-medium text-xs">{getDirectory(file.name)}</TableCell>
+                                        <TableCell className="font-medium text-xs">{file.name.split('/').pop()}</TableCell>
                                     </TableRow>
                                 ))
                             )}

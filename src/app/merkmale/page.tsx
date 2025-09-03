@@ -316,10 +316,12 @@ function MerkmaleCardsPage() {
                 <Book className="mr-2 h-4 w-4" />
                 LP
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-              <FileImage className="mr-2 h-4 w-4" />
-              Storage
-            </Button>
+            {isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+                  <FileImage className="mr-2 h-4 w-4" />
+                  Storage
+                </Button>
+            )}
             {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                     <Shield className="mr-2 h-4 w-4" />

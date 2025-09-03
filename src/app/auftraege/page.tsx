@@ -71,7 +71,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 type AuftragFormData = Omit<Auftrag, 'id'>;
 
 export default function AuftraegePage() {
-  const { user, roles, loading: authLoading, logout } = useAuth();
+  const { user, roles, loading: authLoading, logout } from useAuth();
   const router = useRouter();
   const [items, setItems] = useState<Auftrag[]>([]);
   const [controlPlans, setControlPlans] = useState<ControlPlan[]>([]);
@@ -221,10 +221,12 @@ export default function AuftraegePage() {
                 <Book className="mr-2 h-4 w-4" />
                 LP
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-              <FileImage className="mr-2 h-4 w-4" />
-              Storage
-            </Button>
+            {isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+                  <FileImage className="mr-2 h-4 w-4" />
+                  Storage
+                </Button>
+            )}
             {isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                     <Shield className="mr-2 h-4 w-4" />
