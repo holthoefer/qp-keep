@@ -80,6 +80,7 @@ export default function IncidentPage() {
   const form = useForm<IncidentFormValues>({
     resolver: zodResolver(incidentSchema),
     defaultValues: {
+      workplace: '',
       title: '',
       reportedAt: new Date(),
       priority: 'Mittel',
@@ -268,7 +269,7 @@ export default function IncidentPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Incident-Typ*</FormLabel>
-                    <Select onValuechange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Typ auswählen" />
@@ -365,7 +366,7 @@ export default function IncidentPage() {
                     <FormItem>
                         <FormLabel>Anhänge</FormLabel>
                         <FormControl>
-                            <Input type="file" {...field} />
+                            <Input type="file" {...field} value={field.value?.fileName} />
                         </FormControl>
                         <FormDescription>
                             Screenshots, Logs, etc. (.jpg, .png, .pdf, .txt)
