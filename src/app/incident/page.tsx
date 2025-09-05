@@ -280,7 +280,7 @@ function IncidentPageContent() {
                       name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Beschreibung*</FormLabel>
+                          <FormLabel>Beschreibung (D0 für ev. Reklamation)</FormLabel>
                           <FormControl>
                             <Textarea
                               placeholder="Beschreiben Sie den Vorfall detailliert. Schritte zur Reproduktion, erwartetes vs. tatsächliches Verhalten, etc."

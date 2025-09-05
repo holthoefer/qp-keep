@@ -409,14 +409,14 @@ export default function EventsPage() {
                 <Table>
                 <TableHeader>
                     <TableRow>
+                    <TableHead>Arbeitsplatz</TableHead>
                     <TableHead>Datum</TableHead>
                     <TableHead>Erfasser</TableHead>
                     <TableHead>Eventbeschreibung</TableHead>
-                    <TableHead>Arbeitsplatz</TableHead>
+                    <TableHead>Anhang</TableHead>
                     <TableHead>Auftrag</TableHead>
                     <TableHead>Prozess</TableHead>
                     <TableHead>Charge</TableHead>
-                    <TableHead>Anhang</TableHead>
                     {isAdmin && <TableHead className="text-right w-[100px]">Aktionen</TableHead>}
                     </TableRow>
                 </TableHeader>
@@ -436,13 +436,10 @@ export default function EventsPage() {
                     ) : (
                     events.map((item) => (
                         <TableRow key={item.id}>
+                        <TableCell>{item.workplace || '-'}</TableCell>
                         <TableCell>{item.eventDate ? format(item.eventDate.toDate(), 'dd.MM.yyyy HH:mm') : 'N/A'}</TableCell>
                         <TableCell>{item.reporter}</TableCell>
-                        <TableCell className="max-w-md">{item.description}</TableCell>
-                        <TableCell>{item.workplace || '-'}</TableCell>
-                        <TableCell>{item.po || '-'}</TableCell>
-                        <TableCell>{item.op || '-'}</TableCell>
-                        <TableCell>{item.lot || '-'}</TableCell>
+                        <TableCell className="max-w-md whitespace-pre-line line-clamp-3">{item.description}</TableCell>
                         <TableCell>
                             {item.attachmentUrl && (
                                 isImage(item.attachmentUrl) ? (
@@ -464,6 +461,9 @@ export default function EventsPage() {
                                 )
                             )}
                         </TableCell>
+                        <TableCell>{item.po || '-'}</TableCell>
+                        <TableCell>{item.op || '-'}</TableCell>
+                        <TableCell>{item.lot || '-'}</TableCell>
                         {isAdmin && (
                             <TableCell className="text-right">
                                 <AlertDialogTrigger asChild>
@@ -486,5 +486,3 @@ export default function EventsPage() {
     </>
   );
 }
-
-    
