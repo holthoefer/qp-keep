@@ -5,9 +5,8 @@
 import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
-import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Trash2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Wrench, UploadCloud, Link as LinkIcon, Image as ImageIcon, MoreVertical, StickyNote, Edit } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Wrench, UploadCloud, Link as LinkIcon, Image as ImageIcon, MoreVertical, StickyNote, Edit, ArrowLeft } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -43,6 +42,8 @@ import { format } from 'date-fns';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { generateThumbnailUrl } from '@/lib/image-utils';
 import NextImage from 'next/image';
+import Image from 'next/image';
+import logo from '../Logo.png';
 
 export default function EventsPage() {
   const { user, loading: authLoading, logout, isAdmin } = useAuth();
@@ -109,6 +110,10 @@ export default function EventsPage() {
 
   const handleDelete = async () => {
     if (!itemToDelete) return;
+    if (!isAdmin) {
+      toast({ title: 'Keine Berechtigung', description: 'Nur Administratoren können Events löschen.', variant: 'destructive'});
+      return;
+    }
 
     try {
       await deleteEvent(itemToDelete.id);
@@ -137,7 +142,7 @@ export default function EventsPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <KeepKnowLogo className="h-8 w-8 text-primary" />
+          <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
             Event-Liste
           </h1>
@@ -212,7 +217,12 @@ export default function EventsPage() {
       <main className="flex-1 p-4 md:p-6">
         <div className="mx-auto w-full max-w-7xl">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-headline text-2xl font-semibold">Shopfloor Events</h2>
+             <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={() => router.push('/notes')} className="h-8 w-8">
+                    <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <h2 className="font-headline text-2xl font-semibold">Shopfloor Events</h2>
+             </div>
             <Button onClick={() => router.push('/event/new')}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Neues Event
             </Button>

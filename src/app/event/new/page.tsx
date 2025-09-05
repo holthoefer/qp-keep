@@ -4,7 +4,6 @@
 import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Loader2, PlusCircle, ArrowLeft, UploadCloud, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +17,8 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import Image from 'next/image';
+import logo from '../../Logo.png';
 
 export default function NewEventPage() {
   const { user, roles, loading: authLoading } = useAuth();
@@ -201,7 +202,7 @@ export default function NewEventPage() {
           <Button variant="outline" size="icon" onClick={() => router.back()}>
               <ArrowLeft className="h-4 w-4" />
           </Button>
-          <KeepKnowLogo className="h-8 w-8 text-primary" />
+          <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
             {isEditMode ? 'Event bearbeiten' : 'Neues Event'}
           </h1>

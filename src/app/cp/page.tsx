@@ -93,7 +93,7 @@ import { ImageModal } from '@/components/cp/ImageModal';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth-context';
 import { generateThumbnailUrl } from '@/lib/image-utils';
-import { KeepKnowLogo } from '@/components/icons';
+import logo from '../Logo.png';
 
 
 const statusVariant: Record<
@@ -934,7 +934,7 @@ export default function ControlPlansPage() {
     <div className="flex min-h-screen flex-col bg-background">
        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <KeepKnowLogo className="h-8 w-8 text-primary" />
+          <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
             Control Plan
           </h1>

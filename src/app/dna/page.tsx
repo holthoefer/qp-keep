@@ -28,7 +28,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { generateThumbnailUrl } from '@/lib/image-utils';
 import { useRouter } from 'next/navigation';
 import { SampleChart } from '@/components/SampleChart';
-import { KeepKnowLogo } from '@/components/icons';
 import { useAuth } from '@/hooks/use-auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -39,6 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import logo from '../Logo.png';
 
 export const DnaTimeTracker = ({ lastTimestamp, frequency, prefix }: { lastTimestamp?: string, frequency?: number, prefix?: string }) => {
   const [remainingMinutes, setRemainingMinutes] = React.useState<number | null>(null);
@@ -252,7 +252,7 @@ export default function DnaPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <KeepKnowLogo className="h-8 w-8 text-primary" />
+          <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
             DNA
           </h1>

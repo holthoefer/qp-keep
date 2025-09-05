@@ -5,7 +5,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
-import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Wrench, Siren, StickyNote } from 'lucide-react';
 import {
@@ -66,6 +65,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Image from 'next/image';
+import logo from '../Logo.png';
 
 
 type ControlPlanItemFormData = Omit<ControlPlanItem, 'id' | 'createdAt'>;
@@ -262,7 +263,7 @@ export default function LenkungsplanPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <KeepKnowLogo className="h-8 w-8 text-primary" />
+          <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
             Lenkungsplan
           </h1>

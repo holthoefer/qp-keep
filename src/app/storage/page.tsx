@@ -5,7 +5,6 @@
 import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
-import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Loader2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, RefreshCw } from 'lucide-react';
 import {
@@ -38,6 +37,7 @@ import { listStorageFiles, type StorageFile } from '@/lib/data';
 import { AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import logo from '../Logo.png';
 
 export default function StorageViewerPage() {
   const { user, loading: authLoading, logout, isAdmin } = useAuth();
@@ -113,7 +113,7 @@ export default function StorageViewerPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <KeepKnowLogo className="h-8 w-8 text-primary" />
+          <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
             Storage Viewer
           </h1>
