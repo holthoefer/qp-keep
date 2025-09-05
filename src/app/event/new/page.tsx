@@ -20,12 +20,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 export default function NewEventPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, roles, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   
   const eventId = searchParams.get('id');
+  const [eventData, setEventData] = React.useState<Event | null>(null);
   const [isEditMode, setIsEditMode] = React.useState(!!eventId);
 
   const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
@@ -41,6 +42,15 @@ export default function NewEventPage() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const preselectedWorkplace = searchParams.get('ap');
+  
+  const canEdit = React.useMemo(() => {
+    if (!user) return false;
+    if (roles.includes('admin')) return true;
+    if (isEditMode && eventData) return eventData.userId === user.uid;
+    if (!isEditMode) return true; // Anyone can create
+    return false;
+  }, [user, roles, isEditMode, eventData]);
+
 
   React.useEffect(() => {
     if (authLoading) return;
@@ -56,12 +66,13 @@ export default function NewEventPage() {
         setWorkstations(wsData);
 
         if(eventId) {
-            const eventData = await getEvent(eventId);
-            if (eventData) {
-                setDescription(eventData.description);
-                setAttachmentUrl(eventData.attachmentUrl || '');
-                if (eventData.workplace) {
-                    const preselected = wsData.find(ws => ws.AP === eventData.workplace);
+            const fetchedEventData = await getEvent(eventId);
+            if (fetchedEventData) {
+                setEventData(fetchedEventData);
+                setDescription(fetchedEventData.description);
+                setAttachmentUrl(fetchedEventData.attachmentUrl || '');
+                if (fetchedEventData.workplace) {
+                    const preselected = wsData.find(ws => ws.AP === fetchedEventData.workplace);
                     setSelectedWorkstation(preselected || null);
                 }
             } else {
@@ -89,10 +100,14 @@ export default function NewEventPage() {
       toast({ title: 'Beschreibung darf nicht leer sein.', variant: 'destructive'});
       return;
     }
+    if (!canEdit) {
+      toast({ title: 'Keine Berechtigung', description: 'Sie haben keine Berechtigung, dieses Event zu speichern.', variant: 'destructive'});
+      return;
+    }
 
     try {
       if (isEditMode && eventId) {
-        const eventData: Partial<Event> = {
+        const eventUpdateData: Partial<Event> = {
             description,
             attachmentUrl,
             workplace: selectedWorkstation?.AP,
@@ -100,11 +115,11 @@ export default function NewEventPage() {
             op: selectedWorkstation?.OPcurrent,
             lot: selectedWorkstation?.LOTcurrent,
         };
-        await updateEvent(eventId, eventData);
+        await updateEvent(eventId, eventUpdateData);
         toast({ title: 'Event erfolgreich aktualisiert' });
 
       } else {
-        const eventData: Omit<Event, 'id'> = {
+        const newEventData: Omit<Event, 'id'> = {
             description,
             eventDate: Timestamp.now(),
             reporter: user.displayName || user.email || 'Unbekannt',
@@ -117,7 +132,7 @@ export default function NewEventPage() {
             }),
             ...(attachmentUrl && { attachmentUrl: attachmentUrl }),
         };
-        await addEvent(eventData);
+        await addEvent(newEventData);
         toast({ title: 'Event erfolgreich erfasst' });
       }
       router.push('/events');
@@ -169,7 +184,7 @@ export default function NewEventPage() {
       }
   }
   
-  const isSaveDisabled = !description.trim() || isUploading;
+  const isSaveDisabled = !description.trim() || isUploading || !canEdit;
 
   if (authLoading || loadingData) {
     return (
@@ -210,6 +225,7 @@ export default function NewEventPage() {
                     <Select 
                         value={selectedWorkstation?.AP || 'none'}
                         onValueChange={handleWorkstationChange}
+                        disabled={!canEdit}
                     >
                         <SelectTrigger><SelectValue placeholder="Arbeitsplatz auswählen" /></SelectTrigger>
                         <SelectContent>
@@ -235,6 +251,7 @@ export default function NewEventPage() {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         rows={6}
+                        disabled={!canEdit}
                     />
                 </div>
                 <div className="space-y-2">
@@ -244,7 +261,7 @@ export default function NewEventPage() {
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             variant="outline"
-                            disabled={isUploading}
+                            disabled={isUploading || !canEdit}
                             className="flex-shrink-0"
                         >
                             <UploadCloud className="mr-2 h-4 w-4" />
@@ -266,6 +283,7 @@ export default function NewEventPage() {
                         onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
                         className="hidden"
                         accept=".jpg,.jpeg,.png,.gif,.pdf,.txt,.docx,.xlsx,.pptx"
+                        disabled={!canEdit}
                     />
                 </div>
             </CardContent>
