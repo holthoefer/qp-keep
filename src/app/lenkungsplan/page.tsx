@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage, Wrench, Siren } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -267,6 +267,14 @@ export default function LenkungsplanPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => {}}>
+              <Wrench className="mr-2 h-4 w-4" />
+              Insta
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => {}}>
+              <Siren className="mr-2 h-4 w-4" />
+              Incident
+            </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                 Notizen
             </Button>
