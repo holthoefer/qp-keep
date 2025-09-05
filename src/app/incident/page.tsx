@@ -1,8 +1,9 @@
 
+
 'use client';
 
 import * as React from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth-context';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -32,7 +33,7 @@ import type { Workstation } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2, ArrowLeft, LibraryBig, ImageIcon, UploadCloud, Trash2 } from 'lucide-react';
+import { CalendarIcon, Loader2, ArrowLeft, LibraryBig, ImageIcon, UploadCloud, Trash2, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { KeepKnowLogo } from '@/components/icons';
@@ -41,7 +42,6 @@ import { generateThumbnailUrl } from '@/lib/image-utils';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useRouter } from 'next/navigation';
 
 
 const incidentSchema = z.object({
@@ -205,293 +205,292 @@ function IncidentPageContent() {
   return (
     <>
     <div className="flex min-h-screen flex-col bg-background">
-       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
-        <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => router.back()}>
-                <ArrowLeft className="h-4 w-4" />
-            </Button>
-          <KeepKnowLogo className="h-8 w-8 text-primary" />
-          <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
-            Incident Erfassung
-          </h1>
-        </div>
-      </header>
-    <main className="flex-1 p-4 md:p-6">
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Neuen Incident melden</CardTitle>
-        <CardDescription>
-          Füllen Sie das Formular aus, um ein Problem oder einen Fehler zu melden.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="workplace"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Arbeitsplatz*</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!preselectedWorkplace}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Wählen Sie einen Arbeitsplatz" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {workstations.map((ws) => (
-                        <SelectItem key={ws.AP} value={ws.AP}>
-                          {ws.AP} - {ws.Beschreibung}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Incident-Titel*</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Kurze Zusammenfassung des Problems" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="reportedAt"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Erfassungsdatum*</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={'outline'}
-                          className={cn(
-                            'w-[240px] pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, 'PPP HH:mm')
-                          ) : (
-                            <span>Datum auswählen</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date('1900-01-01')
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priorität*</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Priorität auswählen" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Niedrig">Niedrig</SelectItem>
-                        <SelectItem value="Mittel">Mittel</SelectItem>
-                        <SelectItem value="Hoch">Hoch</SelectItem>
-                        <SelectItem value="Kritisch">Kritisch</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Incident-Typ*</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Typ auswählen" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Bug">Bug</SelectItem>
-                        <SelectItem value="Performance">Performance</SelectItem>
-                        <SelectItem value="Ausfall">Ausfall</SelectItem>
-                        <SelectItem value="Sonstiges">Sonstiges</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Beschreibung*</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Beschreiben Sie den Vorfall detailliert. Schritte zur Reproduktion, erwartetes vs. tatsächliches Verhalten, etc."
-                      rows={6}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="team"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Zuständiges Team</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Team auswählen" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Backend-Team">Backend-Team</SelectItem>
-                      <SelectItem value="Frontend-Team">Frontend-Team</SelectItem>
-                      <SelectItem value="DevOps">DevOps</SelectItem>
-                      <SelectItem value="QA">QA</SelectItem>
-                      <SelectItem value="Sonstiges">Sonstiges</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="components"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Betroffene Komponenten/Services</FormLabel>
-                  <FormControl>
-                    <Input placeholder="z.B. API, Datenbank (kommagetrennt)" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="affectedUser"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Betroffener Benutzer (optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="E-Mail oder Name des Benutzers" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             
-            <div className="space-y-2">
-              <FormLabel>Anhang</FormLabel>
-               <Input
-                    id="file-upload"
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
-                    accept=".jpg,.jpeg,.png,.gif,.pdf,.docx,.xlsx,.pptx,.txt"
-                    className="hidden"
-                    disabled={isUploading}
-                />
-                 <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                    <UploadCloud className="mr-2 h-4 w-4" />
-                    {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Datei hochladen'}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1">
+          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
+            <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="icon" onClick={() => router.back()}>
+                    <ArrowLeft className="h-4 w-4" />
                 </Button>
-                 {isUploading && <Progress value={uploadProgress} className="w-full mt-2" />}
-                {uploadError && (
-                    <Alert variant="destructive" className="mt-2">
-                        <AlertTitle>Upload Fehler</AlertTitle>
-                        <AlertDescription>{uploadError}</AlertDescription>
-                    </Alert>
-                )}
+              <KeepKnowLogo className="h-8 w-8 text-primary" />
+              <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
+                Incident Erfassung
+              </h1>
             </div>
-
-            <FormField
-              control={form.control}
-              name="attachmentUrl"
-              render={({ field }) => (
-                <FormItem>
-                   {attachmentUrl && (
-                    <div className="mt-2 space-y-2">
-                         <div className="flex items-center gap-2">
-                            <div className="flex-grow">
-                                <FormControl>
-                                  <Input placeholder="https://..." {...field} readOnly className="bg-muted"/>
-                                </FormControl>
-                                <FormDescription>
-                                  Dies ist die URL der hochgeladenen Datei.
-                                </FormDescription>
-                            </div>
-                            <Button type="button" variant="ghost" size="icon" onClick={() => form.setValue('attachmentUrl', '')}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                         </div>
-                    </div>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting || isUploading}>
+             <Button type="submit" disabled={form.formState.isSubmitting || isUploading}>
                 {(form.formState.isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Incident melden
+                <Send className="mr-2 h-4 w-4" />
+                Senden
               </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
-    </main>
+          </header>
+          <main className="flex-1 p-4 md:p-6">
+            <Card className="max-w-2xl mx-auto">
+              <CardHeader>
+                <CardTitle>Neuen Incident melden</CardTitle>
+                <CardDescription>
+                  Füllen Sie das Formular aus, um ein Problem oder einen Fehler zu melden.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="workplace"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Arbeitsplatz*</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!preselectedWorkplace}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Wählen Sie einen Arbeitsplatz" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {workstations.map((ws) => (
+                                <SelectItem key={ws.AP} value={ws.AP}>
+                                  {ws.AP} - {ws.Beschreibung}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Incident-Titel*</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Kurze Zusammenfassung des Problems" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="reportedAt"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Erfassungsdatum*</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={'outline'}
+                                  className={cn(
+                                    'w-[240px] pl-3 text-left font-normal',
+                                    !field.value && 'text-muted-foreground'
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, 'PPP HH:mm')
+                                  ) : (
+                                    <span>Datum auswählen</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                  date > new Date() || date < new Date('1900-01-01')
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="priority"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Priorität*</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Priorität auswählen" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Niedrig">Niedrig</SelectItem>
+                                <SelectItem value="Mittel">Mittel</SelectItem>
+                                <SelectItem value="Hoch">Hoch</SelectItem>
+                                <SelectItem value="Kritisch">Kritisch</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Incident-Typ*</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Typ auswählen" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Bug">Bug</SelectItem>
+                                <SelectItem value="Performance">Performance</SelectItem>
+                                <SelectItem value="Ausfall">Ausfall</SelectItem>
+                                <SelectItem value="Sonstiges">Sonstiges</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Beschreibung*</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Beschreiben Sie den Vorfall detailliert. Schritte zur Reproduktion, erwartetes vs. tatsächliches Verhalten, etc."
+                              rows={6}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="team"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Zuständiges Team</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Team auswählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Backend-Team">Backend-Team</SelectItem>
+                              <SelectItem value="Frontend-Team">Frontend-Team</SelectItem>
+                              <SelectItem value="DevOps">DevOps</SelectItem>
+                              <SelectItem value="QA">QA</SelectItem>
+                              <SelectItem value="Sonstiges">Sonstiges</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="components"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Betroffene Komponenten/Services</FormLabel>
+                          <FormControl>
+                            <Input placeholder="z.B. API, Datenbank (kommagetrennt)" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="affectedUser"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Betroffener Benutzer (optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="E-Mail oder Name des Benutzers" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     
+                    <div className="space-y-2">
+                      <FormLabel>Anhang</FormLabel>
+                       <Input
+                            id="file-upload"
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
+                            accept=".jpg,.jpeg,.png,.gif,.pdf,.docx,.xlsx,.pptx,.txt"
+                            className="hidden"
+                            disabled={isUploading}
+                        />
+                         <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                            <UploadCloud className="mr-2 h-4 w-4" />
+                            {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Datei hochladen'}
+                        </Button>
+                         {isUploading && <Progress value={uploadProgress} className="w-full mt-2" />}
+                        {uploadError && (
+                            <Alert variant="destructive" className="mt-2">
+                                <AlertTitle>Upload Fehler</AlertTitle>
+                                <AlertDescription>{uploadError}</AlertDescription>
+                            </Alert>
+                        )}
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="attachmentUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                           {attachmentUrl && (
+                            <div className="mt-2 space-y-2">
+                                 <div className="flex items-center gap-2">
+                                    <div className="flex-grow">
+                                        <FormControl>
+                                          <Input placeholder="https://..." {...field} readOnly className="bg-muted"/>
+                                        </FormControl>
+                                        <FormDescription>
+                                          Dies ist die URL der hochgeladenen Datei.
+                                        </FormDescription>
+                                    </div>
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => form.setValue('attachmentUrl', '')}>
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                 </div>
+                            </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+              </CardContent>
+            </Card>
+          </main>
+        </form>
+      </Form>
     </div>
     </>
   );
