@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -6,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Trash2, Shield, Book, Target, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage, Siren, Wrench, UploadCloud, Link as LinkIcon, Image as ImageIcon, MoreVertical, StickyNote } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Wrench, UploadCloud, Link as LinkIcon, Image as ImageIcon, MoreVertical, StickyNote } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -148,7 +149,7 @@ export default function EventsPage() {
                 <LayoutGrid className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
-                <BrainCircuit className="h-4 w-4" />
+                <Network className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
                 <FolderKanban className="h-4 w-4" />

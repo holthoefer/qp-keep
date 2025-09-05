@@ -7,7 +7,7 @@ import { WorkstationGrid } from "@/components/workstations/WorkstationGrid";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
-import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote } from "lucide-react";
+import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, Network, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,7 +44,7 @@ export default function ArbeitsplaetzePage() {
                             <LayoutGrid className="h-4 w-4" />
                         </Button>
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
-                            <BrainCircuit className="h-4 w-4" />
+                            <Network className="h-4 w-4" />
                         </Button>
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
                             <FolderKanban className="h-4 w-4" />
@@ -61,7 +61,7 @@ export default function ArbeitsplaetzePage() {
                             WP
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                            <BrainCircuit className="mr-2 h-4 w-4" />
+                            <Network className="mr-2 h-4 w-4" />
                             DNA
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>

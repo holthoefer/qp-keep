@@ -33,7 +33,7 @@ import {
   Shield,
   LayoutGrid,
   FolderKanban,
-  BrainCircuit,
+  Network,
   LogOut,
   FileImage,
   StickyNote,
@@ -946,7 +946,7 @@ export default function ControlPlansPage() {
                     WP
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                    <BrainCircuit className="mr-2 h-4 w-4" />
+                    <Network className="mr-2 h-4 w-4" />
                     DNA
                 </Button>
                  <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>

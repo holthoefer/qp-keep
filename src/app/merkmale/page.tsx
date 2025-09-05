@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -28,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2, Book, Shield, Target, LogOut, LayoutGrid, FolderKanban, BrainCircuit, FileImage } from 'lucide-react';
+import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2, Book, Shield, Target, LogOut, LayoutGrid, FolderKanban, Network, FileImage } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { cn } from '@/lib/utils';
@@ -295,7 +296,7 @@ function MerkmaleCardsPage() {
                 WP
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                <BrainCircuit className="mr-2 h-4 w-4" />
+                <Network className="mr-2 h-4 w-4" />
                 DNA
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>

@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, Shield, Book, Target, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage, Siren, Edit, Trash2, Wrench, StickyNote } from 'lucide-react';
+import { Loader2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Edit, Trash2, Wrench, StickyNote } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -121,7 +121,7 @@ export default function IncidentsPage() {
                     WP
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                    <BrainCircuit className="mr-2 h-4 w-4" />
+                    <Network className="mr-2 h-4 w-4" />
                     DNA
                 </Button>
                  <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>

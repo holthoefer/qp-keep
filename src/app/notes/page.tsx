@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage, Siren, Wrench, StickyNote, MoreVertical } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Wrench, StickyNote, MoreVertical } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -143,7 +143,7 @@ export default function NotesPage() {
                     <LayoutGrid className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
-                    <BrainCircuit className="h-4 w-4" />
+                    <Network className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
                     <FolderKanban className="h-4 w-4" />
@@ -160,7 +160,7 @@ export default function NotesPage() {
                     WP
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                    <BrainCircuit className="mr-2 h-4 w-4" />
+                    <Network className="mr-2 h-4 w-4" />
                     DNA
                 </Button>
                  <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
