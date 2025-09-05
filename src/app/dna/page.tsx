@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -24,7 +23,7 @@ import { ImageModal } from '@/components/cp/ImageModal';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { generateThumbnailUrl } from '@/lib/image-utils';
 import { useRouter } from 'next/navigation';
 import { SampleChart } from '@/components/SampleChart';
