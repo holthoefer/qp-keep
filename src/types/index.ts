@@ -219,5 +219,11 @@ export interface Event {
     reporter: string;
     description: string;
     userId: string;
+    workplace?: string;
+    po?: string;
+    op?: string;
+    lot?: string;
     attachmentUrl?: string;
 }
+
+    

@@ -373,7 +373,7 @@ export const getAuftraege = async (): Promise<Auftrag[]> => {
 export const getAuftrag = async (po: string): Promise<Auftrag | null> => {
   const docRef = doc(db, 'auftraege', po);
   const docSnap = await getDoc(docRef);
-  return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Auftrag : null;
+  return docSnap.exists() ? { id: doc.id, ...doc.data() } as Auftrag : null;
 };
 
 export const saveAuftrag = async (auftrag: Auftrag): Promise<void> => {
@@ -609,7 +609,16 @@ export const getEvents = (
 };
 
 export const addEvent = async (eventData: Omit<Event, 'id'>) => {
-    await addDoc(collection(db, 'events'), eventData);
+    const dataToSave: any = { ...eventData };
+
+    // Ensure optional fields are not saved if empty
+    if (!dataToSave.workplace) delete dataToSave.workplace;
+    if (!dataToSave.po) delete dataToSave.po;
+    if (!dataToSave.op) delete dataToSave.op;
+    if (!dataToSave.lot) delete dataToSave.lot;
+    if (!dataToSave.attachmentUrl) delete dataToSave.attachmentUrl;
+
+    await addDoc(collection(db, 'events'), dataToSave);
 };
 
 export const deleteEvent = async (id: string) => {
@@ -622,3 +631,5 @@ export const deleteEvent = async (id: string) => {
     }
     await deleteDoc(doc(db, 'events', id));
 };
+
+    

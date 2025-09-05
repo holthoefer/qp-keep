@@ -41,7 +41,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { getEvents, addEvent, deleteEvent, type Event, getAppStorage } from '@/lib/data';
+import { getEvents, addEvent, deleteEvent, type Event, getAppStorage, getWorkstations, type Workstation } from '@/lib/data';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +50,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { Timestamp } from 'firebase/firestore';
@@ -65,12 +72,14 @@ export default function EventsPage() {
   const { toast } = useToast();
   
   const [events, setEvents] = React.useState<Event[]>([]);
+  const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [newEventDescription, setNewEventDescription] = React.useState('');
   const [newAttachmentUrl, setNewAttachmentUrl] = React.useState('');
+  const [selectedWorkstation, setSelectedWorkstation] = React.useState<Workstation | null>(null);
   
   const [itemToDelete, setItemToDelete] = React.useState<Event | null>(null);
   
@@ -88,21 +97,41 @@ export default function EventsPage() {
       router.push('/');
       return;
     }
+    
+    async function loadData() {
+        setLoading(true);
+        try {
+            const wsData = await getWorkstations();
+            setWorkstations(wsData);
+            
+            const unsubscribe = getEvents(
+              (newEvents) => {
+                setEvents(newEvents);
+                setError(null);
+                setLoading(false);
+              },
+              (err) => {
+                console.error(err);
+                setError(`Error loading events: ${err.message}`);
+                setLoading(false);
+              }
+            );
+            return unsubscribe;
 
-    const unsubscribe = getEvents(
-      (newEvents) => {
-        setEvents(newEvents);
-        setError(null);
-        setLoading(false);
-      },
-      (err) => {
-        console.error(err);
-        setError(`Error loading events: ${err.message}`);
-        setLoading(false);
-      }
-    );
+        } catch (err: any) {
+            console.error(err);
+            setError(`Error loading initial data: ${err.message}`);
+            setLoading(false);
+        }
+    }
 
-    return unsubscribe;
+    const unsubscribePromise = loadData();
+    
+    return () => {
+        unsubscribePromise.then(unsubscribe => {
+            if (unsubscribe) unsubscribe();
+        });
+    };
   }, [user, authLoading, router]);
 
   const handleLogout = async () => {
@@ -122,14 +151,17 @@ export default function EventsPage() {
             eventDate: Timestamp.now(),
             reporter: user.displayName || user.email || 'Unbekannt',
             userId: user.uid,
+            ...(selectedWorkstation && { 
+                workplace: selectedWorkstation.AP,
+                po: selectedWorkstation.POcurrent,
+                op: selectedWorkstation.OPcurrent,
+                lot: selectedWorkstation.LOTcurrent,
+            }),
             ...(newAttachmentUrl && { attachmentUrl: newAttachmentUrl }),
         };
         await addEvent(eventData);
         toast({ title: 'Event erfasst' });
-        setNewEventDescription('');
-        setNewAttachmentUrl('');
-        setUploadError(null);
-        setIsDialogOpen(false);
+        resetDialog();
     } catch(e: any) {
         toast({ title: 'Fehler beim Speichern', description: e.message, variant: 'destructive' });
     }
@@ -146,6 +178,14 @@ export default function EventsPage() {
     } finally {
       setItemToDelete(null);
     }
+  };
+
+  const resetDialog = () => {
+    setIsDialogOpen(false);
+    setNewEventDescription('');
+    setNewAttachmentUrl('');
+    setUploadError(null);
+    setSelectedWorkstation(null);
   };
 
   const handleUpload = (file: File) => {
@@ -265,7 +305,7 @@ export default function EventsPage() {
         </div>
       </header>
       <main className="flex-1 p-4 md:p-6">
-        <div className="mx-auto w-full max-w-5xl">
+        <div className="mx-auto w-full max-w-7xl">
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-headline text-2xl font-semibold">Shopfloor Events</h2>
              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -278,10 +318,29 @@ export default function EventsPage() {
                   <DialogHeader>
                     <DialogTitle>Neues Event erfassen</DialogTitle>
                     <DialogDescription>
-                      Beschreiben Sie das Ereignis, das Sie festhalten möchten.
+                      Beschreiben Sie das Ereignis und ordnen Sie es ggf. einem Arbeitsplatz zu.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
+                     <div className="space-y-2">
+                        <Label htmlFor="workstation">Arbeitsplatz (optional)</Label>
+                        <Select onValueChange={(ap) => setSelectedWorkstation(workstations.find(ws => ws.AP === ap) || null)}>
+                            <SelectTrigger><SelectValue placeholder="Arbeitsplatz auswählen" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">Kein Arbeitsplatz</SelectItem>
+                                {workstations.map(ws => (
+                                    <SelectItem key={ws.AP} value={ws.AP}>{ws.AP} - {ws.Beschreibung}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                     </div>
+                     {selectedWorkstation && (
+                        <div className="text-xs text-muted-foreground space-y-1 rounded-md border p-2 bg-muted">
+                            <p><strong>Auftrag:</strong> {selectedWorkstation.POcurrent || 'N/A'}</p>
+                            <p><strong>Prozess:</strong> {selectedWorkstation.OPcurrent || 'N/A'}</p>
+                            <p><strong>Charge:</strong> {selectedWorkstation.LOTcurrent || 'N/A'}</p>
+                        </div>
+                     )}
                      <Textarea 
                         id="description" 
                         placeholder="z.B. Maschine M-05 verliert Öl am Hauptgetriebe."
@@ -322,7 +381,7 @@ export default function EventsPage() {
                      </div>
                   </div>
                   <DialogFooter>
-                    <DialogClose asChild><Button variant="outline">Abbrechen</Button></DialogClose>
+                    <Button variant="outline" onClick={resetDialog}>Abbrechen</Button>
                     <Button onClick={handleAddEvent}>Speichern</Button>
                   </DialogFooter>
                 </DialogContent>
@@ -353,6 +412,10 @@ export default function EventsPage() {
                     <TableHead>Datum</TableHead>
                     <TableHead>Erfasser</TableHead>
                     <TableHead>Eventbeschreibung</TableHead>
+                    <TableHead>Arbeitsplatz</TableHead>
+                    <TableHead>Auftrag</TableHead>
+                    <TableHead>Prozess</TableHead>
+                    <TableHead>Charge</TableHead>
                     <TableHead>Anhang</TableHead>
                     {isAdmin && <TableHead className="text-right w-[100px]">Aktionen</TableHead>}
                     </TableRow>
@@ -360,13 +423,13 @@ export default function EventsPage() {
                 <TableBody>
                     {loading ? (
                     <TableRow>
-                        <TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center">
+                        <TableCell colSpan={isAdmin ? 9 : 8} className="h-24 text-center">
                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                         </TableCell>
                     </TableRow>
                     ) : events.length === 0 ? (
                     <TableRow>
-                        <TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={isAdmin ? 9 : 8} className="h-24 text-center text-muted-foreground">
                         Keine Events gefunden.
                         </TableCell>
                     </TableRow>
@@ -376,6 +439,10 @@ export default function EventsPage() {
                         <TableCell>{item.eventDate ? format(item.eventDate.toDate(), 'dd.MM.yyyy HH:mm') : 'N/A'}</TableCell>
                         <TableCell>{item.reporter}</TableCell>
                         <TableCell className="max-w-md">{item.description}</TableCell>
+                        <TableCell>{item.workplace || '-'}</TableCell>
+                        <TableCell>{item.po || '-'}</TableCell>
+                        <TableCell>{item.op || '-'}</TableCell>
+                        <TableCell>{item.lot || '-'}</TableCell>
                         <TableCell>
                             {item.attachmentUrl && (
                                 isImage(item.attachmentUrl) ? (
@@ -419,3 +486,5 @@ export default function EventsPage() {
     </>
   );
 }
+
+    
