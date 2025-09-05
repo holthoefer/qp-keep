@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { DNA, Workstation, ControlPlan, ProcessStep } from '@/types';
 import { getDnaData, getWorkstations, getControlPlans } from '@/lib/data';
 import { getDb } from '@/lib/firebase';
-import { Search, ImageIcon, Clock, ArrowLeft, Loader2, Book, Shield, Target, LogOut, Network, FolderKanban, LayoutGrid, FileImage, Siren, Wrench, StickyNote } from 'lucide-react';
+import { Search, ImageIcon, Clock, ArrowLeft, Loader2, Book, Shield, Target, LogOut, Network, FolderKanban, LayoutGrid, FileImage, Siren, Wrench, StickyNote, MoreVertical } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -24,7 +24,7 @@ import { ImageModal } from '@/components/cp/ImageModal';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { generateThumbnailUrl } from '@/lib/image-utils';
 import { useRouter } from 'next/navigation';
 import { SampleChart } from '@/components/SampleChart';
@@ -257,23 +257,33 @@ export default function DnaPage() {
             DNA
           </h1>
         </div>
-         <div className="flex items-center gap-2">
+         <div className="flex items-center gap-1 md:gap-2">
+             {/* Mobile View: Icons and Dropdown */}
+            <div className="md:hidden flex items-center gap-1">
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
+                    <FolderKanban className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
+                    <StickyNote className="h-4 w-4" />
+                </Button>
+            </div>
+
+            {/* Desktop View: Full Buttons */}
             <div className="hidden md:flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                     <LayoutGrid className="mr-2 h-4 w-4" />
                     WP
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                    <Network className="mr-2 h-4 w-4" />
-                    DNA
-                </Button>
-                 <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
+                <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
                     <FolderKanban className="mr-2 h-4 w-4" />
                     PO
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                     <StickyNote className="mr-2 h-4 w-4" />
-                    Notizen
+                    Notiz
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
                     <Wrench className="mr-2 h-4 w-4" />
@@ -304,9 +314,47 @@ export default function DnaPage() {
                     </Button>
                 )}
             </div>
+             <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                 <Button variant="ghost" size="icon" className="h-8 w-8 md:hidden">
+                    <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                 <DropdownMenuItem onClick={() => router.push('/events')}>
+                    <Wrench className="mr-2 h-4 w-4" />
+                    <span>Events</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/incidents')}>
+                    <Siren className="mr-2 h-4 w-4" />
+                    <span>Status-Liste</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/cp')}>
+                    <Target className="mr-2 h-4 w-4" />
+                    <span>CP</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
+                    <Book className="mr-2 h-4 w-4" />
+                    <span>LP</span>
+                </DropdownMenuItem>
+                 {isAdmin && <DropdownMenuSeparator />}
+                {isAdmin && (
+                    <DropdownMenuItem onClick={() => router.push('/storage')}>
+                        <FileImage className="mr-2 h-4 w-4" />
+                        <span>Storage</span>
+                    </DropdownMenuItem>
+                )}
+                {isAdmin && (
+                    <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin</span>
+                    </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="rounded-full">
+                <Button variant="secondary" size="icon" className="rounded-full h-8 w-8">
                   <Avatar>
                     <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || user?.email || ''} />
                     <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>

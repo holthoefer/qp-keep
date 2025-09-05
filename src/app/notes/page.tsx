@@ -149,9 +149,6 @@ export default function NotesPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
                     <FolderKanban className="h-4 w-4" />
                 </Button>
-                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
-                    <StickyNote className="h-4 w-4" />
-                </Button>
             </div>
 
             {/* Desktop View: Full Buttons */}
@@ -167,10 +164,6 @@ export default function NotesPage() {
                  <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
                     <FolderKanban className="mr-2 h-4 w-4" />
                     PO
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
-                    <StickyNote className="mr-2 h-4 w-4" />
-                    Notizen
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
                     <Wrench className="mr-2 h-4 w-4" />
