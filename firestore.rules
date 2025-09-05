@@ -68,7 +68,8 @@ service cloud.firestore {
         allow create: if request.auth != null;
         allow update, delete: if isAdmin(); // Only admins can modify/delete incidents
     }
-
+    
+    // Events can be read and created by any authenticated user. Only admins can delete.
     match /events/{eventId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;

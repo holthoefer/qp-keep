@@ -219,4 +219,5 @@ export interface Event {
     reporter: string;
     description: string;
     userId: string;
+    attachmentUrl?: string;
 }
