@@ -185,3 +185,26 @@ export interface StorageFile {
   name: string;
   thumbnailUrl?: string;
 }
+
+export type IncidentPriority = 'Niedrig' | 'Mittel' | 'Hoch' | 'Kritisch';
+export type IncidentType = 'Bug' | 'Performance' | 'Ausfall' | 'Sonstiges';
+export type IncidentTeam = 'Backend-Team' | 'Frontend-Team' | 'DevOps' | 'QA' | 'Sonstiges';
+
+
+export interface Incident {
+  id: string;
+  workplace: string;
+  title: string;
+  reportedAt: Timestamp;
+  priority: IncidentPriority;
+  type: IncidentType;
+  description: string;
+  team: IncidentTeam;
+  components?: string[];
+  attachments?: string[];
+  reportedBy: {
+    uid: string;
+    email: string;
+  };
+  affectedUser?: string;
+}

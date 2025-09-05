@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -271,7 +272,7 @@ export default function LenkungsplanPage() {
               <Wrench className="mr-2 h-4 w-4" />
               Insta
             </Button>
-            <Button variant="outline" size="sm" onClick={() => {}}>
+            <Button variant="outline" size="sm" onClick={() => router.push('/incident')}>
               <Siren className="mr-2 h-4 w-4" />
               Incident
             </Button>

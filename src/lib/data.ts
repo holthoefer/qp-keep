@@ -24,7 +24,7 @@ import {
 import { ref, listAll, getDownloadURL, type StorageReference } from "firebase/storage";
 import { suggestTags } from '@/ai/flows/suggest-tags';
 import type { User } from 'firebase/auth';
-import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA, SampleData, ProcessStep, Characteristic } from '@/types';
+import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA, SampleData, ProcessStep, Characteristic, Incident } from '@/types';
 
 
 export const getAppStorage = getFirebaseStorage;
@@ -531,4 +531,22 @@ export const getSamplesForDna = async (dnaId: string, count?: number): Promise<S
     }
     
     return samples;
+};
+
+
+// Incident Management
+export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedAt' | 'reportedBy'>) => {
+    const user = auth.currentUser;
+    if (!user) {
+        throw new Error("You must be logged in to report an incident.");
+    }
+
+    await addDoc(collection(db, 'incidents'), {
+        ...incidentData,
+        reportedAt: serverTimestamp(),
+        reportedBy: {
+            uid: user.uid,
+            email: user.email,
+        },
+    });
 };
