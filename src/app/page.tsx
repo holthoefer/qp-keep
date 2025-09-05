@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { type UserProfile } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Image from 'next/image';
 
 export default function HomePage() {
   const { user, profile, loading: authLoading, logout } = useAuth();
@@ -35,7 +36,7 @@ export default function HomePage() {
       <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
         <div className="w-full max-w-sm text-center">
             <div className="mb-8 flex flex-col items-center justify-center space-y-4">
-                <KeepKnowLogo className="h-16 w-16 text-primary" />
+                <Image src="/Logo.png" alt="qp Loop Logo" width={64} height={64} className="h-16 w-16 text-primary" />
                 <h1 className="font-headline text-3xl font-bold tracking-tighter">
                     Start qp Loop
                 </h1>
@@ -76,7 +77,7 @@ export default function HomePage() {
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center justify-center space-y-4">
-          <KeepKnowLogo className="h-16 w-16 text-primary" />
+          <Image src="/Logo.png" alt="qp Loop Logo" width={64} height={64} className="h-16 w-16 text-primary" />
           <h1 className="font-headline text-5xl font-bold tracking-tighter">
             qp Loop
           </h1>
@@ -87,4 +88,3 @@ export default function HomePage() {
     </main>
   );
 }
-
