@@ -222,7 +222,7 @@ export default function AuftraegePage() {
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
                 <Siren className="mr-2 h-4 w-4" />
-                Status-Liste
+                Incidents
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                 <Target className="mr-2 h-4 w-4" />

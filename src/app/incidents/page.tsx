@@ -131,7 +131,7 @@ export default function IncidentsPage() {
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                     <StickyNote className="mr-2 h-4 w-4" />
-                    Notizen
+                    Notiz
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
                     <Wrench className="mr-2 h-4 w-4" />
@@ -139,7 +139,7 @@ export default function IncidentsPage() {
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
                     <Siren className="mr-2 h-4 w-4" />
-                    Status-Liste
+                    Incidents
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                     <Target className="mr-2 h-4 w-4" />
@@ -220,47 +220,55 @@ export default function IncidentsPage() {
                     <TableHead>Priorität</TableHead>
                     <TableHead>Gemeldet von</TableHead>
                     <TableHead>Team</TableHead>
-                    {isAdmin && <TableHead className="text-right">Aktionen</TableHead>}
+                    <TableHead className="text-right">Aktionen</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center">
+                      <TableCell colSpan={7} className="h-24 text-center">
                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                       </TableCell>
                     </TableRow>
                   ) : incidents.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center text-muted-foreground">
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                         Keine Incidents gefunden.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    incidents.map((item) => (
-                      <TableRow key={item.id} onClick={() => handleEdit(item)} className="cursor-pointer">
-                        <TableCell>{item.workplace}</TableCell>
-                        <TableCell>{item.reportedAt ? format(item.reportedAt.toDate(), 'dd.MM.yyyy HH:mm') : 'N/A'}</TableCell>
-                        <TableCell className="font-medium truncate max-w-xs">{item.title}</TableCell>
-                        <TableCell>
-                          <Badge variant={priorityVariant[item.priority]}>{item.priority}</Badge>
-                        </TableCell>
-                        <TableCell className="text-xs">{item.reportedBy.email}</TableCell>
-                        <TableCell>{item.team}</TableCell>
-                        {isAdmin && (
-                          <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" onClick={() => setItemToDelete(item)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))
+                    incidents.map((item) => {
+                        const canEdit = isAdmin || item.reportedBy.uid === user?.uid;
+                        const canDelete = isAdmin;
+                        return (
+                          <TableRow key={item.id}>
+                            <TableCell>{item.workplace}</TableCell>
+                            <TableCell>{item.reportedAt ? format(item.reportedAt.toDate(), 'dd.MM.yyyy HH:mm') : 'N/A'}</TableCell>
+                            <TableCell className="font-medium truncate max-w-xs">{item.title}</TableCell>
+                            <TableCell>
+                              <Badge variant={priorityVariant[item.priority]}>{item.priority}</Badge>
+                            </TableCell>
+                            <TableCell className="text-xs">{item.reportedBy.email}</TableCell>
+                            <TableCell>{item.team}</TableCell>
+                            <TableCell className="text-right">
+                                <div className="flex justify-end gap-1">
+                                {canEdit && (
+                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                                    <Edit className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                {canDelete && (
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setItemToDelete(item)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                )}
+                                </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                    })
                   )}
                 </TableBody>
               </Table>

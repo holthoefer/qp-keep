@@ -41,9 +41,6 @@ export default function ArbeitsplaetzePage() {
                 <div className="flex items-center gap-1 md:gap-2">
                      {/* Mobile View: Icons and Dropdown */}
                     <div className="md:hidden flex items-center gap-1">
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
-                            <LayoutGrid className="h-4 w-4" />
-                        </Button>
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
                             <Network className="h-4 w-4" />
                         </Button>
@@ -57,10 +54,6 @@ export default function ArbeitsplaetzePage() {
 
                     {/* Desktop View: Full Buttons */}
                     <div className="hidden md:flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
-                            <LayoutGrid className="mr-2 h-4 w-4" />
-                            WP
-                        </Button>
                         <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
                             <Network className="mr-2 h-4 w-4" />
                             DNA
@@ -71,7 +64,7 @@ export default function ArbeitsplaetzePage() {
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                             <StickyNote className="mr-2 h-4 w-4" />
-                            Notizen
+                            Notiz
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
                             <Wrench className="mr-2 h-4 w-4" />
@@ -79,7 +72,7 @@ export default function ArbeitsplaetzePage() {
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
                             <Siren className="mr-2 h-4 w-4" />
-                            Status-Liste
+                            Incidents
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                             <Target className="mr-2 h-4 w-4" />
@@ -116,7 +109,7 @@ export default function ArbeitsplaetzePage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push('/incidents')}>
                             <Siren className="mr-2 h-4 w-4" />
-                            <span>Status-Liste</span>
+                            <span>Incidents</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push('/cp')}>
                             <Target className="mr-2 h-4 w-4" />
