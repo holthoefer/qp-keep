@@ -128,15 +128,27 @@ export default function NewEventPage() {
       }
     );
   };
+
+  const handleWorkstationChange = (ap: string) => {
+      if (ap === 'none') {
+        setSelectedWorkstation(null);
+      } else {
+        const station = workstations.find(ws => ws.AP === ap) || null;
+        setSelectedWorkstation(station);
+      }
+  }
   
   const isSaveDisabled = !description.trim() || isUploading;
 
   if (authLoading || loadingData) {
-    return null; // AuthProvider shows LoadingScreen
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
   }
 
   return (
-    <>
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
@@ -165,12 +177,12 @@ export default function NewEventPage() {
                 <div className="space-y-2">
                     <Label htmlFor="workstation">Arbeitsplatz (optional)</Label>
                     <Select 
-                        value={selectedWorkstation?.AP || ''}
-                        onValueChange={(ap) => setSelectedWorkstation(workstations.find(ws => ws.AP === ap) || null)}
+                        value={selectedWorkstation?.AP || 'none'}
+                        onValueChange={handleWorkstationChange}
                     >
                         <SelectTrigger><SelectValue placeholder="Arbeitsplatz auswählen" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Kein Arbeitsplatz</SelectItem>
+                            <SelectItem value="none">Kein Arbeitsplatz</SelectItem>
                             {workstations.map(ws => (
                                 <SelectItem key={ws.AP} value={ws.AP}>{ws.AP} - {ws.Beschreibung}</SelectItem>
                             ))}
@@ -229,6 +241,5 @@ export default function NewEventPage() {
         </Card>
       </main>
     </div>
-    </>
   );
 }
