@@ -561,17 +561,16 @@ export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedB
 
     const dataToSave: any = {
         ...incidentData,
-        reportedBy: {
-            uid: user.uid,
-            email: user.email,
-        },
     };
     
     const isNew = !id;
     
     if (isNew) {
-        // This is a new incident
         dataToSave.reportedAt = serverTimestamp();
+        dataToSave.reportedBy = {
+            uid: user.uid,
+            email: user.email,
+        };
     }
 
     // Remove empty optional fields so they are not saved in Firestore
@@ -608,6 +607,12 @@ export const getEvents = (
   }, onError);
 };
 
+export const getEvent = async (id: string): Promise<Event | null> => {
+    const docRef = doc(db, 'events', id);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Event : null;
+};
+
 export const addEvent = async (eventData: Omit<Event, 'id'>) => {
     const dataToSave: any = { ...eventData };
 
@@ -619,6 +624,11 @@ export const addEvent = async (eventData: Omit<Event, 'id'>) => {
     if (!dataToSave.attachmentUrl) delete dataToSave.attachmentUrl;
 
     await addDoc(collection(db, 'events'), dataToSave);
+};
+
+export const updateEvent = async (id: string, eventData: Partial<Event>) => {
+    const docRef = doc(db, 'events', id);
+    await updateDoc(docRef, eventData);
 };
 
 export const deleteEvent = async (id: string) => {

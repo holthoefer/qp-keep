@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Trash2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Wrench, UploadCloud, Link as LinkIcon, Image as ImageIcon, MoreVertical, StickyNote } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Wrench, UploadCloud, Link as LinkIcon, Image as ImageIcon, MoreVertical, StickyNote, Edit } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -103,6 +103,10 @@ export default function EventsPage() {
     router.push('/');
   };
 
+  const handleEdit = (item: Event) => {
+    router.push(`/event/new?id=${item.id}`);
+  };
+
   const handleDelete = async () => {
     if (!itemToDelete) return;
 
@@ -138,68 +142,56 @@ export default function EventsPage() {
             Event-Liste
           </h1>
         </div>
-        <div className="flex items-center gap-1 md:gap-2">
-            <Button variant="outline" size="icon" className="h-8 w-8 md:hidden" onClick={() => router.push('/notes')}>
-                <StickyNote className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="hidden md:flex" onClick={() => router.push('/notes')}>
-                Notizen
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
-                <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
-                <Network className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
-                <FolderKanban className="h-4 w-4" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                 <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreVertical className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="mr-2 h-4 w-4" />
+                    WP
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push('/events')}>
+                <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                    <Network className="mr-2 h-4 w-4" />
+                    DNA
+                </Button>
+                 <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
+                    <FolderKanban className="mr-2 h-4 w-4" />
+                    PO
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                    <StickyNote className="mr-2 h-4 w-4" />
+                    Notizen
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
                     <Wrench className="mr-2 h-4 w-4" />
-                    <span>Events</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/incidents')}>
+                    Events
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
                     <Siren className="mr-2 h-4 w-4" />
-                    <span>Status-Liste</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/cp')}>
+                    Status-Liste
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                     <Target className="mr-2 h-4 w-4" />
-                    <span>CP</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
+                    CP
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
                     <Book className="mr-2 h-4 w-4" />
-                    <span>LP</span>
-                </DropdownMenuItem>
-                 {isAdmin && <DropdownMenuSeparator />}
+                    LP
+                </Button>
                 {isAdmin && (
-                    <DropdownMenuItem onClick={() => router.push('/storage')}>
-                        <FileImage className="mr-2 h-4 w-4" />
-                        <span>Storage</span>
-                    </DropdownMenuItem>
+                    <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+                    <FileImage className="mr-2 h-4 w-4" />
+                    Storage
+                    </Button>
                 )}
                 {isAdmin && (
-                    <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                    <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                         <Shield className="mr-2 h-4 w-4" />
-                        <span>Admin</span>
-                    </DropdownMenuItem>
+                        Admin
+                    </Button>
                 )}
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Ausloggen</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            </div>
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="rounded-full h-8 w-8">
+                <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
                     <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || user?.email || ''} />
                     <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
@@ -255,24 +247,29 @@ export default function EventsPage() {
                     <TableHead>Auftrag</TableHead>
                     <TableHead>Prozess</TableHead>
                     <TableHead>Charge</TableHead>
-                    {isAdmin && <TableHead className="text-right w-[100px]">Aktionen</TableHead>}
+                    <TableHead className="text-right w-[100px]">Aktionen</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {loading ? (
                     <TableRow>
-                        <TableCell colSpan={isAdmin ? 9 : 8} className="h-24 text-center">
+                        <TableCell colSpan={9} className="h-24 text-center">
                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                         </TableCell>
                     </TableRow>
                     ) : events.length === 0 ? (
                     <TableRow>
-                        <TableCell colSpan={isAdmin ? 9 : 8} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                         Keine Events gefunden.
                         </TableCell>
                     </TableRow>
                     ) : (
-                    events.map((item) => (
+                    events.map((item) => {
+                      const isOwner = item.userId === user?.uid;
+                      const canEdit = isAdmin || isOwner;
+                      const canDelete = isAdmin;
+
+                      return (
                         <TableRow key={item.id}>
                         <TableCell>{item.workplace || '-'}</TableCell>
                         <TableCell>{item.eventDate ? format(item.eventDate.toDate(), 'dd.MM.yyyy HH:mm') : 'N/A'}</TableCell>
@@ -302,17 +299,25 @@ export default function EventsPage() {
                         <TableCell>{item.po || '-'}</TableCell>
                         <TableCell>{item.op || '-'}</TableCell>
                         <TableCell>{item.lot || '-'}</TableCell>
-                        {isAdmin && (
-                            <TableCell className="text-right">
+                        <TableCell className="text-right">
+                          <div className='flex justify-end gap-1'>
+                            {canEdit && (
+                              <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canDelete && (
                                 <AlertDialogTrigger asChild>
                                     <Button variant="ghost" size="icon" onClick={() => setItemToDelete(item)}>
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                 </AlertDialogTrigger>
-                            </TableCell>
-                        )}
+                            )}
+                          </div>
+                        </TableCell>
                         </TableRow>
-                    ))
+                      )
+                    })
                     )}
                 </TableBody>
                 </Table>

@@ -12,7 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { getEvents, addEvent, deleteEvent, type Event, getAppStorage, getWorkstations, type Workstation } from '@/lib/data';
+import { getEvent, addEvent, updateEvent, type Event, getAppStorage, getWorkstations, type Workstation } from '@/lib/data';
 import { Timestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
@@ -25,6 +25,9 @@ export default function NewEventPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   
+  const eventId = searchParams.get('id');
+  const [isEditMode, setIsEditMode] = React.useState(!!eventId);
+
   const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
   const [loadingData, setLoadingData] = React.useState(true);
   
@@ -51,7 +54,21 @@ export default function NewEventPage() {
       try {
         const wsData = await getWorkstations();
         setWorkstations(wsData);
-        if (preselectedWorkplace) {
+
+        if(eventId) {
+            const eventData = await getEvent(eventId);
+            if (eventData) {
+                setDescription(eventData.description);
+                setAttachmentUrl(eventData.attachmentUrl || '');
+                if (eventData.workplace) {
+                    const preselected = wsData.find(ws => ws.AP === eventData.workplace);
+                    setSelectedWorkstation(preselected || null);
+                }
+            } else {
+                 toast({ title: 'Event nicht gefunden', variant: 'destructive' });
+                 router.push('/events');
+            }
+        } else if (preselectedWorkplace) {
           const preselected = wsData.find(ws => ws.AP === preselectedWorkplace);
           if (preselected) {
             setSelectedWorkstation(preselected);
@@ -65,30 +82,44 @@ export default function NewEventPage() {
     }
     
     loadInitialData();
-  }, [user, authLoading, router, preselectedWorkplace, toast]);
+  }, [user, authLoading, router, preselectedWorkplace, eventId, toast]);
 
-  const handleAddEvent = async () => {
+  const handleSaveEvent = async () => {
     if (!user || !description.trim()) {
       toast({ title: 'Beschreibung darf nicht leer sein.', variant: 'destructive'});
       return;
     }
 
     try {
-      const eventData: Omit<Event, 'id'> = {
-        description,
-        eventDate: Timestamp.now(),
-        reporter: user.displayName || user.email || 'Unbekannt',
-        userId: user.uid,
-        ...(selectedWorkstation && { 
-          workplace: selectedWorkstation.AP,
-          po: selectedWorkstation.POcurrent,
-          op: selectedWorkstation.OPcurrent,
-          lot: selectedWorkstation.LOTcurrent,
-        }),
-        ...(attachmentUrl && { attachmentUrl: attachmentUrl }),
-      };
-      await addEvent(eventData);
-      toast({ title: 'Event erfolgreich erfasst' });
+      if (isEditMode && eventId) {
+        const eventData: Partial<Event> = {
+            description,
+            attachmentUrl,
+            workplace: selectedWorkstation?.AP,
+            po: selectedWorkstation?.POcurrent,
+            op: selectedWorkstation?.OPcurrent,
+            lot: selectedWorkstation?.LOTcurrent,
+        };
+        await updateEvent(eventId, eventData);
+        toast({ title: 'Event erfolgreich aktualisiert' });
+
+      } else {
+        const eventData: Omit<Event, 'id'> = {
+            description,
+            eventDate: Timestamp.now(),
+            reporter: user.displayName || user.email || 'Unbekannt',
+            userId: user.uid,
+            ...(selectedWorkstation && { 
+            workplace: selectedWorkstation.AP,
+            po: selectedWorkstation.POcurrent,
+            op: selectedWorkstation.OPcurrent,
+            lot: selectedWorkstation.LOTcurrent,
+            }),
+            ...(attachmentUrl && { attachmentUrl: attachmentUrl }),
+        };
+        await addEvent(eventData);
+        toast({ title: 'Event erfolgreich erfasst' });
+      }
       router.push('/events');
     } catch(e: any) {
       toast({ title: 'Fehler beim Speichern', description: e.message, variant: 'destructive' });
@@ -157,10 +188,10 @@ export default function NewEventPage() {
           </Button>
           <KeepKnowLogo className="h-8 w-8 text-primary" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
-            Neues Event
+            {isEditMode ? 'Event bearbeiten' : 'Neues Event'}
           </h1>
         </div>
-        <Button onClick={handleAddEvent} disabled={isSaveDisabled}>
+        <Button onClick={handleSaveEvent} disabled={isSaveDisabled}>
             <Send className="mr-2 h-4 w-4" />
             Senden
         </Button>
