@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage, Siren, Wrench } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage, Siren, Wrench, StickyNote, MoreVertical } from 'lucide-react';
 import { KeepKnowLogo } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -136,50 +136,68 @@ export default function NotesPage() {
             qp Loop
           </h1>
         </div>
-        <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                WP
+        <div className="flex items-center gap-1 md:gap-2">
+            <Button variant="outline" size="icon" className="h-8 w-8 md:hidden" onClick={() => router.push('/notes')}>
+                <StickyNote className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
-                <Wrench className="mr-2 h-4 w-4" />
-                Events
+            <Button variant="outline" size="sm" className="hidden md:flex" onClick={() => router.push('/notes')}>
+                Notizen
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
-                <Siren className="mr-2 h-4 w-4" />
-                Status-Liste
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
+                <LayoutGrid className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                <BrainCircuit className="mr-2 h-4 w-4" />
-                DNA
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
+                <BrainCircuit className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
-                <FolderKanban className="mr-2 h-4 w-4" />
-                PO
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
+                <FolderKanban className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
-                <Target className="mr-2 h-4 w-4" />
-                CP
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                <Book className="mr-2 h-4 w-4" />
-                LP
-            </Button>
-            {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-                  <FileImage className="mr-2 h-4 w-4" />
-                  Storage
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                 <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
                 </Button>
-            )}
-            {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin
-                </Button>
-            )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => router.push('/events')}>
+                    <Wrench className="mr-2 h-4 w-4" />
+                    <span>Events</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/incidents')}>
+                    <Siren className="mr-2 h-4 w-4" />
+                    <span>Status-Liste</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/cp')}>
+                    <Target className="mr-2 h-4 w-4" />
+                    <span>CP</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
+                    <Book className="mr-2 h-4 w-4" />
+                    <span>LP</span>
+                </DropdownMenuItem>
+                 {isAdmin && <DropdownMenuSeparator />}
+                {isAdmin && (
+                    <DropdownMenuItem onClick={() => router.push('/storage')}>
+                        <FileImage className="mr-2 h-4 w-4" />
+                        <span>Storage</span>
+                    </DropdownMenuItem>
+                )}
+                {isAdmin && (
+                    <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin</span>
+                    </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                 <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Ausloggen</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="rounded-full">
+                <Button variant="secondary" size="icon" className="rounded-full h-8 w-8">
                   <Avatar>
                     <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || user?.email || ''} />
                     <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
