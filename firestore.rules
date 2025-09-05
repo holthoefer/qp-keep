@@ -1,63 +1,77 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check for admin role
+    // Helper function to check if a user is an admin
     function isAdmin() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
-    
-    // Helper function to check if user is active
+
+    // Helper function to check if a user's account is active
     function isActive() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+        return request.auth != null;
     }
 
-    // Users can manage their own profile. Admins can manage any profile.
+    // Users can read their own profile, admins can read any profile
     match /users/{userId} {
-      allow read; // Allow reading of user profiles (e.g., for email display)
-      allow create: if request.auth.uid == userId;
-      allow update: if request.auth.uid == userId || isAdmin();
+      allow read: if request.auth.uid == userId || isAdmin();
+      allow write: if request.auth.uid == userId; // Users can update their own profile initially
+      allow update: if isAdmin(); // Admins can update any profile (e.g., change role/status)
+      allow create: if request.auth.uid == userId; // A user can create their own profile document
     }
-    
-    // Notes: Users can manage their own notes. Admins can read all.
+
+    // Notes: Users can manage their own notes, admins can read all notes.
     match /notes/{noteId} {
-      allow read: if resource.data.userId == request.auth.uid || isAdmin();
-      allow create: if request.resource.data.userId == request.auth.uid && isActive();
-      allow delete: if resource.data.userId == request.auth.uid || isAdmin();
-    }
-
-    // Samples: Any authenticated user can read all samples for charting.
-    // Users can create/update their own samples. Admins can delete any.
-    match /samples/{sampleId} {
-      allow read: if request.auth != null;
-      allow create: if request.resource.data.userId == request.auth.uid && isActive();
-      allow update: if request.auth.uid == resource.data.userId || isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // Workstations, Auftraege, Control Plans, DNA, Lenkungsplan:
-    // For now, allow general authenticated read/write access.
-    // These can be locked down further if needed.
-    match /workstations/{wsId} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth.uid == resource.data.userId || isAdmin();
+      allow create: if request.auth.uid == request.resource.data.userId && isActive();
+      allow delete: if request.auth.uid == resource.data.userId;
     }
     
-    match /auftraege/{auftragId} {
-      allow read, write: if request.auth != null;
-    }
-
+    // Control Plans (Advanced)
     match /control-plans/{planId} {
-       allow read, write: if request.auth != null;
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAdmin() && isActive();
     }
-
+    
+    // Lenkungsplan (Legacy Simple Control Plan)
     match /lenkungsplan/{planId} {
-       allow read, write: if request.auth != null;
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAdmin() && isActive();
+    }
+    
+    // Workstations
+    match /workstations/{wsId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAdmin() && isActive();
     }
 
-    match /dna/{dnaId} {
-      allow read, write: if request.auth != null;
+    // Auftraege
+    match /auftraege/{auftragId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAdmin() && isActive();
     }
+
+    // DNA and Samples
+    match /dna/{dnaId} {
+        allow read, write: if isAuthenticated() && isActive();
+    }
+
+    match /samples/{sampleId} {
+        allow read, write: if isAuthenticated() && isActive();
+        allow delete: if isAdmin() && isActive();
+    }
+    
+    // Incidents
+    match /incidents/{incidentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && isActive();
+        allow update, delete: if isAdmin() && isActive();
+    }
+
   }
 }
