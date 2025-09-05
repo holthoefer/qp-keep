@@ -28,8 +28,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { getWorkstations, addIncident, getAppStorage, getWorkstation } from '@/lib/data';
-import type { Workstation } from '@/types';
+import { getWorkstation, addIncident, getIncident } from '@/lib/data';
+import type { Workstation, Incident } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -38,10 +38,6 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { KeepKnowLogo } from '@/components/icons';
 import Image from 'next/image';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 
 
 const incidentSchema = z.object({
@@ -51,7 +47,7 @@ const incidentSchema = z.object({
   priority: z.enum(['Niedrig', 'Mittel', 'Hoch', 'Kritisch']),
   type: z.enum(['Bug', 'Performance', 'Ausfall', 'Sonstiges']),
   description: z.string().min(1, { message: 'Description is required.' }),
-  team: z.enum(['Backend-Team', 'Frontend-Team', 'DevOps', 'QA', 'Sonstiges']),
+  team: z.enum(['Backend-Team', 'DevOps', 'QA', 'Sonstiges']),
   components: z.string().optional(),
   attachmentUrl: z.string().url({ message: "Bitte geben Sie eine gültige URL ein." }).optional().or(z.literal('')),
   affectedUser: z.string().optional(),
@@ -64,107 +60,72 @@ function IncidentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [workstation, setWorkstation] = React.useState<Workstation | null>(null);
-  const [loadingWorkstation, setLoadingWorkstation] = React.useState(true);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [uploadProgress, setUploadProgress] = React.useState(0);
-  const [uploadError, setUploadError] = React.useState<string | null>(null);
   
+  const incidentId = searchParams.get('id');
   const preselectedWorkplace = searchParams.get('ap');
   const preselectedTitle = searchParams.get('po');
+  
+  const [workstation, setWorkstation] = React.useState<Workstation | null>(null);
+  const [loadingData, setLoadingData] = React.useState(true);
 
-
-  React.useEffect(() => {
-    async function loadWorkstation() {
-      if (!preselectedWorkplace) {
-          setLoadingWorkstation(false);
-          return;
-      }
-      try {
-        const wsData = await getWorkstation(preselectedWorkplace);
-        setWorkstation(wsData);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error loading workstation data',
-          description: 'Could not fetch details for the selected workstation.',
-        });
-      } finally {
-        setLoadingWorkstation(false);
-      }
-    }
-    loadWorkstation();
-  }, [preselectedWorkplace, toast]);
 
   const form = useForm<IncidentFormValues>({
     resolver: zodResolver(incidentSchema),
     defaultValues: {
-      workplace: preselectedWorkplace || '',
-      title: preselectedTitle || '',
+      workplace: '',
+      title: '',
       reportedAt: new Date(),
       priority: 'Mittel',
       type: 'Bug',
       description: '',
-      team: 'Frontend-Team',
+      team: 'Sonstiges',
       components: '',
       affectedUser: '',
       attachmentUrl: '',
     },
   });
-  
-  const attachmentUrl = form.watch('attachmentUrl');
 
-  const handleUpload = (file: File) => {
-    if (file.size > 10 * 1024 * 1024) {
-      setUploadError("Die Datei ist größer als 10 MB. Bitte wählen Sie eine kleinere Datei.");
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadProgress(0);
-    setUploadError(null);
-
-    const storage = getAppStorage();
-    if (!storage) {
-        setUploadError("Storage-Dienst ist nicht initialisiert.");
-        setIsUploading(false);
-        return;
-    }
-
-    const storageRef = ref(storage, `uploads/incidents/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      (error) => {
-        console.error('Upload Error:', error);
-        setUploadError('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
-        setIsUploading(false);
-        setUploadProgress(0);
-      },
-      async () => {
-        try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          form.setValue('attachmentUrl', downloadURL, { shouldValidate: true, shouldDirty: true });
-          toast({
-            title: 'Upload erfolgreich',
-            description: 'Die Datei wurde hochgeladen und die URL wurde dem Formular hinzugefügt.',
+  React.useEffect(() => {
+    async function loadInitialData() {
+      setLoadingData(true);
+      try {
+        if (incidentId) {
+          // Edit mode
+          const incidentData = await getIncident(incidentId);
+          if (incidentData) {
+            form.reset({
+                ...incidentData,
+                reportedAt: incidentData.reportedAt.toDate(),
+                components: incidentData.components?.join(', ') || '',
+            });
+            const wsData = await getWorkstation(incidentData.workplace);
+            setWorkstation(wsData);
+          } else {
+             toast({ variant: 'destructive', title: 'Fehler', description: 'Incident nicht gefunden.' });
+             router.push('/incidents');
+          }
+        } else if (preselectedWorkplace) {
+          // New mode with pre-selection
+          const wsData = await getWorkstation(preselectedWorkplace);
+          setWorkstation(wsData);
+          form.reset({
+              ...form.getValues(),
+              workplace: preselectedWorkplace,
+              title: preselectedTitle || '',
           });
-        } catch (e: any) {
-           setUploadError('Fehler beim Abrufen der Download-URL nach dem Upload.');
-        } finally {
-            setIsUploading(false);
-            setUploadProgress(0);
         }
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Error loading data',
+          description: error.message,
+        });
+      } finally {
+        setLoadingData(false);
       }
-    );
-  };
-
+    }
+    loadInitialData();
+  }, [incidentId, preselectedWorkplace, preselectedTitle, form, router, toast]);
 
   const onSubmit = async (data: IncidentFormValues) => {
     if (!user) {
@@ -185,13 +146,13 @@ function IncidentPageContent() {
             components: data.components?.split(',').map(c => c.trim()).filter(c => c) || [],
         };
         
-        await addIncident(incidentData);
+        await addIncident(incidentData, incidentId || undefined);
         
         toast({
-            title: "Incident Reported",
-            description: "Thank you for your submission. The team has been notified."
+            title: incidentId ? "Incident aktualisiert" : "Incident gemeldet",
+            description: "Ihre Änderungen wurden erfolgreich gespeichert."
         });
-        router.push('/lenkungsplan');
+        router.push('/incidents');
     } catch(e: any) {
         toast({
             variant: "destructive",
@@ -201,13 +162,15 @@ function IncidentPageContent() {
     }
   };
 
-  if (authLoading || loadingWorkstation) {
+  if (authLoading || loadingData) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
+
+  const isSaveDisabled = !form.formState.isDirty || form.formState.isSubmitting;
 
   return (
     <>
@@ -221,11 +184,11 @@ function IncidentPageContent() {
                 </Button>
               <KeepKnowLogo className="h-8 w-8 text-primary" />
               <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
-                Incident Erfassung
+                {incidentId ? 'Incident bearbeiten' : 'Incident erfassen'}
               </h1>
             </div>
-             <Button type="submit" disabled={form.formState.isSubmitting || isUploading}>
-                {(form.formState.isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+             <Button type="submit" disabled={isSaveDisabled}>
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Send className="mr-2 h-4 w-4" />
                 Senden
               </Button>
@@ -233,7 +196,9 @@ function IncidentPageContent() {
           <main className="flex-1 p-4 md:p-6">
             <Card className="max-w-2xl mx-auto">
               <CardHeader>
-                <CardTitle>Neuen Incident melden</CardTitle>
+                <CardTitle>
+                    {incidentId ? `Incident für ${form.getValues('workplace')} bearbeiten` : 'Neuen Incident melden'}
+                </CardTitle>
                  {workstation ? (
                     <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
                         <span><Badge variant="outline">AP</Badge> {workstation.AP}</span>
@@ -275,6 +240,20 @@ function IncidentPageContent() {
                           <FormLabel>Incident-Titel*</FormLabel>
                           <FormControl>
                             <Input placeholder="Kurze Zusammenfassung des Problems" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                     <FormField
+                      control={form.control}
+                      name="workplace"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Arbeitsplatz*</FormLabel>
+                          <FormControl>
+                            <Input {...field} readOnly disabled />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -426,53 +405,16 @@ function IncidentPageContent() {
                       )}
                     />
                      
-                    <div className="space-y-2">
-                      <FormLabel>Anhang</FormLabel>
-                       <Input
-                            id="file-upload"
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
-                            accept=".jpg,.jpeg,.png,.gif,.pdf,.docx,.xlsx,.pptx,.txt"
-                            className="hidden"
-                            disabled={isUploading}
-                        />
-                         <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                            <UploadCloud className="mr-2 h-4 w-4" />
-                            {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Datei hochladen'}
-                        </Button>
-                         {isUploading && <Progress value={uploadProgress} className="w-full mt-2" />}
-                        {uploadError && (
-                            <Alert variant="destructive" className="mt-2">
-                                <AlertTitle>Upload Fehler</AlertTitle>
-                                <AlertDescription>{uploadError}</AlertDescription>
-                            </Alert>
-                        )}
-                    </div>
-
                     <FormField
                       control={form.control}
                       name="attachmentUrl"
                       render={({ field }) => (
                         <FormItem>
-                           {attachmentUrl && (
-                            <div className="mt-2 space-y-2">
-                                 <div className="flex items-center gap-2">
-                                    <div className="flex-grow">
-                                        <FormControl>
-                                          <Input placeholder="https://..." {...field} readOnly className="bg-muted"/>
-                                        </FormControl>
-                                        <FormDescription>
-                                          Dies ist die URL der hochgeladenen Datei.
-                                        </FormDescription>
-                                    </div>
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => form.setValue('attachmentUrl', '')}>
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                 </div>
-                            </div>
-                          )}
-                          <FormMessage />
+                           <FormLabel>Anhang URL</FormLabel>
+                           <FormControl>
+                            <Input placeholder="https://..." {...field} />
+                           </FormControl>
+                           <FormMessage />
                         </FormItem>
                       )}
                     />

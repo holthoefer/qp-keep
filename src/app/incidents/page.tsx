@@ -207,7 +207,7 @@ export default function IncidentsPage() {
                   </TableRow>
                 ) : (
                   incidents.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} onClick={() => handleEdit(item)} className="cursor-pointer">
                       <TableCell className="font-medium truncate max-w-xs">{item.title}</TableCell>
                       <TableCell>{item.workplace}</TableCell>
                       <TableCell>
@@ -217,7 +217,7 @@ export default function IncidentsPage() {
                       <TableCell>{item.reportedAt ? format(item.reportedAt.toDate(), 'dd.MM.yyyy HH:mm') : 'N/A'}</TableCell>
                       <TableCell className="text-xs">{item.reportedBy.email}</TableCell>
                       {isAdmin && (
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                             <Edit className="h-4 w-4" />
                           </Button>
