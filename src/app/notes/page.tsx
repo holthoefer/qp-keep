@@ -141,6 +141,7 @@ export default function NotesPage() {
                 <StickyNote className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="sm" className="hidden md:flex" onClick={() => router.push('/notes')}>
+                <StickyNote className="mr-2 h-4 w-4" />
                 Notizen
             </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
@@ -188,11 +189,6 @@ export default function NotesPage() {
                         <span>Admin</span>
                     </DropdownMenuItem>
                 )}
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Ausloggen</span>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
            <DropdownMenu>

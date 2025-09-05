@@ -7,7 +7,7 @@ import { WorkstationGrid } from "@/components/workstations/WorkstationGrid";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
-import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit, FileImage, Siren, Wrench } from "lucide-react";
+import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,49 +37,64 @@ export default function ArbeitsplaetzePage() {
                     Arbeitsplätze
                 </h1>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                <div className="flex items-center gap-1 md:gap-2">
+                    <Button variant="outline" size="icon" className="h-8 w-8 md:hidden" onClick={() => router.push('/notes')}>
+                        <StickyNote className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" className="hidden md:flex" onClick={() => router.push('/notes')}>
+                        <StickyNote className="mr-2 h-4 w-4" />
                         Notizen
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
-                        <Wrench className="mr-2 h-4 w-4" />
-                        Events
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
+                        <LayoutGrid className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
-                        <Siren className="mr-2 h-4 w-4" />
-                        Status-Liste
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
+                        <BrainCircuit className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                        <BrainCircuit className="mr-2 h-4 w-4" />
-                        DNA
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
+                        <FolderKanban className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
-                        <FolderKanban className="mr-2 h-4 w-4" />
-                        PO
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
-                        <Target className="mr-2 h-4 w-4" />
-                        CP
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                        <Book className="mr-2 h-4 w-4" />
-                        LP
-                    </Button>
-                    {isAdmin && (
-                        <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-                          <FileImage className="mr-2 h-4 w-4" />
-                          Storage
-                        </Button>
-                    )}
-                    {isAdmin && (
-                        <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
-                            <Shield className="mr-2 h-4 w-4" />
-                            Admin
-                        </Button>
-                    )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="secondary" size="icon" className="rounded-full">
+                         <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push('/events')}>
+                            <Wrench className="mr-2 h-4 w-4" />
+                            <span>Events</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/incidents')}>
+                            <Siren className="mr-2 h-4 w-4" />
+                            <span>Status-Liste</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/cp')}>
+                            <Target className="mr-2 h-4 w-4" />
+                            <span>CP</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
+                            <Book className="mr-2 h-4 w-4" />
+                            <span>LP</span>
+                        </DropdownMenuItem>
+                         {isAdmin && <DropdownMenuSeparator />}
+                        {isAdmin && (
+                            <DropdownMenuItem onClick={() => router.push('/storage')}>
+                                <FileImage className="mr-2 h-4 w-4" />
+                                <span>Storage</span>
+                            </DropdownMenuItem>
+                        )}
+                        {isAdmin && (
+                            <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                                <Shield className="mr-2 h-4 w-4" />
+                                <span>Admin</span>
+                            </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="secondary" size="icon" className="rounded-full h-8 w-8">
                           <Avatar>
                             <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || user?.email || ''} />
                             <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
