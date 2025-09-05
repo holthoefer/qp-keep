@@ -122,8 +122,7 @@ export function LoginForm() {
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="font-headline">Enter qp Loop</CardTitle>
-        <CardDescription>Melden Sie sich an oder erstellen Sie ein Konto.</CardDescription>
+        <CardDescription>Anmelden oder neues Konto erstellen</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
