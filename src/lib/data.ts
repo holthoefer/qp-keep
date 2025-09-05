@@ -553,11 +553,12 @@ export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedB
     if (!dataToSave.attachmentUrl) delete (dataToSave as any).attachmentUrl;
     if (!dataToSave.components || dataToSave.components.length === 0) delete (dataToSave as any).components;
     if (!dataToSave.affectedUser) delete (dataToSave as any).affectedUser;
+    if (!dataToSave.po) delete (dataToSave as any).po;
+    if (!dataToSave.op) delete (dataToSave as any).op;
+    if (!dataToSave.lot) delete (dataToSave as any).lot;
 
     const incidentId = `${incidentData.workplace}_${Date.now()}`;
     const docRef = doc(db, 'incidents', incidentId);
 
     await setDoc(docRef, dataToSave);
 };
-
-    

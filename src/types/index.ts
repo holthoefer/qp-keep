@@ -207,6 +207,7 @@ export interface Incident {
     email: string | null;
   };
   affectedUser?: string;
+  po?: string;
+  op?: string;
+  lot?: string;
 }
-
-    

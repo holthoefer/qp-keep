@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { getWorkstations, addIncident, getAppStorage } from '@/lib/data';
+import { getWorkstations, addIncident, getAppStorage, getWorkstation } from '@/lib/data';
 import type { Workstation } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -38,10 +38,10 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { KeepKnowLogo } from '@/components/icons';
 import Image from 'next/image';
-import { generateThumbnailUrl } from '@/lib/image-utils';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
 
 const incidentSchema = z.object({
@@ -64,8 +64,8 @@ function IncidentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
-  const [loadingWorkstations, setLoadingWorkstations] = React.useState(true);
+  const [workstation, setWorkstation] = React.useState<Workstation | null>(null);
+  const [loadingWorkstation, setLoadingWorkstation] = React.useState(true);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState(0);
@@ -76,22 +76,26 @@ function IncidentPageContent() {
 
 
   React.useEffect(() => {
-    async function loadWorkstations() {
+    async function loadWorkstation() {
+      if (!preselectedWorkplace) {
+          setLoadingWorkstation(false);
+          return;
+      }
       try {
-        const wsData = await getWorkstations();
-        setWorkstations(wsData);
+        const wsData = await getWorkstation(preselectedWorkplace);
+        setWorkstation(wsData);
       } catch (error) {
         toast({
           variant: 'destructive',
-          title: 'Error loading workstations',
-          description: 'Could not fetch the list of workstations.',
+          title: 'Error loading workstation data',
+          description: 'Could not fetch details for the selected workstation.',
         });
       } finally {
-        setLoadingWorkstations(false);
+        setLoadingWorkstation(false);
       }
     }
-    loadWorkstations();
-  }, [toast]);
+    loadWorkstation();
+  }, [preselectedWorkplace, toast]);
 
   const form = useForm<IncidentFormValues>({
     resolver: zodResolver(incidentSchema),
@@ -175,6 +179,9 @@ function IncidentPageContent() {
     try {
         const incidentData = {
             ...data,
+            po: workstation?.POcurrent,
+            op: workstation?.OPcurrent,
+            lot: workstation?.LOTcurrent,
             components: data.components?.split(',').map(c => c.trim()).filter(c => c) || [],
         };
         
@@ -194,7 +201,7 @@ function IncidentPageContent() {
     }
   };
 
-  if (authLoading || loadingWorkstations) {
+  if (authLoading || loadingWorkstation) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -227,32 +234,34 @@ function IncidentPageContent() {
             <Card className="max-w-2xl mx-auto">
               <CardHeader>
                 <CardTitle>Neuen Incident melden</CardTitle>
-                <CardDescription>
-                  Füllen Sie das Formular aus, um ein Problem oder einen Fehler zu melden.
-                </CardDescription>
+                 {workstation ? (
+                    <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
+                        <span><Badge variant="outline">AP</Badge> {workstation.AP}</span>
+                        <span><Badge variant="outline">PO</Badge> {workstation.POcurrent || 'N/A'}</span>
+                        <span><Badge variant="outline">OP</Badge> {workstation.OPcurrent || 'N/A'}</span>
+                        <span><Badge variant="outline">LOT</Badge> {workstation.LOTcurrent || 'N/A'}</span>
+                    </CardDescription>
+                ) : (
+                     <CardDescription>
+                        Füllen Sie das Formular aus, um ein Problem oder einen Fehler zu melden.
+                    </CardDescription>
+                )}
               </CardHeader>
               <CardContent>
                   <div className="space-y-6">
                     <FormField
                       control={form.control}
-                      name="workplace"
+                      name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Arbeitsplatz*</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!preselectedWorkplace}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Wählen Sie einen Arbeitsplatz" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {workstations.map((ws) => (
-                                <SelectItem key={ws.AP} value={ws.AP}>
-                                  {ws.AP} - {ws.Beschreibung}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Beschreibung*</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Beschreiben Sie den Vorfall detailliert. Schritte zur Reproduktion, erwartetes vs. tatsächliches Verhalten, etc."
+                              rows={6}
+                              {...field}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -363,24 +372,6 @@ function IncidentPageContent() {
                         )}
                       />
                     </div>
-
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Beschreibung*</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Beschreiben Sie den Vorfall detailliert. Schritte zur Reproduktion, erwartetes vs. tatsächliches Verhalten, etc."
-                              rows={6}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
                     <FormField
                       control={form.control}
