@@ -106,10 +106,6 @@ export default function IncidentPage() {
   const attachmentUrl = form.watch('attachmentUrl');
 
   const handleUpload = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-        setUploadError("Ungültiger Dateityp. Bitte nur Bilder hochladen.");
-        return;
-    }
     if (file.size > 10 * 1024 * 1024) {
       setUploadError("Die Datei ist größer als 10 MB. Bitte wählen Sie eine kleinere Datei.");
       return;
@@ -147,7 +143,7 @@ export default function IncidentPage() {
           form.setValue('attachmentUrl', downloadURL, { shouldValidate: true, shouldDirty: true });
           toast({
             title: 'Upload erfolgreich',
-            description: 'Das Bild wurde hochgeladen und die URL wurde dem Formular hinzugefügt.',
+            description: 'Die Datei wurde hochgeladen und die URL wurde dem Formular hinzugefügt.',
           });
         } catch (e: any) {
            setUploadError('Fehler beim Abrufen der Download-URL nach dem Upload.');
@@ -428,19 +424,19 @@ export default function IncidentPage() {
             />
              
             <div className="space-y-2">
-              <FormLabel>Anhang (Bild)</FormLabel>
+              <FormLabel>Anhang</FormLabel>
                <Input
                     id="file-upload"
                     type="file"
                     ref={fileInputRef}
                     onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,.gif,.pdf,.docx,.xlsx,.pptx,.txt"
                     className="hidden"
                     disabled={isUploading}
                 />
                  <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
                     <UploadCloud className="mr-2 h-4 w-4" />
-                    {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Bild hochladen'}
+                    {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Datei hochladen'}
                 </Button>
                  {isUploading && <Progress value={uploadProgress} className="w-full mt-2" />}
                 {uploadError && (
@@ -459,19 +455,12 @@ export default function IncidentPage() {
                    {attachmentUrl && (
                     <div className="mt-2 space-y-2">
                          <div className="flex items-center gap-2">
-                            <Image
-                                src={generateThumbnailUrl(attachmentUrl)}
-                                alt="Anhang Vorschau"
-                                width={64}
-                                height={64}
-                                className="rounded-sm object-cover aspect-square border"
-                            />
                             <div className="flex-grow">
                                 <FormControl>
                                   <Input placeholder="https://..." {...field} readOnly className="bg-muted"/>
                                 </FormControl>
                                 <FormDescription>
-                                  Dies ist die URL des hochgeladenen Bildes.
+                                  Dies ist die URL der hochgeladenen Datei.
                                 </FormDescription>
                             </div>
                             <Button type="button" variant="ghost" size="icon" onClick={() => form.setValue('attachmentUrl', '')}>
