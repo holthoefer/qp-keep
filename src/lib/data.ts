@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { db, auth, getAppStorage as getFirebaseStorage } from './firebase';
@@ -23,7 +24,7 @@ import {
 import { ref, listAll, getDownloadURL, type StorageReference } from "firebase/storage";
 import { suggestTags } from '@/ai/flows/suggest-tags';
 import type { User } from 'firebase/auth';
-import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA, SampleData, ProcessStep, Characteristic, Incident } from '@/types';
+import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA, SampleData, ProcessStep, Characteristic, Incident, Event } from '@/types';
 
 
 export const getAppStorage = getFirebaseStorage;
@@ -552,7 +553,7 @@ export const getIncident = async (id: string): Promise<Incident | null> => {
 };
 
 
-export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedBy' | 'reportedAt'>, id?: string) => {
+export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedBy'>, id?: string) => {
     const user = auth.currentUser;
     if (!user) {
         throw new Error("You must be logged in to report an incident.");
@@ -566,7 +567,9 @@ export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedB
         },
     };
     
-    if (!id) {
+    const isNew = !id;
+    
+    if (isNew) {
         // This is a new incident
         dataToSave.reportedAt = serverTimestamp();
     }
@@ -582,13 +585,40 @@ export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedB
     const docId = id || `${incidentData.workplace}_${Date.now()}`;
     const docRef = doc(db, 'incidents', docId);
 
-    if (id) {
-        await updateDoc(docRef, dataToSave);
-    } else {
+    if (isNew) {
         await setDoc(docRef, dataToSave);
+    } else {
+        await updateDoc(docRef, dataToSave);
     }
 };
 
 export const deleteIncident = async (id: string) => {
     await deleteDoc(doc(db, 'incidents', id));
+};
+
+// Event Management for Shopfloor
+export const getEvents = (
+  onSuccess: (events: Event[]) => void,
+  onError: (error: Error) => void
+) => {
+  const q = query(collection(db, 'events'), orderBy('eventDate', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const events: Event[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+    onSuccess(events);
+  }, onError);
+};
+
+export const addEvent = async (eventData: Omit<Event, 'id'>) => {
+    await addDoc(collection(db, 'events'), eventData);
+};
+
+export const deleteEvent = async (id: string) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Nicht authentifiziert.");
+    
+    const profile = await getProfile(user.uid);
+    if (profile?.role !== 'admin') {
+        throw new Error("Nur Administratoren dürfen Events löschen.");
+    }
+    await deleteDoc(doc(db, 'events', id));
 };

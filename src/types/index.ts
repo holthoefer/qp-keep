@@ -1,4 +1,5 @@
 
+
 import { Timestamp } from 'firebase/firestore';
 
 export enum ControlPlanStatus {
@@ -210,4 +211,12 @@ export interface Incident {
   po?: string;
   op?: string;
   lot?: string;
+}
+
+export interface Event {
+    id: string;
+    eventDate: Timestamp;
+    reporter: string;
+    description: string;
+    userId: string;
 }

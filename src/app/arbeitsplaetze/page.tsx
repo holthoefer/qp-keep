@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { KeepKnowLogo } from "@/components/icons";
@@ -6,7 +7,7 @@ import { WorkstationGrid } from "@/components/workstations/WorkstationGrid";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
-import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit, FileImage, Siren } from "lucide-react";
+import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit, FileImage, Siren, Wrench } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +40,10 @@ export default function ArbeitsplaetzePage() {
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                         Notizen
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
+                        <Wrench className="mr-2 h-4 w-4" />
+                        Events
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
                         <Siren className="mr-2 h-4 w-4" />

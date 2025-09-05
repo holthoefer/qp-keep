@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -227,6 +228,11 @@ export function WorkstationGrid() {
     router.push(`/incident?ap=${encodeURIComponent(ap)}&po=${encodeURIComponent(po || '')}`);
   }
 
+  const handleEventClick = (e: React.MouseEvent, ap: string, po?: string) => {
+    e.stopPropagation();
+    router.push(`/events`);
+  }
+
   return (
     <>
       <ImageModal
@@ -451,7 +457,7 @@ export function WorkstationGrid() {
                       </CardContent>
                       <CardFooter className="flex justify-between items-center">
                            <div className="flex items-center gap-1">
-                               <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                               <Button variant="outline" size="sm" onClick={(e) => handleEventClick(e, ws.AP, ws.POcurrent)}>
                                    <Wrench className="h-4 w-4" />
                                </Button>
                                <Button variant="outline" size="sm" onClick={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
