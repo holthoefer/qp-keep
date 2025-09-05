@@ -27,18 +27,21 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { getWorkstations, addIncident } from '@/lib/data';
-import type { Workstation, IncidentPriority, IncidentType, IncidentTeam } from '@/types';
+import { getWorkstations, addIncident, getAppStorage } from '@/lib/data';
+import type { Workstation } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2, ArrowLeft, LibraryBig, ImageIcon } from 'lucide-react';
+import { CalendarIcon, Loader2, ArrowLeft, LibraryBig, ImageIcon, UploadCloud, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { KeepKnowLogo } from '@/components/icons';
-import { StorageBrowser } from '@/components/cp/StorageBrowser';
 import Image from 'next/image';
 import { generateThumbnailUrl } from '@/lib/image-utils';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+
 
 const incidentSchema = z.object({
   workplace: z.string().min(1, { message: 'Workplace is required.' }),
@@ -61,7 +64,10 @@ export default function IncidentPage() {
   const { toast } = useToast();
   const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
   const [loadingWorkstations, setLoadingWorkstations] = React.useState(true);
-  const [isBrowserOpen, setIsBrowserOpen] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     async function loadWorkstations() {
@@ -99,10 +105,60 @@ export default function IncidentPage() {
   
   const attachmentUrl = form.watch('attachmentUrl');
 
-  const handleImageSelectFromBrowser = (url: string) => {
-    form.setValue('attachmentUrl', url, { shouldValidate: true });
-    setIsBrowserOpen(false);
-  }
+  const handleUpload = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+        setUploadError("Ungültiger Dateityp. Bitte nur Bilder hochladen.");
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("Die Datei ist größer als 10 MB. Bitte wählen Sie eine kleinere Datei.");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+
+    const storage = getAppStorage();
+    if (!storage) {
+        setUploadError("Storage-Dienst ist nicht initialisiert.");
+        setIsUploading(false);
+        return;
+    }
+
+    const storageRef = ref(storage, `uploads/incidents/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error('Upload Error:', error);
+        setUploadError('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
+        setIsUploading(false);
+        setUploadProgress(0);
+      },
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          form.setValue('attachmentUrl', downloadURL, { shouldValidate: true, shouldDirty: true });
+          toast({
+            title: 'Upload erfolgreich',
+            description: 'Das Bild wurde hochgeladen und die URL wurde dem Formular hinzugefügt.',
+          });
+        } catch (e: any) {
+           setUploadError('Fehler beim Abrufen der Download-URL nach dem Upload.');
+        } finally {
+            setIsUploading(false);
+            setUploadProgress(0);
+        }
+      }
+    );
+  };
+
 
   const onSubmit = async (data: IncidentFormValues) => {
     if (!user) {
@@ -117,7 +173,6 @@ export default function IncidentPage() {
     try {
         const incidentData = {
             ...data,
-            reportedAt: data.reportedAt,
             components: data.components?.split(',').map(c => c.trim()).filter(c => c) || [],
         };
         
@@ -147,11 +202,6 @@ export default function IncidentPage() {
 
   return (
     <>
-    <StorageBrowser 
-        isOpen={isBrowserOpen}
-        onOpenChange={setIsBrowserOpen}
-        onImageSelect={handleImageSelectFromBrowser}
-      />
     <div className="flex min-h-screen flex-col bg-background">
        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
@@ -376,38 +426,60 @@ export default function IncidentPage() {
                 </FormItem>
               )}
             />
+             
+            <div className="space-y-2">
+              <FormLabel>Anhang (Bild)</FormLabel>
+               <Input
+                    id="file-upload"
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isUploading}
+                />
+                 <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                    <UploadCloud className="mr-2 h-4 w-4" />
+                    {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Bild hochladen'}
+                </Button>
+                 {isUploading && <Progress value={uploadProgress} className="w-full mt-2" />}
+                {uploadError && (
+                    <Alert variant="destructive" className="mt-2">
+                        <AlertTitle>Upload Fehler</AlertTitle>
+                        <AlertDescription>{uploadError}</AlertDescription>
+                    </Alert>
+                )}
+            </div>
 
             <FormField
               control={form.control}
               name="attachmentUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Anhang (Bild-URL)</FormLabel>
-                   <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsBrowserOpen(true)}>
-                        <LibraryBig className="mr-2 h-4 w-4" />
-                        Storage durchsuchen
-                    </Button>
-                    {attachmentUrl ? (
-                      <Image
-                        src={generateThumbnailUrl(attachmentUrl)}
-                        alt="Anhang Vorschau"
-                        width={40}
-                        height={40}
-                        className="rounded-sm object-cover aspect-square border"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-sm bg-muted flex items-center justify-center border">
-                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <FormControl>
-                    <Input placeholder="https://..." {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Wählen Sie ein Bild aus dem Storage aus oder fügen Sie eine URL manuell ein.
-                  </FormDescription>
+                   {attachmentUrl && (
+                    <div className="mt-2 space-y-2">
+                         <div className="flex items-center gap-2">
+                            <Image
+                                src={generateThumbnailUrl(attachmentUrl)}
+                                alt="Anhang Vorschau"
+                                width={64}
+                                height={64}
+                                className="rounded-sm object-cover aspect-square border"
+                            />
+                            <div className="flex-grow">
+                                <FormControl>
+                                  <Input placeholder="https://..." {...field} readOnly className="bg-muted"/>
+                                </FormControl>
+                                <FormDescription>
+                                  Dies ist die URL des hochgeladenen Bildes.
+                                </FormDescription>
+                            </div>
+                            <Button type="button" variant="ghost" size="icon" onClick={() => form.setValue('attachmentUrl', '')}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                         </div>
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -415,8 +487,8 @@ export default function IncidentPage() {
 
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={form.formState.isSubmitting || isUploading}>
+                {(form.formState.isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Incident melden
               </Button>
             </div>
@@ -429,5 +501,3 @@ export default function IncidentPage() {
     </>
   );
 }
-
-    
