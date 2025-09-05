@@ -179,75 +179,75 @@ export default function IncidentsPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Titel</TableHead>
-                  <TableHead>Arbeitsplatz</TableHead>
-                  <TableHead>Priorität</TableHead>
-                  <TableHead>Typ</TableHead>
-                  <TableHead>Gemeldet am</TableHead>
-                  <TableHead>Gemeldet von</TableHead>
-                  {isAdmin && <TableHead className="text-right">Aktionen</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
+          <AlertDialog>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Sind Sie sicher?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Dieser Vorgang kann nicht rückgängig gemacht werden. Der Incident "{itemToDelete?.title}" wird dauerhaft gelöscht.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setItemToDelete(null)}>Abbrechen</AlertDialogCancel>
+                <AlertDialogAction onClick={() => itemToDelete && handleDelete(itemToDelete.id)}>Löschen</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center">
-                      <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-                    </TableCell>
+                    <TableHead>Arbeitsplatz</TableHead>
+                    <TableHead>Gemeldet am</TableHead>
+                    <TableHead>Titel</TableHead>
+                    <TableHead>Priorität</TableHead>
+                    <TableHead>Gemeldet von</TableHead>
+                    <TableHead>Team</TableHead>
+                    {isAdmin && <TableHead className="text-right">Aktionen</TableHead>}
                   </TableRow>
-                ) : incidents.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center text-muted-foreground">
-                      Keine Incidents gefunden.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  incidents.map((item) => (
-                    <TableRow key={item.id} onClick={() => handleEdit(item)} className="cursor-pointer">
-                      <TableCell className="font-medium truncate max-w-xs">{item.title}</TableCell>
-                      <TableCell>{item.workplace}</TableCell>
-                      <TableCell>
-                        <Badge variant={priorityVariant[item.priority]}>{item.priority}</Badge>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center">
+                        <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                       </TableCell>
-                      <TableCell>{item.type}</TableCell>
-                      <TableCell>{item.reportedAt ? format(item.reportedAt.toDate(), 'dd.MM.yyyy HH:mm') : 'N/A'}</TableCell>
-                      <TableCell className="text-xs">{item.reportedBy.email}</TableCell>
-                      {isAdmin && (
-                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
+                    </TableRow>
+                  ) : incidents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center text-muted-foreground">
+                        Keine Incidents gefunden.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    incidents.map((item) => (
+                      <TableRow key={item.id} onClick={() => handleEdit(item)} className="cursor-pointer">
+                        <TableCell>{item.workplace}</TableCell>
+                        <TableCell>{item.reportedAt ? format(item.reportedAt.toDate(), 'dd.MM.yyyy HH:mm') : 'N/A'}</TableCell>
+                        <TableCell className="font-medium truncate max-w-xs">{item.title}</TableCell>
+                        <TableCell>
+                          <Badge variant={priorityVariant[item.priority]}>{item.priority}</Badge>
+                        </TableCell>
+                        <TableCell className="text-xs">{item.reportedBy.email}</TableCell>
+                        <TableCell>{item.team}</TableCell>
+                        {isAdmin && (
+                          <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" onClick={() => setItemToDelete(item)}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Sind Sie sicher?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Dieser Vorgang kann nicht rückgängig gemacht werden. Der Incident "{item.title}" wird dauerhaft gelöscht.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(item.id)}>Löschen</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                           </AlertDialog>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </AlertDialog>
         </div>
       </main>
     </div>
