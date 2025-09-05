@@ -27,6 +27,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
   DropdownMenu,
@@ -179,7 +180,7 @@ export default function IncidentsPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-           <AlertDialog>
+           <AlertDialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Sind Sie sicher?</AlertDialogTitle>
@@ -253,4 +254,3 @@ export default function IncidentsPage() {
     </div>
   );
 }
-
