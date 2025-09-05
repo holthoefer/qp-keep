@@ -38,6 +38,11 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { KeepKnowLogo } from '@/components/icons';
 import Image from 'next/image';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { getAppStorage } from '@/lib/data';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
 
 const incidentSchema = z.object({
@@ -67,6 +72,11 @@ function IncidentPageContent() {
   
   const [workstation, setWorkstation] = React.useState<Workstation | null>(null);
   const [loadingData, setLoadingData] = React.useState(true);
+  
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
 
   const form = useForm<IncidentFormValues>({
@@ -126,6 +136,57 @@ function IncidentPageContent() {
     }
     loadInitialData();
   }, [incidentId, preselectedWorkplace, preselectedTitle, form, router, toast]);
+  
+  const handleUpload = (file: File) => {
+    if (!incidentId && !preselectedWorkplace) {
+        setUploadError("Bitte speichern Sie den Incident zuerst oder rufen Sie ihn über einen Arbeitsplatz auf.");
+        return;
+    }
+    const incidentIdentifier = incidentId || preselectedWorkplace!;
+    
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+    
+    const storage = getAppStorage();
+    if (!storage) {
+        setUploadError("Storage-Dienst ist nicht initialisiert.");
+        setIsUploading(false);
+        return;
+    }
+
+    const storageRef = ref(storage, `uploads/incidents/${incidentIdentifier}/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+    
+     uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error('Upload Error:', error);
+        setUploadError('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
+        setIsUploading(false);
+        setUploadProgress(0);
+      },
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          form.setValue('attachmentUrl', downloadURL, { shouldDirty: true });
+           toast({
+            title: 'Upload erfolgreich',
+            description: 'Klicken Sie auf Speichern, um die Änderung zu übernehmen.',
+          });
+        } catch (e: any) {
+           setUploadError('Fehler beim Abrufen der Download-URL nach dem Upload.');
+        } finally {
+            setIsUploading(false)
+            setUploadProgress(0);
+        }
+      }
+    );
+  }
 
   const onSubmit = async (data: IncidentFormValues) => {
     if (!user) {
@@ -197,7 +258,7 @@ function IncidentPageContent() {
             <Card className="max-w-2xl mx-auto">
               <CardHeader>
                 <CardTitle>
-                    {incidentId ? `Incident für ${form.getValues('workplace')} bearbeiten` : 'Neuen Incident melden'}
+                    {incidentId ? `Incident bearbeiten` : 'Neuen Incident melden'}
                 </CardTitle>
                  {workstation ? (
                     <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
@@ -384,7 +445,7 @@ function IncidentPageContent() {
                         <FormItem>
                           <FormLabel>Betroffene Komponenten/Services</FormLabel>
                           <FormControl>
-                            <Input placeholder="z.B. API, Datenbank (kommagetrennt)" {...field} />
+                            <Input placeholder="z.B. API, Datenbank (kommagetrennt)" {...field} value={field.value ?? ''} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -398,7 +459,7 @@ function IncidentPageContent() {
                         <FormItem>
                           <FormLabel>Betroffener Benutzer (optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder="E-Mail oder Name des Benutzers" {...field} />
+                            <Input placeholder="E-Mail oder Name des Benutzers" {...field} value={field.value ?? ''} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -410,11 +471,31 @@ function IncidentPageContent() {
                       name="attachmentUrl"
                       render={({ field }) => (
                         <FormItem>
-                           <FormLabel>Anhang URL</FormLabel>
-                           <FormControl>
-                            <Input placeholder="https://..." {...field} />
-                           </FormControl>
+                           <FormLabel>Datei-Anhang</FormLabel>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                  type="button"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  variant="outline"
+                                  disabled={isUploading}
+                                >
+                                    <UploadCloud className="mr-2 h-4 w-4" />
+                                    {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Datei hochladen'}
+                                </Button>
+                               <FormControl>
+                                <Input placeholder="https://..." {...field} value={field.value ?? ''} readOnly className="flex-grow bg-muted" />
+                               </FormControl>
+                            </div>
                            <FormMessage />
+                           {isUploading && <Progress value={uploadProgress} className="mt-2" />}
+                           {uploadError && <Alert variant="destructive" className="mt-2"><AlertDescription>{uploadError}</AlertDescription></Alert>}
+                            <Input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
+                                className="hidden"
+                                accept=".jpg,.jpeg,.png,.gif,.pdf,.txt,.docx,.xlsx,.pptx"
+                            />
                         </FormItem>
                       )}
                     />
