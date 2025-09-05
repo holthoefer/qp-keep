@@ -268,14 +268,6 @@ export default function LenkungsplanPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => {}}>
-              <Wrench className="mr-2 h-4 w-4" />
-              Insta
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/incident')}>
-              <Siren className="mr-2 h-4 w-4" />
-              Incident
-            </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                 Notizen
             </Button>

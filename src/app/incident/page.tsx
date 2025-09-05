@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth-context';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -41,6 +41,7 @@ import { generateThumbnailUrl } from '@/lib/image-utils';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useRouter } from 'next/navigation';
 
 
 const incidentSchema = z.object({
@@ -58,9 +59,10 @@ const incidentSchema = z.object({
 
 type IncidentFormValues = z.infer<typeof incidentSchema>;
 
-export default function IncidentPage() {
+function IncidentPageContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
   const [loadingWorkstations, setLoadingWorkstations] = React.useState(true);
@@ -68,6 +70,10 @@ export default function IncidentPage() {
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState(0);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
+  
+  const preselectedWorkplace = searchParams.get('ap');
+  const preselectedTitle = searchParams.get('po');
+
 
   React.useEffect(() => {
     async function loadWorkstations() {
@@ -90,8 +96,8 @@ export default function IncidentPage() {
   const form = useForm<IncidentFormValues>({
     resolver: zodResolver(incidentSchema),
     defaultValues: {
-      workplace: '',
-      title: '',
+      workplace: preselectedWorkplace || '',
+      title: preselectedTitle || '',
       reportedAt: new Date(),
       priority: 'Mittel',
       type: 'Bug',
@@ -227,7 +233,7 @@ export default function IncidentPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Arbeitsplatz*</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!preselectedWorkplace}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Wählen Sie einen Arbeitsplatz" />
@@ -489,4 +495,12 @@ export default function IncidentPage() {
     </div>
     </>
   );
+}
+
+export default function IncidentPage() {
+    return (
+        <React.Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <IncidentPageContent />
+        </React.Suspense>
+    );
 }

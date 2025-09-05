@@ -34,7 +34,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA } from '@/types';
 import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData } from '@/lib/data';
-import { Pencil, PlusCircle, RefreshCw, ListChecks, MoreHorizontal, Image as ImageIcon, MoreVertical, FolderKanban, Clock, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
+import { Pencil, PlusCircle, RefreshCw, ListChecks, MoreHorizontal, Image as ImageIcon, MoreVertical, FolderKanban, Clock, AlertTriangle, Loader2, ArrowLeft, Wrench, Siren } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -221,6 +221,11 @@ export function WorkstationGrid() {
     e.stopPropagation();
     openDialogForEdit(workstation);
   };
+  
+  const handleIncidentClick = (e: React.MouseEvent, ap: string, po?: string) => {
+    e.stopPropagation();
+    router.push(`/incident?ap=${encodeURIComponent(ap)}&po=${encodeURIComponent(po || '')}`);
+  }
 
   return (
     <>
@@ -445,12 +450,14 @@ export function WorkstationGrid() {
                           </div>
                       </CardContent>
                       <CardFooter className="flex justify-between items-center">
-                           <Button asChild variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
-                                <Link href={`/merkmale?ap=${encodeURIComponent(ws.AP)}`}>
-                                    <ListChecks className="mr-2 h-4 w-4" />
-                                    Liste Merkmale
-                                </Link>
-                           </Button>
+                           <div className="flex items-center gap-1">
+                               <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                                   <Wrench className="h-4 w-4" />
+                               </Button>
+                               <Button variant="outline" size="sm" onClick={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
+                                   <Siren className="h-4 w-4" />
+                               </Button>
+                           </div>
                            <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="sm" className='ml-auto' onClick={(e) => e.stopPropagation()}>
