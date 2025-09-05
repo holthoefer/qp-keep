@@ -36,6 +36,9 @@ import {
   BrainCircuit,
   LogOut,
   FileImage,
+  StickyNote,
+  Wrench,
+  Siren,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -937,37 +940,52 @@ export default function ControlPlansPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
-                Notizen
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                WP
-            </Button>
-             <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                <BrainCircuit className="mr-2 h-4 w-4" />
-                DNA
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
-                <FolderKanban className="mr-2 h-4 w-4" />
-                PO
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                <Book className="mr-2 h-4 w-4" />
-                LP
-            </Button>
-            {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-                  <FileImage className="mr-2 h-4 w-4" />
-                  Storage
+             <div className="hidden md:flex items-center gap-2">
+                 <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="mr-2 h-4 w-4" />
+                    WP
                 </Button>
-            )}
-            {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin
+                <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                    <BrainCircuit className="mr-2 h-4 w-4" />
+                    DNA
                 </Button>
-            )}
+                 <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
+                    <FolderKanban className="mr-2 h-4 w-4" />
+                    PO
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                    <StickyNote className="mr-2 h-4 w-4" />
+                    Notizen
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
+                    <Wrench className="mr-2 h-4 w-4" />
+                    Events
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
+                    <Siren className="mr-2 h-4 w-4" />
+                    Status-Liste
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
+                    <Target className="mr-2 h-4 w-4" />
+                    CP
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                    <Book className="mr-2 h-4 w-4" />
+                    LP
+                </Button>
+                {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+                    <FileImage className="mr-2 h-4 w-4" />
+                    Storage
+                    </Button>
+                )}
+                {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin
+                    </Button>
+                )}
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">

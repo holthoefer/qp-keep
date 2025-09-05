@@ -38,25 +38,73 @@ export default function ArbeitsplaetzePage() {
                 </h1>
                 </div>
                 <div className="flex items-center gap-1 md:gap-2">
-                    <Button variant="outline" size="icon" className="h-8 w-8 md:hidden" onClick={() => router.push('/notes')}>
-                        <StickyNote className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="hidden md:flex" onClick={() => router.push('/notes')}>
-                        <StickyNote className="mr-2 h-4 w-4" />
-                        Notizen
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
-                        <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
-                        <BrainCircuit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
-                        <FolderKanban className="h-4 w-4" />
-                    </Button>
+                     {/* Mobile View: Icons and Dropdown */}
+                    <div className="md:hidden flex items-center gap-1">
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
+                            <LayoutGrid className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
+                            <BrainCircuit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
+                            <FolderKanban className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
+                            <StickyNote className="h-4 w-4" />
+                        </Button>
+                    </div>
+
+                    {/* Desktop View: Full Buttons */}
+                    <div className="hidden md:flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
+                            <LayoutGrid className="mr-2 h-4 w-4" />
+                            WP
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                            <BrainCircuit className="mr-2 h-4 w-4" />
+                            DNA
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
+                            <FolderKanban className="mr-2 h-4 w-4" />
+                            PO
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                            <StickyNote className="mr-2 h-4 w-4" />
+                            Notizen
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
+                            <Wrench className="mr-2 h-4 w-4" />
+                            Events
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
+                            <Siren className="mr-2 h-4 w-4" />
+                            Status-Liste
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
+                            <Target className="mr-2 h-4 w-4" />
+                            CP
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                            <Book className="mr-2 h-4 w-4" />
+                            LP
+                        </Button>
+                        {isAdmin && (
+                            <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+                                <FileImage className="mr-2 h-4 w-4" />
+                                Storage
+                            </Button>
+                        )}
+                        {isAdmin && (
+                            <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                                <Shield className="mr-2 h-4 w-4" />
+                                Admin
+                            </Button>
+                        )}
+                    </div>
+                    
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" size="icon" className="h-8 w-8">
+                         <Button variant="ghost" size="icon" className="h-8 w-8 md:hidden">
                             <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -92,6 +140,7 @@ export default function ArbeitsplaetzePage() {
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="secondary" size="icon" className="rounded-full h-8 w-8">

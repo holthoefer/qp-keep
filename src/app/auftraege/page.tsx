@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { KeepKnowLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, BrainCircuit, LogOut, FileImage, StickyNote, Wrench, Siren } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -202,20 +203,29 @@ export default function AuftraegePage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
-                Notizen
-            </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 WP
             </Button>
-             <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+            <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
                 <BrainCircuit className="mr-2 h-4 w-4" />
                 DNA
             </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
+             <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
                 <FolderKanban className="mr-2 h-4 w-4" />
                 PO
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                <StickyNote className="mr-2 h-4 w-4" />
+                Notizen
+            </Button>
+             <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
+                <Wrench className="mr-2 h-4 w-4" />
+                Events
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
+                <Siren className="mr-2 h-4 w-4" />
+                Status-Liste
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                 <Target className="mr-2 h-4 w-4" />
