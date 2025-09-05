@@ -32,10 +32,13 @@ import type { Workstation, IncidentPriority, IncidentType, IncidentTeam } from '
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Loader2, ArrowLeft } from 'lucide-react';
+import { CalendarIcon, Loader2, ArrowLeft, LibraryBig, ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { KeepKnowLogo } from '@/components/icons';
+import { StorageBrowser } from '@/components/cp/StorageBrowser';
+import Image from 'next/image';
+import { generateThumbnailUrl } from '@/lib/image-utils';
 
 const incidentSchema = z.object({
   workplace: z.string().min(1, { message: 'Workplace is required.' }),
@@ -46,7 +49,7 @@ const incidentSchema = z.object({
   description: z.string().min(1, { message: 'Description is required.' }),
   team: z.enum(['Backend-Team', 'Frontend-Team', 'DevOps', 'QA', 'Sonstiges']),
   components: z.string().optional(),
-  attachments: z.any().optional(), // For simplicity, not handling file objects yet
+  attachmentUrl: z.string().url({ message: "Bitte geben Sie eine gültige URL ein." }).optional().or(z.literal('')),
   affectedUser: z.string().optional(),
 });
 
@@ -58,6 +61,7 @@ export default function IncidentPage() {
   const { toast } = useToast();
   const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
   const [loadingWorkstations, setLoadingWorkstations] = React.useState(true);
+  const [isBrowserOpen, setIsBrowserOpen] = React.useState(false);
 
   React.useEffect(() => {
     async function loadWorkstations() {
@@ -89,8 +93,16 @@ export default function IncidentPage() {
       team: 'Frontend-Team',
       components: '',
       affectedUser: '',
+      attachmentUrl: '',
     },
   });
+  
+  const attachmentUrl = form.watch('attachmentUrl');
+
+  const handleImageSelectFromBrowser = (url: string) => {
+    form.setValue('attachmentUrl', url, { shouldValidate: true });
+    setIsBrowserOpen(false);
+  }
 
   const onSubmit = async (data: IncidentFormValues) => {
     if (!user) {
@@ -134,6 +146,12 @@ export default function IncidentPage() {
   }
 
   return (
+    <>
+    <StorageBrowser 
+        isOpen={isBrowserOpen}
+        onOpenChange={setIsBrowserOpen}
+        onImageSelect={handleImageSelectFromBrowser}
+      />
     <div className="flex min-h-screen flex-col bg-background">
        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
@@ -358,22 +376,41 @@ export default function IncidentPage() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
-                control={form.control}
-                name="attachments"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Anhänge</FormLabel>
-                        <FormControl>
-                            <Input type="file" {...field} value={field.value?.fileName} />
-                        </FormControl>
-                        <FormDescription>
-                            Screenshots, Logs, etc. (.jpg, .png, .pdf, .txt)
-                        </FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )}
+              control={form.control}
+              name="attachmentUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Anhang (Bild-URL)</FormLabel>
+                   <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsBrowserOpen(true)}>
+                        <LibraryBig className="mr-2 h-4 w-4" />
+                        Storage durchsuchen
+                    </Button>
+                    {attachmentUrl ? (
+                      <Image
+                        src={generateThumbnailUrl(attachmentUrl)}
+                        alt="Anhang Vorschau"
+                        width={40}
+                        height={40}
+                        className="rounded-sm object-cover aspect-square border"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-sm bg-muted flex items-center justify-center border">
+                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <FormControl>
+                    <Input placeholder="https://..." {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Wählen Sie ein Bild aus dem Storage aus oder fügen Sie eine URL manuell ein.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
 
@@ -389,5 +426,8 @@ export default function IncidentPage() {
     </Card>
     </main>
     </div>
+    </>
   );
 }
+
+    

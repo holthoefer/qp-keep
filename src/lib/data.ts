@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { db, auth, getAppStorage as getFirebaseStorage } from './firebase';
@@ -230,7 +229,7 @@ export async function getControlPlan(id: string): Promise<ControlPlan | null> {
 }
 
 
-// Helper to remove undefined values from an object, which Firestore doesn't support
+// Helper function to remove undefined values from an object, which Firestore doesn't support
 const removeUndefinedValues = (obj: any): any => {
     if (obj === undefined) {
         return null; // Convert top-level undefined to null
@@ -541,12 +540,22 @@ export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedA
         throw new Error("You must be logged in to report an incident.");
     }
 
-    await addDoc(collection(db, 'incidents'), {
+    const dataToSave = {
         ...incidentData,
         reportedAt: serverTimestamp(),
         reportedBy: {
             uid: user.uid,
             email: user.email,
         },
-    });
+    };
+
+    // Remove empty optional fields so they are not saved in Firestore
+    if (!dataToSave.attachmentUrl) delete (dataToSave as any).attachmentUrl;
+    if (!dataToSave.components || dataToSave.components.length === 0) delete (dataToSave as any).components;
+    if (!dataToSave.affectedUser) delete (dataToSave as any).affectedUser;
+
+
+    await addDoc(collection(db, 'incidents'), dataToSave);
 };
+
+    

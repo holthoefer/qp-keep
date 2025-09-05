@@ -201,10 +201,12 @@ export interface Incident {
   description: string;
   team: IncidentTeam;
   components?: string[];
-  attachments?: string[];
+  attachmentUrl?: string;
   reportedBy: {
     uid: string;
-    email: string;
+    email: string | null;
   };
   affectedUser?: string;
 }
+
+    
