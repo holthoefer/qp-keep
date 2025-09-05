@@ -73,15 +73,14 @@ export default function IncidentsPage() {
     return unsubscribe;
   }, [user, authLoading, router]);
   
-  const handleDelete = async () => {
-    if (!isAdmin || !itemToDelete) return;
+  const handleDelete = async (incidentId: string) => {
+    if (!isAdmin) return;
     try {
-      await deleteIncident(itemToDelete.id);
+      await deleteIncident(incidentId);
       toast({ title: 'Incident gelöscht' });
+      // The onSnapshot listener in getIncidents will update the state automatically
     } catch(e: any) {
       toast({ title: 'Fehler beim Löschen', description: e.message, variant: 'destructive' });
-    } finally {
-      setItemToDelete(null);
     }
   };
 
@@ -180,20 +179,6 @@ export default function IncidentsPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-           <AlertDialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Sind Sie sicher?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Dieser Vorgang kann nicht rückgängig gemacht werden. Der Incident "{itemToDelete?.title}" wird dauerhaft gelöscht.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setItemToDelete(null)}>Abbrechen</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>Löschen</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
           <div className="rounded-lg border">
             <Table>
               <TableHeader>
@@ -236,11 +221,25 @@ export default function IncidentsPage() {
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => setItemToDelete(item)}>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon">
                                 <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                           </AlertDialogTrigger>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Sind Sie sicher?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Dieser Vorgang kann nicht rückgängig gemacht werden. Der Incident "{item.title}" wird dauerhaft gelöscht.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(item.id)}>Löschen</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                           </AlertDialog>
                         </TableCell>
                       )}
                     </TableRow>
