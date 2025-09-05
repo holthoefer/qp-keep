@@ -534,31 +534,61 @@ export const getSamplesForDna = async (dnaId: string, count?: number): Promise<S
 
 
 // Incident Management
-export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedBy' | 'reportedAt'>) => {
+export const getIncidents = (
+  onSuccess: (incidents: Incident[]) => void,
+  onError: (error: Error) => void
+) => {
+  const q = query(collection(db, 'incidents'), orderBy('reportedAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const incidents: Incident[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Incident));
+    onSuccess(incidents);
+  }, onError);
+};
+
+export const getIncident = async (id: string): Promise<Incident | null> => {
+    const docRef = doc(db, 'incidents', id);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Incident : null;
+};
+
+
+export const addIncident = async (incidentData: Omit<Incident, 'id' | 'reportedBy' | 'reportedAt'>, id?: string) => {
     const user = auth.currentUser;
     if (!user) {
         throw new Error("You must be logged in to report an incident.");
     }
 
-    const dataToSave = {
+    const dataToSave: any = {
         ...incidentData,
-        reportedAt: serverTimestamp(),
         reportedBy: {
             uid: user.uid,
             email: user.email,
         },
     };
+    
+    if (!id) {
+        // This is a new incident
+        dataToSave.reportedAt = serverTimestamp();
+    }
 
     // Remove empty optional fields so they are not saved in Firestore
-    if (!dataToSave.attachmentUrl) delete (dataToSave as any).attachmentUrl;
-    if (!dataToSave.components || dataToSave.components.length === 0) delete (dataToSave as any).components;
-    if (!dataToSave.affectedUser) delete (dataToSave as any).affectedUser;
-    if (!dataToSave.po) delete (dataToSave as any).po;
-    if (!dataToSave.op) delete (dataToSave as any).op;
-    if (!dataToSave.lot) delete (dataToSave as any).lot;
+    if (!dataToSave.attachmentUrl) delete dataToSave.attachmentUrl;
+    if (!dataToSave.components || dataToSave.components.length === 0) delete dataToSave.components;
+    if (!dataToSave.affectedUser) delete dataToSave.affectedUser;
+    if (!dataToSave.po) delete dataToSave.po;
+    if (!dataToSave.op) delete dataToSave.op;
+    if (!dataToSave.lot) delete dataToSave.lot;
+    
+    const docId = id || `${incidentData.workplace}_${Date.now()}`;
+    const docRef = doc(db, 'incidents', docId);
 
-    const incidentId = `${incidentData.workplace}_${Date.now()}`;
-    const docRef = doc(db, 'incidents', incidentId);
+    if (id) {
+        await updateDoc(docRef, dataToSave);
+    } else {
+        await setDoc(docRef, dataToSave);
+    }
+};
 
-    await setDoc(docRef, dataToSave);
+export const deleteIncident = async (id: string) => {
+    await deleteDoc(doc(db, 'incidents', id));
 };

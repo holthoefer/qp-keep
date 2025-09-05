@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -274,6 +273,10 @@ export default function LenkungsplanPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 WP
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
+                <Siren className="mr-2 h-4 w-4" />
+                Status-Liste
             </Button>
              <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
                 <BrainCircuit className="mr-2 h-4 w-4" />

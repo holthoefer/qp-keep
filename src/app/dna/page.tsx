@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { DNA, Workstation, ControlPlan, ProcessStep } from '@/types';
 import { getDnaData, getWorkstations, getControlPlans } from '@/lib/data';
 import { getDb } from '@/lib/firebase';
-import { Search, ImageIcon, Clock, ArrowLeft, Loader2, Book, Shield, Target, LogOut, BrainCircuit, FolderKanban, LayoutGrid, FileImage } from 'lucide-react';
+import { Search, ImageIcon, Clock, ArrowLeft, Loader2, Book, Shield, Target, LogOut, BrainCircuit, FolderKanban, LayoutGrid, FileImage, Siren } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -263,6 +263,10 @@ export default function DnaPage() {
             <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                 <LayoutGrid className="mr-2 h-4 w-4" />
                 WP
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
+                <Siren className="mr-2 h-4 w-4" />
+                Status-Liste
             </Button>
             <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
                 <FolderKanban className="mr-2 h-4 w-4" />

@@ -6,7 +6,7 @@ import { WorkstationGrid } from "@/components/workstations/WorkstationGrid";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
-import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit, FileImage } from "lucide-react";
+import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, BrainCircuit, FileImage, Siren } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +39,10 @@ export default function ArbeitsplaetzePage() {
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
                         Notizen
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
+                        <Siren className="mr-2 h-4 w-4" />
+                        Status-Liste
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
                         <BrainCircuit className="mr-2 h-4 w-4" />
