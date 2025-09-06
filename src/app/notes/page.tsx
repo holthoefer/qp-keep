@@ -133,7 +133,7 @@ export default function NotesPage() {
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
           <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
-          <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
+          <h1 className="font-headline text-xl font-bold tracking-tighter text-foreground">
             qp Loop
           </h1>
         </div>
@@ -259,7 +259,7 @@ export default function NotesPage() {
         <div className="mx-auto w-full max-w-3xl">
           <Card>
             <CardHeader>
-              <CardTitle className="font-headline">Neue Notiz erstellen</CardTitle>
+              <CardTitle className="text-xl font-headline">Neue Notiz erstellen</CardTitle>
             </CardHeader>
             <CardContent>
               {profile?.status === 'inactive' ? (
@@ -299,7 +299,7 @@ export default function NotesPage() {
         </div>
 
         <div className="mx-auto w-full max-w-3xl">
-          <h2 className="mb-4 font-headline text-2xl font-semibold">
+          <h2 className="mb-4 font-headline text-xl font-semibold">
             {isAdmin ? 'Alle Notizen' : 'Meine Notizen'}
           </h2>
            {error && (
@@ -320,7 +320,7 @@ export default function NotesPage() {
                   <CardHeader>
                     <div className="flex justify-between items-start">
                         <div>
-                            <CardTitle>{note.title}</CardTitle>
+                            <CardTitle className="text-xl">{note.title}</CardTitle>
                              <div className="text-xs text-muted-foreground pt-1 flex flex-col sm:flex-row sm:items-center sm:gap-2">
                                 <span>{note.createdAt?.toDate().toLocaleString('de-DE')}</span>
                                 {isAdmin && note.userId !== user.uid && (
