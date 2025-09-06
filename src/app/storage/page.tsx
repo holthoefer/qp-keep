@@ -52,7 +52,7 @@ export default function StorageViewerPage() {
       setVisibleFiles(filesFromDb.slice(0, PAGE_SIZE));
       setPage(1);
       setError(null);
-    } catch (err: any) => {
+    } catch (err: any) {
       console.error(err);
       setError(`Fehler beim Laden der Dateien: ${err.message}`);
       toast({
@@ -307,5 +307,3 @@ export default function StorageViewerPage() {
     </>
   );
 }
-
-```
