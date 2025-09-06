@@ -16,15 +16,16 @@ export default function AdminLayout({
   const { user, roles, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  if (authLoading) {
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/');
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading || !user) {
     return <LoadingScreen />;
   }
-
-  if (!user) {
-    router.replace('/');
-    return <LoadingScreen />;
-  }
-
+  
   const isAuthorized = roles.includes('admin');
 
   if (!isAuthorized) {
