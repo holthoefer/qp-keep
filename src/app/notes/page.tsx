@@ -166,12 +166,6 @@ export default function NotesPage() {
                     <Book className="mr-2 h-4 w-4" />
                     LP
                 </Button>
-                 {isAdmin && (
-                    <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-                        <FileImage className="mr-2 h-4 w-4" />
-                        Storage
-                    </Button>
-                )}
                 {isAdmin && (
                     <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                         <Shield className="mr-2 h-4 w-4" />
@@ -215,12 +209,6 @@ export default function NotesPage() {
                         <span>LP</span>
                     </DropdownMenuItem>
                      {isAdmin && <DropdownMenuSeparator />}
-                    {isAdmin && (
-                        <DropdownMenuItem onClick={() => router.push('/storage')}>
-                            <FileImage className="mr-2 h-4 w-4" />
-                            <span>Storage</span>
-                        </DropdownMenuItem>
-                    )}
                     {isAdmin && (
                         <DropdownMenuItem onClick={() => router.push('/admin/users')}>
                             <Shield className="mr-2 h-4 w-4" />

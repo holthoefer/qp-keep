@@ -6,7 +6,7 @@ import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Loader2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, RefreshCw } from 'lucide-react';
+import { Loader2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, RefreshCw, MoreVertical, Wrench, StickyNote, Siren } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -25,13 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { listStorageFiles, type StorageFile } from '@/lib/data';
 import { AlertTriangle } from 'lucide-react';
@@ -39,33 +32,26 @@ import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import logo from '../Logo.png';
 
+const PAGE_SIZE = 25;
+
 export default function StorageViewerPage() {
   const { user, loading: authLoading, logout, isAdmin } = useAuth();
   const router = useRouter();
-  const [files, setFiles] = React.useState<StorageFile[]>([]);
+  const [allFiles, setAllFiles] = React.useState<StorageFile[]>([]);
+  const [visibleFiles, setVisibleFiles] = React.useState<StorageFile[]>([]);
   const [loadingFiles, setLoadingFiles] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [directories, setDirectories] = React.useState<string[]>(['Alle']);
-  const [selectedDirectory, setSelectedDirectory] = React.useState('Alle');
+  const [page, setPage] = React.useState(1);
   const { toast } = useToast();
 
   const fetchData = React.useCallback(async () => {
     setLoadingFiles(true);
     try {
-      const allFiles = await listStorageFiles('uploads/');
-      allFiles.sort((a, b) => a.name.localeCompare(b.name));
-      setFiles(allFiles);
-
-      // Extract unique directories
-      const dirs = new Set<string>(['Alle']);
-      allFiles.forEach(file => {
-          const pathParts = file.name.split('/');
-          if (pathParts.length > 1) {
-              dirs.add(pathParts.slice(0, -1).join('/'));
-          }
-      });
-      setDirectories(Array.from(dirs));
-
+      const filesFromDb = await listStorageFiles('uploads/');
+      filesFromDb.sort((a, b) => a.name.localeCompare(b.name));
+      setAllFiles(filesFromDb);
+      setVisibleFiles(filesFromDb.slice(0, PAGE_SIZE));
+      setPage(1);
       setError(null);
     } catch (err: any) {
       console.error(err);
@@ -83,27 +69,20 @@ export default function StorageViewerPage() {
   React.useEffect(() => {
     fetchData();
   }, [fetchData]);
+  
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    const newVisibleFiles = allFiles.slice(0, nextPage * PAGE_SIZE);
+    setVisibleFiles(newVisibleFiles);
+    setPage(nextPage);
+  }
 
   const handleLogout = async () => {
     await logout();
     router.push('/');
   };
-  
-  const getDirectory = (filePath: string) => {
-    const pathParts = filePath.split('/');
-    if (pathParts.length > 1) {
-      return pathParts.slice(0, -1).join('/');
-    }
-    return '/'; // Use a single slash for root
-  }
 
-  const filteredFiles = React.useMemo(() => {
-    if (selectedDirectory === 'Alle') {
-        return files;
-    }
-    return files.filter(file => file.name.startsWith(selectedDirectory + '/'));
-  }, [files, selectedDirectory]);
-
+  const hasMoreFiles = visibleFiles.length < allFiles.length;
 
   if (authLoading) {
     return null; // AuthProvider shows loading screen
@@ -113,41 +92,100 @@ export default function StorageViewerPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
-          <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
-            Storage Viewer
+          <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
+          <h1 className="font-headline text-xl font-bold tracking-tighter text-foreground">
+            qp
           </h1>
+            {/* Desktop View: Full Buttons */}
+            <div className="hidden md:flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="mr-2 h-4 w-4" />
+                    WP
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                    <Network className="mr-2 h-4 w-4" />
+                    DNA
+                </Button>
+                 <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
+                    <FolderKanban className="mr-2 h-4 w-4" />
+                    PO
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                    <StickyNote className="mr-2 h-4 w-4" />
+                    Notiz
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
+                    <Wrench className="mr-2 h-4 w-4" />
+                    Events
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
+                    <Siren className="mr-2 h-4 w-4" />
+                    Incidents
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
+                    <Target className="mr-2 h-4 w-4" />
+                    CP
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                    <Book className="mr-2 h-4 w-4" />
+                    LP
+                </Button>
+                {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin
+                    </Button>
+                )}
+            </div>
+             {/* Mobile View: Icons and Dropdown */}
+            <div className="md:hidden flex items-center gap-1">
+                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
+                    <Network className="h-4 w-4" />
+                </Button>
+                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
+                    <FolderKanban className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
+                    <StickyNote className="h-4 w-4" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                     <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                     <DropdownMenuItem onClick={() => router.push('/events')}>
+                        <Wrench className="mr-2 h-4 w-4" />
+                        <span>Events</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/incidents')}>
+                        <Siren className="mr-2 h-4 w-4" />
+                        <span>Incidents</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/cp')}>
+                        <Target className="mr-2 h-4 w-4" />
+                        <span>CP</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
+                        <Book className="mr-2 h-4 w-4" />
+                        <span>LP</span>
+                    </DropdownMenuItem>
+                     {isAdmin && <DropdownMenuSeparator />}
+                    {isAdmin && (
+                        <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                            <Shield className="mr-2 h-4 w-4" />
+                            <span>Admin</span>
+                        </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
-                Notizen
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                WP
-            </Button>
-             <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                <Network className="mr-2 h-4 w-4" />
-                DNA
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
-                <FolderKanban className="mr-2 h-4 w-4" />
-                PO
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
-                <Target className="mr-2 h-4 w-4" />
-                CP
-            </Button>
-             <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                <Book className="mr-2 h-4 w-4" />
-                LP
-            </Button>
-            {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin
-                </Button>
-            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">
@@ -177,16 +215,6 @@ export default function StorageViewerPage() {
                         <CardDescription>Übersicht aller Originalbilder und der generierten Thumbnails.</CardDescription>
                     </div>
                      <div className="flex items-center gap-2">
-                        <Select value={selectedDirectory} onValueChange={setSelectedDirectory}>
-                            <SelectTrigger className="w-[280px]">
-                                <SelectValue placeholder="Verzeichnis auswählen" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {directories.map(dir => (
-                                    <SelectItem key={dir} value={dir}>{dir}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
                         <Button variant="outline" size="sm" onClick={fetchData}>
                             <RefreshCw className="mr-2 h-4 w-4" />
                             Neu laden
@@ -209,25 +237,24 @@ export default function StorageViewerPage() {
                             <TableHead>Thumbnail</TableHead>
                             <TableHead>Thumbnail URL</TableHead>
                             <TableHead>Original URL</TableHead>
-                            <TableHead>Verzeichnis</TableHead>
                             <TableHead>Dateiname</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loadingFiles ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
+                                    <TableCell colSpan={4} className="h-24 text-center">
                                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                                     </TableCell>
                                 </TableRow>
-                            ) : filteredFiles.length === 0 ? (
+                            ) : visibleFiles.length === 0 ? (
                                  <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                        Keine Dateien im Verzeichnis '{selectedDirectory}' gefunden.
+                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                        Keine Dateien gefunden.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredFiles.map((file) => (
+                                visibleFiles.map((file) => (
                                     <TableRow key={file.url}>
                                         <TableCell>
                                             {file.thumbnailUrl ? (
@@ -238,7 +265,6 @@ export default function StorageViewerPage() {
                                         </TableCell>
                                         <TableCell className="text-xs text-muted-foreground break-all max-w-xs font-mono">{file.thumbnailUrl || 'N/A'}</TableCell>
                                         <TableCell className="text-xs text-muted-foreground break-all max-w-xs font-mono">{file.url}</TableCell>
-                                        <TableCell className="font-medium text-xs">{getDirectory(file.name)}</TableCell>
                                         <TableCell className="font-medium text-xs">{file.name.split('/').pop()}</TableCell>
                                     </TableRow>
                                 ))
@@ -246,6 +272,13 @@ export default function StorageViewerPage() {
                         </TableBody>
                     </Table>
                 </div>
+                {hasMoreFiles && (
+                    <div className="pt-4 text-center">
+                        <Button onClick={handleLoadMore} variant="secondary">
+                            Mehr laden
+                        </Button>
+                    </div>
+                )}
             </CardContent>
         </Card>
       </main>

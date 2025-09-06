@@ -935,7 +935,7 @@ export default function ControlPlansPage() {
        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
           <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
-          <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
+          <h1 className="font-headline text-xl font-bold tracking-tighter text-foreground">
             qp
           </h1>
              <div className="hidden md:flex items-center gap-2">
@@ -967,12 +967,6 @@ export default function ControlPlansPage() {
                     <Book className="mr-2 h-4 w-4" />
                     LP
                 </Button>
-                {isAdmin && (
-                    <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-                    <FileImage className="mr-2 h-4 w-4" />
-                    Storage
-                    </Button>
-                )}
                 {isAdmin && (
                     <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                         <Shield className="mr-2 h-4 w-4" />
