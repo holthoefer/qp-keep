@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Wrench, Siren, StickyNote } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Wrench, Siren, StickyNote, ArrowLeft } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -264,7 +264,7 @@ export default function LenkungsplanPage() {
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
           <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
-          <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
+          <h1 className="font-headline text-xl font-bold tracking-tighter text-foreground">
             qp
           </h1>
             <div className="hidden md:flex items-center gap-2">
@@ -334,7 +334,12 @@ export default function LenkungsplanPage() {
       <main className="flex-1 p-4 md:p-6">
         <div className="mx-auto w-full max-w-6xl">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-headline text-2xl font-semibold">Pläne</h2>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={() => router.push('/notes')} className="h-8 w-8">
+                    <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <h2 className="font-headline text-2xl font-semibold">Pläne</h2>
+            </div>
             <div className="flex items-center gap-2">
                 {isAdmin && (
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
