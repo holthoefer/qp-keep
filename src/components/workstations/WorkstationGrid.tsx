@@ -44,62 +44,56 @@ import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { generateThumbnailUrl } from '@/lib/image-utils';
 
-const NextCheckBadge = ({ dnaForWorkstation }: { dnaForWorkstation: DNA[] }) => {
-  const [nextDueDna, setNextDueDna] = React.useState<{ dna: DNA; remainingMinutes: number } | null>(null);
+const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: () => void }) => {
+  const [remainingMinutes, setRemainingMinutes] = React.useState<number | null>(null);
 
   React.useEffect(() => {
-    if (dnaForWorkstation.length === 0) {
-      setNextDueDna(null);
+    if (!dna.lastCheckTimestamp || !dna.Frequency) {
+      setRemainingMinutes(null);
       return;
     }
 
-    const now = new Date().getTime();
-    let mostUrgent: { dna: DNA; remainingMinutes: number } | null = null;
+    const calculateRemainingTime = () => {
+        const lastCheckTime = new Date(dna.lastCheckTimestamp!).getTime();
+        const dueTime = lastCheckTime + dna.Frequency! * 60 * 1000;
+        const now = new Date().getTime();
+        const remaining = Math.floor((dueTime - now) / (1000 * 60));
+        setRemainingMinutes(remaining);
+    };
 
-    dnaForWorkstation.forEach(dna => {
-      if (dna.lastCheckTimestamp && dna.Frequency) {
-        const lastCheckTime = new Date(dna.lastCheckTimestamp).getTime();
-        const dueTime = lastCheckTime + dna.Frequency * 60 * 1000;
-        const remainingMinutes = Math.floor((dueTime - now) / (1000 * 60));
-        
-        if (mostUrgent === null || remainingMinutes < mostUrgent.remainingMinutes) {
-          mostUrgent = { dna, remainingMinutes };
-        }
-      }
-    });
-
-    setNextDueDna(mostUrgent);
-  }, [dnaForWorkstation]);
+    calculateRemainingTime();
+    const interval = setInterval(calculateRemainingTime, 60000);
+    return () => clearInterval(interval);
+  }, [dna.lastCheckTimestamp, dna.Frequency]);
 
 
-  if (!nextDueDna) {
+  if (remainingMinutes === null) {
     return null;
   }
 
-  const { dna, remainingMinutes } = nextDueDna;
   const isOverdue = remainingMinutes < 0;
   
   let badgeVariant: "destructive" | "secondary" | "default" = "default";
   
   if (isOverdue) {
     badgeVariant = "destructive";
-  } else if (dna.Frequency) {
+  } else if (dna.Frequency && dna.lastCheckTimestamp) {
     const totalInterval = dna.Frequency;
-    const timeElapsed = (new Date().getTime() - new Date(dna.lastCheckTimestamp!).getTime()) / (1000 * 60);
-    if (timeElapsed / totalInterval > 0.8) {
-        badgeVariant = "secondary"; // Yellow-ish
+    const timeElapsed = (new Date().getTime() - new Date(dna.lastCheckTimestamp).getTime()) / (1000 * 60);
+    if ((totalInterval - timeElapsed) / totalInterval < 0.2) {
+        badgeVariant = "secondary"; // Yellow-ish for last 20% of time
     }
   }
 
   return (
-      <div className="flex items-center gap-2">
-        <Badge variant={badgeVariant} className={cn(badgeVariant === 'secondary' && 'bg-amber-400/80 text-black')}>
+      <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>
+        <Badge variant={badgeVariant} className={cn("cursor-pointer", badgeVariant === 'secondary' && 'bg-amber-400/80 text-black hover:bg-amber-400/70')}>
           <Clock className="mr-1.5 h-3.5 w-3.5" />
           <span>
               M#{dna.Char}: {isOverdue ? `${Math.abs(remainingMinutes)}m überfällig` : `${remainingMinutes}m übrig`}
           </span>
         </Badge>
-    </div>
+      </Button>
   );
 };
 
@@ -262,6 +256,12 @@ export function WorkstationGrid() {
     }
   };
 
+  const getErfassungUrl = (dna: DNA) => {
+      if (!dna.WP || !dna.PO || !dna.OP || !dna.Char) {
+          return '#';
+      }
+      return `/erfassung?ap=${dna.WP}&po=${dna.PO}&op=${dna.OP}&charNum=${dna.Char}`;
+  }
 
   const handleCardClick = (e: React.MouseEvent<HTMLDivElement>, ap: string) => {
     if ((e.target as HTMLElement).closest('button, a')) {
@@ -350,7 +350,7 @@ export function WorkstationGrid() {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="POcurrent" className="text-right">
-                        POcurrent
+                        PO
                     </Label>
                     <Select name="POcurrent" defaultValue={editingWorkstation?.POcurrent || 'none'} onValueChange={handlePoChange}>
                         <SelectTrigger className="col-span-3">
@@ -368,7 +368,7 @@ export function WorkstationGrid() {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="CPcurrent" className="text-right">
-                        CPcurrent
+                        CP
                     </Label>
                     <Input
                         id="CPcurrent"
@@ -380,7 +380,7 @@ export function WorkstationGrid() {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="OPcurrent" className="text-right">
-                        OPcurrent
+                        OP
                     </Label>
                     <Select name="OPcurrent" defaultValue={editingWorkstation?.OPcurrent || 'none'} key={selectedControlPlan?.id || 'none'}>
                         <SelectTrigger className="col-span-3">
@@ -398,7 +398,7 @@ export function WorkstationGrid() {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="LOTcurrent" className="text-right">
-                    LOTcurrent
+                    LOT
                 </Label>
                 <Input
                     id="LOTcurrent"
@@ -474,6 +474,25 @@ export function WorkstationGrid() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {workstations.map((ws) => {
                   const dnaForWorkstation = allDna.filter(d => d.WP === ws.AP && d.PO === ws.POcurrent && d.OP === ws.OPcurrent);
+                  
+                  const exceptionDnas = dnaForWorkstation.filter(dna => dna.checkStatus && dna.checkStatus !== 'OK');
+
+                  let nextDueDna: DNA | null = null;
+                  let shortestTime = Infinity;
+
+                  dnaForWorkstation.forEach(dna => {
+                    if (dna.lastCheckTimestamp && dna.Frequency) {
+                      const lastCheckTime = new Date(dna.lastCheckTimestamp).getTime();
+                      const dueTime = lastCheckTime + dna.Frequency * 60 * 1000;
+                      const now = new Date().getTime();
+                      const remainingMinutes = dueTime - now;
+                      if (remainingMinutes < shortestTime) {
+                        shortestTime = remainingMinutes;
+                        nextDueDna = dna;
+                      }
+                    }
+                  });
+
                   return (
                   <Card key={ws.AP} className="flex flex-col hover:border-primary transition-colors cursor-pointer" onClick={(e) => handleCardClick(e, ws.AP)}>
                       <CardHeader>
@@ -505,7 +524,7 @@ export function WorkstationGrid() {
                       </CardHeader>
                       <CardContent className="flex-grow">
                           <div className="space-y-2 text-sm">
-                              <NextCheckBadge dnaForWorkstation={dnaForWorkstation} />
+                              {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={() => router.push(getErfassungUrl(nextDueDna!))} />}
                               <div className="flex items-center gap-2">
                                   <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">PO</Badge>
                                   <span className="text-left">{ws.POcurrent || 'N/A'}</span>
@@ -519,6 +538,24 @@ export function WorkstationGrid() {
                                   <span className="text-left">{ws.LOTcurrent || 'N/A'}</span>
                               </div>
                                {ws.Bemerkung && <p className="text-xs text-muted-foreground pt-1">{ws.Bemerkung}</p>}
+                               {exceptionDnas.length > 0 && (
+                                   <div className="pt-2 space-y-1">
+                                       {exceptionDnas.map(dna => (
+                                           <Button
+                                                key={dna.idDNA}
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-auto p-0"
+                                                onClick={() => router.push(getErfassungUrl(dna))}
+                                            >
+                                               <Badge variant="destructive" className="cursor-pointer">
+                                                   <AlertTriangle className="mr-1.5 h-3.5 w-3.5" />
+                                                   M#{dna.Char}: {dna.checkStatus}
+                                               </Badge>
+                                           </Button>
+                                       ))}
+                                   </div>
+                               )}
                           </div>
                       </CardContent>
                       <CardFooter className="flex justify-between items-center">
