@@ -37,7 +37,7 @@ export default function HomePage() {
       <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
         <div className="w-full max-w-sm text-center">
             <div className="mb-8 flex flex-col items-center justify-center space-y-4">
-                <Image src={logo} alt="qp Loop Logo" width={64} height={64} className="h-16 w-16 text-primary" />
+                <Image src={logo} alt="qp Loop Logo" width={128} height={128} className="h-32 w-32 text-primary" />
                 <h1 className="font-headline text-3xl font-bold tracking-tighter">
                     qp
                 </h1>
