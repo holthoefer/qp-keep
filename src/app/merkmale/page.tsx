@@ -29,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2, Book, Shield, Target, LogOut, LayoutGrid, FolderKanban, Network, FileImage, StickyNote } from 'lucide-react';
+import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2, Book, Shield, Target, LogOut, LayoutGrid, FolderKanban, Network, FileImage, StickyNote, Wrench, Siren, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { cn } from '@/lib/utils';
@@ -49,6 +49,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import logo from '../Logo.png';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -282,47 +284,100 @@ function MerkmaleCardsPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <KeepKnowLogo className="h-8 w-8 text-primary" />
-          <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
-            Merkmale
+          <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
+          <h1 className="font-headline text-xl font-bold tracking-tighter text-foreground">
+            qp
           </h1>
+            {/* Desktop View: Full Buttons */}
+            <div className="hidden md:flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="mr-2 h-4 w-4" />
+                    WP
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                    <Network className="mr-2 h-4 w-4" />
+                    DNA
+                </Button>
+                 <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
+                    <FolderKanban className="mr-2 h-4 w-4" />
+                    PO
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                    <StickyNote className="mr-2 h-4 w-4" />
+                    Notiz
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
+                    <Wrench className="mr-2 h-4 w-4" />
+                    Events
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
+                    <Siren className="mr-2 h-4 w-4" />
+                    Incidents
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
+                    <Target className="mr-2 h-4 w-4" />
+                    CP
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                    <Book className="mr-2 h-4 w-4" />
+                    LP
+                </Button>
+                {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin
+                    </Button>
+                )}
+            </div>
+             {/* Mobile View: Icons and Dropdown */}
+            <div className="md:hidden flex items-center gap-1">
+                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
+                    <Network className="h-4 w-4" />
+                </Button>
+                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
+                    <FolderKanban className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
+                    <StickyNote className="h-4 w-4" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                     <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                     <DropdownMenuItem onClick={() => router.push('/events')}>
+                        <Wrench className="mr-2 h-4 w-4" />
+                        <span>Events</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/incidents')}>
+                        <Siren className="mr-2 h-4 w-4" />
+                        <span>Incidents</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/cp')}>
+                        <Target className="mr-2 h-4 w-4" />
+                        <span>CP</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
+                        <Book className="mr-2 h-4 w-4" />
+                        <span>LP</span>
+                    </DropdownMenuItem>
+                     {isAdmin && <DropdownMenuSeparator />}
+                    {isAdmin && (
+                        <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                            <Shield className="mr-2 h-4 w-4" />
+                            <span>Admin</span>
+                        </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
-                Notiz
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                WP
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                <Network className="mr-2 h-4 w-4" />
-                DNA
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/PO')}>
-                <FolderKanban className="mr-2 h-4 w-4" />
-                PO
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
-                <Target className="mr-2 h-4 w-4" />
-                CP
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                <Book className="mr-2 h-4 w-4" />
-                LP
-            </Button>
-            {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-                  <FileImage className="mr-2 h-4 w-4" />
-                  Storage
-                </Button>
-            )}
-            {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin
-                </Button>
-            )}
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">
