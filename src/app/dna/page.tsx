@@ -71,6 +71,13 @@ export const DnaTimeTracker = ({ lastTimestamp, frequency, prefix }: { lastTimes
   
   const freq = frequency || 60;
   const isOverdue = remainingMinutes < 0;
+
+  let percentageElapsed = 0;
+  if(lastTimestamp && frequency) {
+    const timeElapsed = (new Date().getTime() - new Date(lastTimestamp).getTime()) / (1000 * 60);
+    percentageElapsed = timeElapsed / frequency;
+  }
+  
   const isWarning = !isOverdue && percentageElapsed >= 0.8;
   
   const badgeVariant = isOverdue ? "destructive" : isWarning ? "secondary" : "default";
