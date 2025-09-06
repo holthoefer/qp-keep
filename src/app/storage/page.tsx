@@ -6,15 +6,7 @@ import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Loader2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, RefreshCw, MoreVertical, Wrench, StickyNote, Siren } from 'lucide-react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Loader2, Shield, Book, Target, LayoutGrid, FolderKanban, Network, LogOut, FileImage, RefreshCw, MoreVertical, Wrench, StickyNote, Siren, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -29,8 +21,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { listStorageFiles, type StorageFile } from '@/lib/data';
 import { AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import logo from '../Logo.png';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ImageModal } from '@/components/cp/ImageModal';
+import { Copy } from 'lucide-react';
 
 const PAGE_SIZE = 25;
 
@@ -43,6 +38,10 @@ export default function StorageViewerPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
   const { toast } = useToast();
+  
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [modalImageUrl, setModalImageUrl] = React.useState('');
+  const [modalImageAlt, setModalImageAlt] = React.useState('');
 
   const fetchData = React.useCallback(async () => {
     setLoadingFiles(true);
@@ -53,7 +52,7 @@ export default function StorageViewerPage() {
       setVisibleFiles(filesFromDb.slice(0, PAGE_SIZE));
       setPage(1);
       setError(null);
-    } catch (err: any) {
+    } catch (err: any) => {
       console.error(err);
       setError(`Fehler beim Laden der Dateien: ${err.message}`);
       toast({
@@ -88,7 +87,25 @@ export default function StorageViewerPage() {
     return null; // AuthProvider shows loading screen
   }
 
+  const handleCopyUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    toast({ title: 'URL kopiert!' });
+  };
+  
+  const handleImageClick = (file: StorageFile) => {
+    setModalImageUrl(file.url);
+    setModalImageAlt(file.name);
+    setIsModalOpen(true);
+  }
+
   return (
+    <>
+    <ImageModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        imageUrl={modalImageUrl}
+        imageAlt={modalImageAlt}
+      />
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
@@ -96,7 +113,6 @@ export default function StorageViewerPage() {
           <h1 className="font-headline text-xl font-bold tracking-tighter text-foreground">
             qp
           </h1>
-            {/* Desktop View: Full Buttons */}
             <div className="hidden md:flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                     <LayoutGrid className="mr-2 h-4 w-4" />
@@ -210,9 +226,14 @@ export default function StorageViewerPage() {
         <Card className="mx-auto w-full max-w-7xl">
             <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <CardTitle>Firebase Storage Dateien</CardTitle>
-                        <CardDescription>Übersicht aller Originalbilder und der generierten Thumbnails.</CardDescription>
+                     <div className="flex items-center gap-2">
+                        <Button variant="outline" size="icon" onClick={() => router.push('/admin/users')} className="h-8 w-8">
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                         <div>
+                            <CardTitle>Firebase Storage Dateien</CardTitle>
+                            <CardDescription>Übersicht aller Originalbilder und der generierten Thumbnails.</CardDescription>
+                        </div>
                     </div>
                      <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={fetchData}>
@@ -230,48 +251,48 @@ export default function StorageViewerPage() {
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
                 )}
-                <div className="rounded-lg border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead>Thumbnail</TableHead>
-                            <TableHead>Thumbnail URL</TableHead>
-                            <TableHead>Original URL</TableHead>
-                            <TableHead>Dateiname</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loadingFiles ? (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center">
-                                        <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-                                    </TableCell>
-                                </TableRow>
-                            ) : visibleFiles.length === 0 ? (
-                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                        Keine Dateien gefunden.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                visibleFiles.map((file) => (
-                                    <TableRow key={file.url}>
-                                        <TableCell>
-                                            {file.thumbnailUrl ? (
-                                                <Image src={file.thumbnailUrl} alt={`Thumbnail für ${file.name}`} width={64} height={64} className="rounded object-cover aspect-square" />
-                                            ) : (
-                                                <div className="w-16 h-16 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">No thumb</div>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="text-xs text-muted-foreground break-all max-w-xs font-mono">{file.thumbnailUrl || 'N/A'}</TableCell>
-                                        <TableCell className="text-xs text-muted-foreground break-all max-w-xs font-mono">{file.url}</TableCell>
-                                        <TableCell className="font-medium text-xs">{file.name.split('/').pop()}</TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {loadingFiles ? (
+                        Array.from({ length: 10 }).map((_, i) => (
+                            <Card key={i}>
+                                <CardContent className="p-0">
+                                    <Skeleton className="w-full h-32 rounded-t-lg" />
+                                </CardContent>
+                                <CardFooter className="p-2 flex-col items-start">
+                                    <Skeleton className="h-4 w-full mt-1" />
+                                </CardFooter>
+                            </Card>
+                        ))
+                    ) : visibleFiles.length === 0 ? (
+                        <div className="col-span-full text-center py-10">
+                            <p className="text-muted-foreground">Keine Dateien gefunden.</p>
+                        </div>
+                    ) : (
+                        visibleFiles.map((file) => (
+                            <Card key={file.url} className="overflow-hidden">
+                                <CardContent className="p-0">
+                                    <button onClick={() => handleImageClick(file)} className="block w-full aspect-square relative bg-muted hover:opacity-80 transition-opacity">
+                                        <Image 
+                                            src={file.thumbnailUrl || file.url} 
+                                            alt={`Thumbnail für ${file.name}`} 
+                                            fill 
+                                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                                            className="object-cover"
+                                        />
+                                    </button>
+                                </CardContent>
+                                <CardFooter className="p-2 flex-col items-start">
+                                    <p className="text-xs font-medium truncate w-full" title={file.name}>
+                                        {file.name.split('/').pop()}
+                                    </p>
+                                    <Button size="xs" variant="ghost" className="h-6 px-1 w-full justify-start text-muted-foreground" onClick={() => handleCopyUrl(file.url)}>
+                                        <Copy className="h-3 w-3 mr-1"/> Original-URL kopieren
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))
+                    )}
+                 </div>
                 {hasMoreFiles && (
                     <div className="pt-4 text-center">
                         <Button onClick={handleLoadMore} variant="secondary">
@@ -283,5 +304,8 @@ export default function StorageViewerPage() {
         </Card>
       </main>
     </div>
+    </>
   );
 }
+
+```
