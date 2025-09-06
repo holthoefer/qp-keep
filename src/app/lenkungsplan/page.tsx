@@ -263,12 +263,10 @@ export default function LenkungsplanPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
+          <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
-            Lenkungsplan
+            qp
           </h1>
-        </div>
-        <div className="flex items-center gap-2">
             <div className="hidden md:flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                     <LayoutGrid className="mr-2 h-4 w-4" />
@@ -311,6 +309,8 @@ export default function LenkungsplanPage() {
                     </Button>
                 )}
             </div>
+        </div>
+        <div className="flex items-center gap-2">
           <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">

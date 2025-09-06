@@ -198,52 +198,54 @@ export default function AuftraegePage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <Image src={logo} alt="qp Loop Logo" width={32} height={32} className="h-8 w-8" />
+          <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
-            Aufträge (Legacy)
+            qp
           </h1>
+            <div className="hidden md:flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="mr-2 h-4 w-4" />
+                    WP
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
+                    <Network className="mr-2 h-4 w-4" />
+                    DNA
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
+                    <StickyNote className="mr-2 h-4 w-4" />
+                    Notiz
+                </Button>
+                 <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
+                    <Wrench className="mr-2 h-4 w-4" />
+                    Events
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
+                    <Siren className="mr-2 h-4 w-4" />
+                    Incidents
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
+                    <Target className="mr-2 h-4 w-4" />
+                    CP
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                    <Book className="mr-2 h-4 w-4" />
+                    LP
+                </Button>
+                {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+                      <FileImage className="mr-2 h-4 w-4" />
+                      Storage
+                    </Button>
+                )}
+                {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin
+                    </Button>
+                )}
+            </div>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                WP
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/dna')}>
-                <Network className="mr-2 h-4 w-4" />
-                DNA
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/notes')}>
-                <StickyNote className="mr-2 h-4 w-4" />
-                Notiz
-            </Button>
-             <Button variant="outline" size="sm" onClick={() => router.push('/events')}>
-                <Wrench className="mr-2 h-4 w-4" />
-                Events
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/incidents')}>
-                <Siren className="mr-2 h-4 w-4" />
-                Incidents
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
-                <Target className="mr-2 h-4 w-4" />
-                CP
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                <Book className="mr-2 h-4 w-4" />
-                LP
-            </Button>
-            {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-                  <FileImage className="mr-2 h-4 w-4" />
-                  Storage
-                </Button>
-            )}
-            {isAdmin && (
-                <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin
-                </Button>
-            )}
           <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">
