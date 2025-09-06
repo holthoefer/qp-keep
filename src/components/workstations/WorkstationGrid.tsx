@@ -395,7 +395,7 @@ export function WorkstationGrid() {
         </CardHeader>
         <CardContent className="bg-muted/30 p-2 rounded-lg">
           {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {Array.from({ length: 3 }).map((_, i) => (
                       <Card key={i}>
                           <CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader>
@@ -408,7 +408,7 @@ export function WorkstationGrid() {
                   ))}
               </div>
           ) : workstations.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {workstations.map((ws) => (
                   <Card key={ws.AP} className="flex flex-col hover:border-primary transition-colors cursor-pointer" onClick={(e) => handleCardClick(e, ws.AP)}>
                       <CardHeader>
