@@ -44,10 +44,71 @@ import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { generateThumbnailUrl } from '@/lib/image-utils';
 
+const NextCheckBadge = ({ dnaForWorkstation }: { dnaForWorkstation: DNA[] }) => {
+  const [nextDueDna, setNextDueDna] = React.useState<{ dna: DNA; remainingMinutes: number } | null>(null);
+
+  React.useEffect(() => {
+    if (dnaForWorkstation.length === 0) {
+      setNextDueDna(null);
+      return;
+    }
+
+    const now = new Date().getTime();
+    let mostUrgent: { dna: DNA; remainingMinutes: number } | null = null;
+
+    dnaForWorkstation.forEach(dna => {
+      if (dna.lastCheckTimestamp && dna.Frequency) {
+        const lastCheckTime = new Date(dna.lastCheckTimestamp).getTime();
+        const dueTime = lastCheckTime + dna.Frequency * 60 * 1000;
+        const remainingMinutes = Math.floor((dueTime - now) / (1000 * 60));
+        
+        if (mostUrgent === null || remainingMinutes < mostUrgent.remainingMinutes) {
+          mostUrgent = { dna, remainingMinutes };
+        }
+      }
+    });
+
+    setNextDueDna(mostUrgent);
+  }, [dnaForWorkstation]);
+
+
+  if (!nextDueDna) {
+    return null;
+  }
+
+  const { dna, remainingMinutes } = nextDueDna;
+  const isOverdue = remainingMinutes < 0;
+  
+  let badgeVariant: "destructive" | "secondary" | "default" = "default";
+  
+  if (isOverdue) {
+    badgeVariant = "destructive";
+  } else if (dna.Frequency) {
+    const totalInterval = dna.Frequency;
+    const timeElapsed = (new Date().getTime() - new Date(dna.lastCheckTimestamp!).getTime()) / (1000 * 60);
+    if (timeElapsed / totalInterval > 0.8) {
+        badgeVariant = "secondary"; // Yellow-ish
+    }
+  }
+
+  return (
+      <div className="flex items-center gap-2">
+        <Badge variant={badgeVariant} className={cn(badgeVariant === 'secondary' && 'bg-amber-400/80 text-black')}>
+          <Clock className="mr-1.5 h-3.5 w-3.5" />
+          <span>
+              M#{dna.Char}: {isOverdue ? `${Math.abs(remainingMinutes)}m überfällig` : `${remainingMinutes}m übrig`}
+          </span>
+        </Badge>
+    </div>
+  );
+};
+
+
 export function WorkstationGrid() {
   const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
   const [auftraege, setAuftraege] = React.useState<Auftrag[]>([]);
   const [controlPlans, setControlPlans] = React.useState<ControlPlan[]>([]);
+  const [allDna, setAllDna] = React.useState<DNA[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [editingWorkstation, setEditingWorkstation] =
     React.useState<Workstation | null>(null);
@@ -68,14 +129,16 @@ export function WorkstationGrid() {
   const fetchData = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const [workstationsData, auftraegeData, controlPlansData] = await Promise.all([
+      const [workstationsData, auftraegeData, controlPlansData, dnaData] = await Promise.all([
         getWorkstations(),
         getAuftraege(),
         getControlPlans(),
+        getDnaData(),
       ]);
       setWorkstations(workstationsData);
       setAuftraege(auftraegeData);
       setControlPlans(controlPlansData);
+      setAllDna(dnaData);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -395,7 +458,7 @@ export function WorkstationGrid() {
         </CardHeader>
         <CardContent className="bg-muted/30 p-2 rounded-lg">
           {isLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {Array.from({ length: 3 }).map((_, i) => (
                       <Card key={i}>
                           <CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader>
@@ -408,8 +471,10 @@ export function WorkstationGrid() {
                   ))}
               </div>
           ) : workstations.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {workstations.map((ws) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {workstations.map((ws) => {
+                  const dnaForWorkstation = allDna.filter(d => d.WP === ws.AP && d.PO === ws.POcurrent && d.OP === ws.OPcurrent);
+                  return (
                   <Card key={ws.AP} className="flex flex-col hover:border-primary transition-colors cursor-pointer" onClick={(e) => handleCardClick(e, ws.AP)}>
                       <CardHeader>
                         <div className="flex items-start justify-between gap-4">
@@ -440,16 +505,17 @@ export function WorkstationGrid() {
                       </CardHeader>
                       <CardContent className="flex-grow">
                           <div className="space-y-2 text-sm">
+                              <NextCheckBadge dnaForWorkstation={dnaForWorkstation} />
                               <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">Auftrag</Badge>
+                                  <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">PO</Badge>
                                   <span className="text-left">{ws.POcurrent || 'N/A'}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">Prozess</Badge>
+                                  <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">OP</Badge>
                                   <span className="text-left">{ws.OPcurrent || 'N/A'}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">Charge</Badge>
+                                  <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">LOT</Badge>
                                   <span className="text-left">{ws.LOTcurrent || 'N/A'}</span>
                               </div>
                                {ws.Bemerkung && <p className="text-xs text-muted-foreground pt-1">{ws.Bemerkung}</p>}
@@ -492,7 +558,7 @@ export function WorkstationGrid() {
                           </DropdownMenu>
                       </CardFooter>
                   </Card>
-              ))}
+              )})}
             </div>
           ) : (
               <div className="text-center py-10 text-gray-500">
