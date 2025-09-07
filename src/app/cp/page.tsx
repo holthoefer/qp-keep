@@ -992,9 +992,6 @@ export default function ControlPlansPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
                     <Siren className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
-                    <Target className="h-4 w-4" />
-                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                      <Button variant="ghost" size="icon" className="h-8 w-8">

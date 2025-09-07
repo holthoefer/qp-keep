@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -256,6 +255,9 @@ export default function POPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
                     <Siren className="h-4 w-4" />
                 </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
+                    <Target className="h-4 w-4" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                      <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -263,10 +265,6 @@ export default function POPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => router.push('/cp')}>
-                        <Target className="mr-2 h-4 w-4" />
-                        <span>CP</span>
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
                         <Book className="mr-2 h-4 w-4" />
                         <span>LP</span>
@@ -295,7 +293,7 @@ export default function POPage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>{auth.user?.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem onClick={auth.logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Ausloggen</span>
                 </DropdownMenuItem>

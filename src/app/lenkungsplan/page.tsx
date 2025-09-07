@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Wrench, Siren, StickyNote, ArrowLeft } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Wrench, Siren, StickyNote, ArrowLeft, MoreVertical } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -302,6 +302,45 @@ export default function LenkungsplanPage() {
                         Admin
                     </Button>
                 )}
+            </div>
+            {/* Mobile View: Icons and Dropdown */}
+            <div className="md:hidden flex items-center gap-1">
+                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
+                    <Network className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
+                    <FolderKanban className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
+                    <StickyNote className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
+                    <Wrench className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
+                    <Siren className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
+                    <Target className="h-4 w-4" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                     <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                     {isAdmin && (
+                        <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                            <Shield className="mr-2 h-4 w-4" />
+                            <span>Admin</span>
+                        </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
         <div className="flex items-center gap-2">
