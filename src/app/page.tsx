@@ -31,10 +31,10 @@ export default function HomePage() {
   // State 2: User is logged in
   if (user) {
     return (
-      <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
+      <main className="flex min-h-screen w-full flex-col items-center justify-start md:justify-center bg-background p-4 pt-8 md:pt-4">
         <div className="w-full max-w-md text-center">
             <div className="mb-4">
-               <a href="https://www.quapilot.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+               <a href="https://www.quapilot.com" target="_blank" rel="noopener noreferrer" className="text-lg text-muted-foreground hover:text-primary transition-colors">
                  www.quapilot.com
                </a>
             </div>
@@ -64,7 +64,7 @@ export default function HomePage() {
                         <Network className="mr-2 h-4 w-4" />
                         DNA (Aktive Merkmale)
                     </Button>
-                    <Button 
+                     <Button 
                         onClick={() => router.push('/events')} 
                         className="w-full"
                         disabled={profile?.status === 'inactive'}
@@ -89,20 +89,20 @@ export default function HomePage() {
                         Control Plan {profile && !isAdmin && "(read)"}
                     </Button>
                      <Button 
-                        onClick={() => router.push('/lenkungsplan')} 
-                        className="w-full"
-                        disabled={profile?.status === 'inactive'}
-                    >
-                        <Book className="mr-2 h-4 w-4" />
-                        Plan-Ideen
-                    </Button>
-                     <Button 
                         onClick={() => router.push('/notes')} 
                         className="w-full"
                         disabled={profile?.status === 'inactive'}
                     >
                         <StickyNote className="mr-2 h-4 w-4" />
                         Zur Notizenseite
+                    </Button>
+                     <Button 
+                        onClick={() => router.push('/lenkungsplan')} 
+                        className="w-full"
+                        disabled={profile?.status === 'inactive'}
+                    >
+                        <Book className="mr-2 h-4 w-4" />
+                        Plan-Ideen
                     </Button>
                      {isAdmin && (
                         <Button 
