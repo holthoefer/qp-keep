@@ -47,9 +47,16 @@ export default function HomePage() {
             <div className="space-y-4">
                 <p className="font-medium">{user.email}</p>
                 <Button 
-                onClick={goToNotes} 
-                className="w-full"
-                disabled={profile?.status === 'inactive'}
+                    onClick={() => router.push('/arbeitsplaetze')} 
+                    className="w-full"
+                    disabled={profile?.status === 'inactive'}
+                >
+                    Zu den Arbeitsplätzen
+                </Button>
+                <Button 
+                    onClick={goToNotes} 
+                    className="w-full"
+                    disabled={profile?.status === 'inactive'}
                 >
                     Zur Notizenseite
                 </Button>
