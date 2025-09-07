@@ -26,7 +26,7 @@ export default function QPInfoPage() {
                 www.quapilot.com
             </a>
             <Image src={logo} alt="QuaPilot Logo" width={128} height={128} className="h-32 w-32 mb-4" />
-            <CardTitle className="text-3xl">QuaPilot (qp)<sup>®</sup></CardTitle>
+            <CardTitle className="text-3xl">QuaPilot<sup>&reg;</sup> (qp)</CardTitle>
             <CardDescription>Loop-in Notizen und Stichproben</CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-4">
@@ -39,7 +39,7 @@ export default function QPInfoPage() {
           </CardContent>
           <CardFooter className="justify-center pt-4">
               <p className="text-xs text-muted-foreground">
-                QuaPilot<sup>®</sup> ist eine in der Schweiz registrierte Marke.
+                QuaPilot<sup>&reg;</sup> ist eine in der Schweiz registrierte Marke.
               </p>
           </CardFooter>
         </Card>

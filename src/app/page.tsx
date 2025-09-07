@@ -144,7 +144,7 @@ export default function HomePage() {
           <div className="flex items-center justify-center gap-4">
             <Image src={logo} alt="QuaPilot Logo" width={48} height={48} className="h-12 w-12" />
             <h1 className="font-headline text-4xl font-bold tracking-tighter">
-              QuaPilot (qp)
+              QuaPilot<sup>&reg;</sup> (qp)
             </h1>
           </div>
           <p className="text-muted-foreground">Loop-in Notizen und Stichproben</p>
