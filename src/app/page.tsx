@@ -33,7 +33,12 @@ export default function HomePage() {
     return (
       <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
         <div className="w-full max-w-md text-center">
-            <Link href="/qpinfo" aria-label="Zur Info-Seite">
+            <div className="mb-4">
+               <a href="https://www.quapilot.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                 www.quapilot.com
+               </a>
+            </div>
+            <Link href="/qpinfo" aria-label="Zur Info-Seite" className="flex justify-center">
                 <Button variant="ghost" className="mb-8 flex flex-col items-center justify-center space-y-4 h-auto">
                     <Image src={logo} alt="qp Loop Logo" width={256} height={256} className="h-64 w-64 text-primary" />
                 </Button>
@@ -84,20 +89,20 @@ export default function HomePage() {
                         Control Plan {profile && !isAdmin && "(read)"}
                     </Button>
                      <Button 
-                        onClick={() => router.push('/notes')} 
-                        className="w-full"
-                        disabled={profile?.status === 'inactive'}
-                    >
-                        <StickyNote className="mr-2 h-4 w-4" />
-                        Zur Notizenseite
-                    </Button>
-                     <Button 
                         onClick={() => router.push('/lenkungsplan')} 
                         className="w-full"
                         disabled={profile?.status === 'inactive'}
                     >
                         <Book className="mr-2 h-4 w-4" />
                         Plan-Ideen
+                    </Button>
+                     <Button 
+                        onClick={() => router.push('/notes')} 
+                        className="w-full"
+                        disabled={profile?.status === 'inactive'}
+                    >
+                        <StickyNote className="mr-2 h-4 w-4" />
+                        Zur Notizenseite
                     </Button>
                      {isAdmin && (
                         <Button 

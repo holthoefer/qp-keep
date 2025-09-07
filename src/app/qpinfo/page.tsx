@@ -23,6 +23,9 @@ export default function QPInfoPage() {
       <div className="flex flex-col items-center justify-center flex-grow">
         <Card className="w-full max-w-2xl">
           <CardHeader className="items-center text-center">
+            <a href="https://www.quapilot.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors mb-4">
+                www.quapilot.com
+            </a>
             <Image src={logo} alt="QuaPilot Logo" width={128} height={128} className="h-32 w-32 mb-4" />
             <CardTitle className="text-3xl">QuaPilot (qp)</CardTitle>
             <CardDescription>Loop-in Notizen und Stichproben</CardDescription>
