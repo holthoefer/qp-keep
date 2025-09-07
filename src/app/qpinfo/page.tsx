@@ -1,10 +1,9 @@
 
-
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import logo from '../Logo.png';
@@ -27,7 +26,7 @@ export default function QPInfoPage() {
                 www.quapilot.com
             </a>
             <Image src={logo} alt="QuaPilot Logo" width={128} height={128} className="h-32 w-32 mb-4" />
-            <CardTitle className="text-3xl">QuaPilot (qp)</CardTitle>
+            <CardTitle className="text-3xl">QuaPilot (qp)<sup>®</sup></CardTitle>
             <CardDescription>Loop-in Notizen und Stichproben</CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-4">
@@ -38,6 +37,11 @@ export default function QPInfoPage() {
               Version 1.0.0
             </p>
           </CardContent>
+          <CardFooter className="justify-center pt-4">
+              <p className="text-xs text-muted-foreground">
+                QuaPilot<sup>®</sup> ist eine in der Schweiz registrierte Marke.
+              </p>
+          </CardFooter>
         </Card>
       </div>
     </div>
