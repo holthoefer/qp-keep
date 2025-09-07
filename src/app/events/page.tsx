@@ -195,11 +195,11 @@ export default function EventsPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
                     <StickyNote className="h-4 w-4" />
                 </Button>
-                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
-                    <Wrench className="h-4 w-4" />
-                </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
                     <Siren className="h-4 w-4" />
+                </Button>
+                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
+                    <Target className="h-4 w-4" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -208,10 +208,6 @@ export default function EventsPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => router.push('/cp')}>
-                        <Target className="mr-2 h-4 w-4" />
-                        <span>CP</span>
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
                         <Book className="mr-2 h-4 w-4" />
                         <span>LP</span>
