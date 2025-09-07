@@ -62,7 +62,7 @@ export default function HomePage() {
                         disabled={profile?.status === 'inactive'}
                     >
                         <Network className="mr-2 h-4 w-4" />
-                        DNA (Akt. Merkmale)
+                        DNA (akt. Merkmale)
                     </Button>
                      <Button 
                         onClick={() => router.push('/events')} 
@@ -89,20 +89,20 @@ export default function HomePage() {
                         Control Plan {profile && !isAdmin && "(read)"}
                     </Button>
                      <Button 
-                        onClick={() => router.push('/lenkungsplan')} 
-                        className="w-full"
-                        disabled={profile?.status === 'inactive'}
-                    >
-                        <Book className="mr-2 h-4 w-4" />
-                        Plan-Ideen
-                    </Button>
-                    <Button 
                         onClick={() => router.push('/notes')} 
                         className="w-full"
                         disabled={profile?.status === 'inactive'}
                     >
                         <StickyNote className="mr-2 h-4 w-4" />
                         Notizen
+                    </Button>
+                    <Button 
+                        onClick={() => router.push('/lenkungsplan')} 
+                        className="w-full"
+                        disabled={profile?.status === 'inactive'}
+                    >
+                        <Book className="mr-2 h-4 w-4" />
+                        Plan-Ideen
                     </Button>
                      {isAdmin && (
                         <Button 
