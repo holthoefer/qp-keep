@@ -26,8 +26,9 @@ import logo from '../Logo.png';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { Copy } from 'lucide-react';
+import Link from 'next/link';
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 10;
 
 export default function StorageViewerPage() {
   const { user, loading: authLoading, logout, isAdmin } = useAuth();
@@ -109,10 +110,9 @@ export default function StorageViewerPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
-          <h1 className="font-headline text-xl font-bold tracking-tighter text-foreground">
-            qp
-          </h1>
+            <Link href="/" aria-label="Zur Startseite">
+              <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
+            </Link>
             <div className="hidden md:flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                     <LayoutGrid className="mr-2 h-4 w-4" />
@@ -167,6 +167,12 @@ export default function StorageViewerPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
                     <StickyNote className="h-4 w-4" />
                 </Button>
+                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
+                    <Wrench className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
+                    <Siren className="h-4 w-4" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                      <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -174,14 +180,6 @@ export default function StorageViewerPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                     <DropdownMenuItem onClick={() => router.push('/events')}>
-                        <Wrench className="mr-2 h-4 w-4" />
-                        <span>Events</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/incidents')}>
-                        <Siren className="mr-2 h-4 w-4" />
-                        <span>Incidents</span>
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/cp')}>
                         <Target className="mr-2 h-4 w-4" />
                         <span>CP</span>

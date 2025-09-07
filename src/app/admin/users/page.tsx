@@ -37,6 +37,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import logo from '../../Logo.png';
+import Link from 'next/link';
 
 
 export default function UserManagementPage() {
@@ -112,10 +113,9 @@ export default function UserManagementPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
-          <h1 className="font-headline text-xl font-bold tracking-tighter text-foreground">
-            qp
-          </h1>
+            <Link href="/" aria-label="Zur Startseite">
+              <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
+            </Link>
             {/* Desktop View: Full Buttons */}
             <div className="hidden md:flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
@@ -151,9 +151,9 @@ export default function UserManagementPage() {
                     LP
                 </Button>
                 {isAdmin && (
-                    <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
-                      <FileImage className="mr-2 h-4 w-4" />
-                      Storage
+                    <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin
                     </Button>
                 )}
             </div>
@@ -171,6 +171,12 @@ export default function UserManagementPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
                     <StickyNote className="h-4 w-4" />
                 </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
+                    <Wrench className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
+                    <Siren className="h-4 w-4" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                      <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -178,14 +184,6 @@ export default function UserManagementPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                     <DropdownMenuItem onClick={() => router.push('/events')}>
-                        <Wrench className="mr-2 h-4 w-4" />
-                        <span>Events</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/incidents')}>
-                        <Siren className="mr-2 h-4 w-4" />
-                        <span>Incidents</span>
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/cp')}>
                         <Target className="mr-2 h-4 w-4" />
                         <span>CP</span>
@@ -196,9 +194,9 @@ export default function UserManagementPage() {
                     </DropdownMenuItem>
                      {isAdmin && <DropdownMenuSeparator />}
                     {isAdmin && (
-                        <DropdownMenuItem onClick={() => router.push('/storage')}>
-                            <FileImage className="mr-2 h-4 w-4" />
-                            <span>Storage</span>
+                        <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                            <Shield className="mr-2 h-4 w-4" />
+                            <span>Admin</span>
                         </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
@@ -235,6 +233,12 @@ export default function UserManagementPage() {
                   </Button>
                   <h2 className="font-headline text-2xl font-semibold">Admin: Benutzerliste</h2>
               </div>
+              {isAdmin && (
+                  <Button variant="outline" size="sm" onClick={() => router.push('/storage')}>
+                    <FileImage className="mr-2 h-4 w-4" />
+                    Storage
+                  </Button>
+              )}
             </div>
             {error && (
               <Alert variant="destructive" className="mb-4">
