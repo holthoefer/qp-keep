@@ -33,7 +33,7 @@ export default function HomePage() {
     return (
       <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
         <div className="w-full max-w-md text-center">
-            <Link href="/" aria-label="Zur Startseite">
+            <Link href="/qpinfo" aria-label="Zur Info-Seite">
                 <div className="mb-8 flex flex-col items-center justify-center space-y-4">
                     <Image src={logo} alt="qp Loop Logo" width={256} height={256} className="h-64 w-64 text-primary" />
                 </div>
@@ -52,12 +52,12 @@ export default function HomePage() {
                         Zu den Arbeitsplätzen
                     </Button>
                     <Button 
-                        onClick={() => router.push('/notes')} 
+                        onClick={() => router.push('/dna')} 
                         className="w-full"
                         disabled={profile?.status === 'inactive'}
                     >
-                        <StickyNote className="mr-2 h-4 w-4" />
-                        Zur Notizenseite
+                        <Network className="mr-2 h-4 w-4" />
+                        DNA (Aktive Merkmale)
                     </Button>
                     <Button 
                         onClick={() => router.push('/events')} 
@@ -75,21 +75,21 @@ export default function HomePage() {
                         <Siren className="mr-2 h-4 w-4" />
                         Zu den Incidents
                     </Button>
-                    <Button 
-                        onClick={() => router.push('/dna')} 
-                        className="w-full"
-                        disabled={profile?.status === 'inactive'}
-                    >
-                        <Network className="mr-2 h-4 w-4" />
-                        DNA (Aktive Merkmale)
-                    </Button>
                      <Button 
                         onClick={() => router.push('/cp')} 
                         className="w-full"
                         disabled={profile?.status === 'inactive'}
                     >
                         <Target className="mr-2 h-4 w-4" />
-                        Control Plans {!isAdmin && "(read only)"}
+                        Control Plans {profile && !isAdmin && "(read only)"}
+                    </Button>
+                    <Button 
+                        onClick={() => router.push('/notes')} 
+                        className="w-full"
+                        disabled={profile?.status === 'inactive'}
+                    >
+                        <StickyNote className="mr-2 h-4 w-4" />
+                        Zur Notizenseite
                     </Button>
                      <Button 
                         onClick={() => router.push('/lenkungsplan')} 
@@ -97,7 +97,7 @@ export default function HomePage() {
                         disabled={profile?.status === 'inactive'}
                     >
                         <Book className="mr-2 h-4 w-4" />
-                        (Lenkungs) Pläne
+                        Plan-Ideen
                     </Button>
                      {isAdmin && (
                         <Button 
