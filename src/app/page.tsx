@@ -83,14 +83,6 @@ export default function HomePage() {
                         <Target className="mr-2 h-4 w-4" />
                         Control Plans {profile && !isAdmin && "(read only)"}
                     </Button>
-                    <Button 
-                        onClick={() => router.push('/notes')} 
-                        className="w-full"
-                        disabled={profile?.status === 'inactive'}
-                    >
-                        <StickyNote className="mr-2 h-4 w-4" />
-                        Zur Notizenseite
-                    </Button>
                      <Button 
                         onClick={() => router.push('/lenkungsplan')} 
                         className="w-full"
@@ -98,6 +90,14 @@ export default function HomePage() {
                     >
                         <Book className="mr-2 h-4 w-4" />
                         Plan-Ideen
+                    </Button>
+                    <Button 
+                        onClick={() => router.push('/notes')} 
+                        className="w-full"
+                        disabled={profile?.status === 'inactive'}
+                    >
+                        <StickyNote className="mr-2 h-4 w-4" />
+                        Zur Notizenseite
                     </Button>
                      {isAdmin && (
                         <Button 
