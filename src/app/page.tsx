@@ -118,18 +118,10 @@ export default function HomePage() {
                      <Button 
                         onClick={() => router.push('/cp')} 
                         className="w-full"
-                        disabled={profile_?.status === 'inactive'}
+                        disabled={profile?.status === 'inactive'}
                     >
                         <Target className="mr-2 h-4 w-4" />
                         Control Plan {profile && !isAdmin && "(read)"}
-                    </Button>
-                    <Button 
-                        onClick={() => router.push('/notes')} 
-                        className="w-full"
-                        disabled={profile?.status === 'inactive'}
-                    >
-                        <StickyNote className="mr-2 h-4 w-4" />
-                        Notizen
                     </Button>
                      <Button 
                         onClick={() => router.push('/lenkungsplan')} 
@@ -138,6 +130,14 @@ export default function HomePage() {
                     >
                         <Book className="mr-2 h-4 w-4" />
                         Plan-Ideen
+                    </Button>
+                    <Button 
+                        onClick={() => router.push('/notes')} 
+                        className="w-full"
+                        disabled={profile?.status === 'inactive'}
+                    >
+                        <StickyNote className="mr-2 h-4 w-4" />
+                        Notizen
                     </Button>
                      {isAdmin && (
                         <Button 
