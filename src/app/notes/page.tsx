@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Wrench, StickyNote, MoreVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -31,6 +31,7 @@ import Link from 'next/link';
 export default function NotesPage() {
   const { user, profile, roles, loading: authLoading, logout } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -59,9 +60,17 @@ export default function NotesPage() {
         setLoadingNotes(false);
       }
     );
+    
+    // Check for message from agent
+    const agentMessage = searchParams.get('message');
+    if (agentMessage) {
+        setTitle('Agent');
+        setContent(agentMessage);
+    }
+
     return unsubscribe;
     
-  }, [user, authLoading, router, isAdmin]);
+  }, [user, authLoading, router, isAdmin, searchParams]);
 
   const handleLogout = async () => {
     await logout();
