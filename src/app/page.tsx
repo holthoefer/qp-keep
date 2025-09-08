@@ -96,8 +96,6 @@ export default function HomePage() {
             </div>
           
             <div className="space-y-4">
-                <p className="font-medium">{user.email}</p>
-                
                 <div className="grid grid-cols-2 gap-4">
                     <Button 
                         onClick={() => router.push('/arbeitsplaetze')} 
@@ -166,18 +164,8 @@ export default function HomePage() {
                         </Button>
                     )}
                 </div>
-
-                {profile?.status === 'inactive' && (
-                <Alert variant="destructive" className="text-left">
-                    <ShieldAlert className="h-4 w-4" />
-                    <AlertTitle>Konto inaktiv</AlertTitle>
-                    <AlertDescription>
-                    Ihr Konto wurde von einem Administrator gesperrt. Sie können nicht auf Ihre Notizen zugreifen.
-                    </AlertDescription>
-                </Alert>
-                )}
                 
-                <div className="space-y-2 pt-4">
+                <div className="space-y-2 pt-2">
                   <Textarea 
                     placeholder="Sagen Sie dem Agenten, was Sie tun möchten..."
                     value={agentInput}
@@ -190,12 +178,22 @@ export default function HomePage() {
                     An Agenten senden
                   </Button>
                 </div>
-
+                
+                {profile?.status === 'inactive' && (
+                <Alert variant="destructive" className="text-left">
+                    <ShieldAlert className="h-4 w-4" />
+                    <AlertTitle>Konto inaktiv</AlertTitle>
+                    <AlertDescription>
+                    Ihr Konto wurde von einem Administrator gesperrt. Sie können nicht auf Ihre Notizen zugreifen.
+                    </AlertDescription>
+                </Alert>
+                )}
 
                 <Button onClick={handleLogout} variant="secondary" className="w-full">
                     <LogOut className="mr-2 h-4 w-4" />
                     Ausloggen
                 </Button>
+                <p className="font-medium text-sm text-muted-foreground pt-1">{user.email}</p>
             </div>
         </div>
          <div className="w-full max-w-md text-center mt-auto pb-2">
