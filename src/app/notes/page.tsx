@@ -363,7 +363,7 @@ export default function NotesPage() {
                             disabled={isUploading}
                           >
                             <UploadCloud className="mr-2 h-4 w-4" />
-                            Anhang
+                            Foto/Datei
                           </Button>
                         )}
                         {attachmentUrl && isImage(attachmentUrl) && (
