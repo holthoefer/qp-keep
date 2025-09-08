@@ -13,7 +13,7 @@ import {
     createUserWithEmailAndPassword,
     sendPasswordResetEmail,
 } from 'firebase/auth';
-import { auth, saveOrUpdateUserProfile, getProfile, type UserProfile } from '@/lib/data';
+import { auth, getProfile, type UserProfile } from '@/lib/data';
 import { LoadingScreen } from '@/components/LoadingScreen';
 
 interface AuthContextType {
@@ -41,15 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setLoading(true);
             if (currentUser) {
-                // Try to get profile
-                let userProfile = await getProfile(currentUser.uid);
-
-                // If profile doesn't exist, create it and then refetch it
-                if (!userProfile) {
-                    await saveOrUpdateUserProfile(currentUser);
-                    userProfile = await getProfile(currentUser.uid); // Refetch after creation
-                }
-                
+                // getProfile will now create the profile if it doesn't exist.
+                const userProfile = await getProfile(currentUser);
                 setUser(currentUser);
                 setProfile(userProfile);
 

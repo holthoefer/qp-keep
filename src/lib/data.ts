@@ -32,7 +32,10 @@ export { auth };
 
 // Note Management
 export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'> & { userEmail: string, attachmentUrl?: string }) => {
-    const userProfile = await getProfile(note.userId);
+    const user = auth.currentUser;
+    if (!user) throw new Error("Nicht authentifiziert.");
+    
+    const userProfile = await getProfile(user);
     if (userProfile?.status !== 'active') {
         throw new Error('Ihr Konto ist inaktiv. Sie können keine neuen Notizen erstellen.');
     }
@@ -114,13 +117,23 @@ export const saveOrUpdateUserProfile = async (user: User) => {
     }
 };
 
-export const getProfile = async (userId: string): Promise<UserProfile | null> => {
-    const userDocRef = doc(db, 'users', userId);
+export const getProfile = async (user: User): Promise<UserProfile | null> => {
+    const userDocRef = doc(db, 'users', user.uid);
     try {
-        const userDocSnap = await getDoc(userDocRef);
-        return userDocSnap.exists() ? { uid: userDocSnap.id, ...userDocSnap.data() } as UserProfile : null;
+        let userDocSnap = await getDoc(userDocRef);
+        if (!userDocSnap.exists()) {
+            console.log(`Profile for ${user.uid} not found, creating it...`);
+            await saveOrUpdateUserProfile(user);
+            // After creating, we must re-fetch the document.
+            userDocSnap = await getDoc(userDocRef);
+            if (!userDocSnap.exists()) {
+                // If it still doesn't exist, something is wrong.
+                throw new Error("Failed to create and fetch user profile.");
+            }
+        }
+        return { uid: userDocSnap.id, ...userDocSnap.data() } as UserProfile;
     } catch (error) {
-        console.error("Error fetching profile for", userId, error);
+        console.error("Error fetching profile for", user.uid, error);
         return null;
     }
 }
@@ -507,7 +520,7 @@ export const deleteSample = async (sampleId: string): Promise<void> => {
     const user = auth.currentUser;
     if (!user) throw new Error("Nicht authentifiziert.");
     
-    const profile = await getProfile(user.uid);
+    const profile = await getProfile(user);
     if (profile?.role !== 'admin') {
         throw new Error("Nur Administratoren dürfen Stichproben löschen.");
     }
@@ -641,7 +654,7 @@ export const deleteEvent = async (id: string) => {
     const user = auth.currentUser;
     if (!user) throw new Error("Nicht authentifiziert.");
     
-    const profile = await getProfile(user.uid);
+    const profile = await getProfile(user);
     if (profile?.role !== 'admin') {
         throw new Error("Nur Administratoren dürfen Events löschen.");
     }
