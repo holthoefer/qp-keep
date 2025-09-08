@@ -40,6 +40,7 @@ export default function NotesPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [attachmentUrl, setAttachmentUrl] = useState('');
+  const [justUploaded, setJustUploaded] = useState(false);
   
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -93,6 +94,7 @@ export default function NotesPage() {
 
   const clearAttachment = () => {
     setAttachmentUrl('');
+    setJustUploaded(false);
     if(attachmentInputRef.current) {
         attachmentInputRef.current.value = '';
     }
@@ -185,6 +187,7 @@ export default function NotesPage() {
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
         setAttachmentUrl(downloadURL);
+        setJustUploaded(true);
         setIsUploading(false);
         toast({ title: 'Upload erfolgreich', description: 'Die Datei ist bereit zum Speichern.' });
       }
@@ -264,7 +267,7 @@ export default function NotesPage() {
                       <FolderKanban className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
-                      <Wrench className="mr-2 h-4 w-4" />
+                      <Wrench className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
                       <Siren className="h-4 w-4" />
@@ -352,29 +355,37 @@ export default function NotesPage() {
                     
                     <div className="flex justify-between items-end gap-4">
                       <div className="space-y-2">
-                        {attachmentUrl ? (
-                             <div className="relative w-32 h-32">
-                                <NextImage src={generateThumbnailUrl(attachmentUrl)} alt="Vorschau" fill className="rounded-md object-cover" />
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                                    onClick={clearAttachment}
-                                >
-                                    <Trash2 className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        ) : (
-                             <Button
-                                type="button"
-                                onClick={() => attachmentInputRef.current?.click()}
-                                variant="outline"
-                                disabled={isUploading}
+                        {!attachmentUrl && (
+                          <Button
+                            type="button"
+                            onClick={() => attachmentInputRef.current?.click()}
+                            variant="outline"
+                            disabled={isUploading}
+                          >
+                            <UploadCloud className="mr-2 h-4 w-4" />
+                            Anhang
+                          </Button>
+                        )}
+                        {attachmentUrl && isImage(attachmentUrl) && (
+                          <div className="relative w-32 h-32">
+                            <NextImage src={justUploaded ? attachmentUrl : generateThumbnailUrl(attachmentUrl)} alt="Vorschau" fill className="rounded-md object-cover" />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                              onClick={clearAttachment}
                             >
-                                <UploadCloud className="mr-2 h-4 w-4" />
-                                Anhang
+                              <Trash2 className="h-3 w-3" />
                             </Button>
+                          </div>
+                        )}
+                         {attachmentUrl && !isImage(attachmentUrl) && (
+                           <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
+                                <File className="h-6 w-6 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground truncate max-w-xs">{attachmentUrl.split('/').pop()?.split('?')[0]}</span>
+                                <Button type="button" variant="ghost" size="icon" onClick={clearAttachment} className="h-6 w-6"><Trash2 className="h-3 w-3" /></Button>
+                           </div>
                         )}
                       </div>
                       <div className="flex-shrink-0">
