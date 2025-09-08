@@ -189,11 +189,13 @@ export default function HomePage() {
                 </Alert>
                 )}
 
-                <Button onClick={handleLogout} variant="secondary" className="w-full">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Ausloggen
-                </Button>
-                <p className="font-medium text-sm text-muted-foreground pt-1">{user.email}</p>
+                <div className="text-center">
+                    <Button onClick={handleLogout} variant="secondary" className="w-full">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Ausloggen
+                    </Button>
+                    <p className="font-medium text-sm text-muted-foreground mt-2">{user.email}</p>
+                </div>
             </div>
         </div>
          <div className="w-full max-w-md text-center mt-auto pb-2">
