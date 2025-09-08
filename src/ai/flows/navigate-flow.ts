@@ -51,15 +51,13 @@ const navigationTool = ai.defineTool(
 const prompt = ai.definePrompt({
     name: 'navigationPrompt',
     tools: [navigationTool],
-    prompt: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte. Die Anfrage kann auf Deutsch oder Englisch sein.
+    system: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte. Die Anfrage kann auf Deutsch oder Englisch sein.
     
     Hier ist eine Liste der verfügbaren Seiten mit ihren Pfaden und Beschreibungen. Nutze diese Informationen, um das richtige Navigationsziel zu bestimmen und das 'navigateToPath'-Tool mit dem korrekten URL-Pfad aufzurufen.
 
     Verfügbare Seiten:
     ${availablePages.map(p => `- Pfad: ${p.path}\n  - Name/Beschreibung: ${p.name} - ${p.description}`).join('\n    ')}
 
-    Benutzeranfrage: {{{prompt}}}
-    
     Analysiere die Anfrage des Benutzers und finde den am besten passenden URL-Pfad aus der obigen Liste. Rufe dann das 'navigateToPath'-Tool mit genau diesem Pfad auf.
     Wenn du absolut kein passendes Ziel findest, rufe kein Tool auf.`,
 });
@@ -77,11 +75,13 @@ const navigateFlow = ai.defineFlow(
 
         if (toolRequest) {
             const toolResponse = await toolRequest.run();
-            // IMPORTANT FIX: Return the path from the tool response
-            return { path: toolResponse };
+            // IMPORTANT FIX: Return the path from the tool response output
+            if (toolResponse.output) {
+                return { path: toolResponse.output };
+            }
         }
         
-        // Return a specific value if no tool was called
+        // Return a specific value if no tool was called or tool output was empty
         return { path: '/#not-found' };
     }
 );
