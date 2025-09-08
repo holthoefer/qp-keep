@@ -77,6 +77,7 @@ const navigateFlow = ai.defineFlow(
 
         if (toolRequest) {
             const toolResponse = await toolRequest.run();
+            // IMPORTANT FIX: Return the path from the tool response
             return { path: toolResponse };
         }
         
