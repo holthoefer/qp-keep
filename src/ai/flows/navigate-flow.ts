@@ -27,7 +27,7 @@ const availablePages = [
     { name: "Events", path: "/events", description: "Zeigt die Liste der Shopfloor-Events an oder erlaubt das Erstellen eines neuen Events." },
     { name: "Incidents", path: "/incidents", description: "Zeigt die Liste der Incidents (Vorfälle) an oder erlaubt das Erstellen eines neuen Incidents." },
     { name: "Control Plan", path: "/cp", description: "Zeigt die Übersicht der Control Plans (Lenkungspläne, CP) an." },
-    { name: "Notizen", path: "/notes", description: "Zeigt die Notizenseite an. Wenn der Benutzer eine neue Notiz erstellen möchte (z.B. 'Notiz: ...'), navigiere hierher und extrahiere den Inhalt in das 'message'-Feld." },
+    { name: "Notizen", path: "/notes", description: "Zeigt die Notizenseite an. Wenn der Benutzer eine neue Notiz erstellen möchte (z.B. 'Notiz: ...'), navigiere hierher und extrahiere den Inhalt in das 'message'-Feld. Formatiere den extrahierten Text in einem sauberen E-Mail-Stil (Anrede, Hauptteil, Grußformel), falls der Kontext dies nahelegt. Der Titel der Notiz wird automatisch auf 'Agent😎' gesetzt." },
     { name: "Plan-Ideen", path: "/lenkungsplan", description: "Zeigt die Seite für Plan-Ideen und Entwürfe (Lenkungsplan-Rohfassungen, LP) an." },
     { name: "Admin", path: "/admin/users", description: "Zeigt die Admin-Konsole zur Benutzerverwaltung (User Management) an." },
     { name: "Startseite", path: "/", description: "Die Haupt- oder Startseite der Anwendung (Homepage, Main Page, Home)." },

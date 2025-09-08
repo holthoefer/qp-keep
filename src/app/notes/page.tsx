@@ -40,9 +40,7 @@ export default function NotesPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [attachmentUrl, setAttachmentUrl] = useState('');
-  const [attachmentName, setAttachmentName] = useState('');
-  const [isAttachmentImage, setIsAttachmentImage] = useState(false);
-
+  
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +78,7 @@ export default function NotesPage() {
     
     const agentMessage = searchParams.get('message');
     if (agentMessage) {
-        setTitle('Agent');
+        setTitle('Agent😎');
         setContent(agentMessage);
     }
 
@@ -95,8 +93,6 @@ export default function NotesPage() {
 
   const clearAttachment = () => {
     setAttachmentUrl('');
-    setAttachmentName('');
-    setIsAttachmentImage(false);
     if(attachmentInputRef.current) {
         attachmentInputRef.current.value = '';
     }
@@ -189,8 +185,6 @@ export default function NotesPage() {
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
         setAttachmentUrl(downloadURL);
-        setAttachmentName(file.name);
-        setIsAttachmentImage(file.type.startsWith('image/'));
         setIsUploading(false);
         toast({ title: 'Upload erfolgreich', description: 'Die Datei ist bereit zum Speichern.' });
       }
@@ -358,7 +352,20 @@ export default function NotesPage() {
                     
                     <div className="flex justify-between items-end gap-4">
                       <div className="space-y-2">
-                        {!attachmentUrl ? (
+                        {attachmentUrl ? (
+                             <div className="relative w-32 h-32">
+                                <NextImage src={generateThumbnailUrl(attachmentUrl)} alt="Vorschau" fill className="rounded-md object-cover" />
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                                    onClick={clearAttachment}
+                                >
+                                    <Trash2 className="h-3 w-3" />
+                                </Button>
+                            </div>
+                        ) : (
                              <Button
                                 type="button"
                                 onClick={() => attachmentInputRef.current?.click()}
@@ -366,43 +373,14 @@ export default function NotesPage() {
                                 disabled={isUploading}
                             >
                                 <UploadCloud className="mr-2 h-4 w-4" />
-                                Anhang hochladen
+                                Anhang
                             </Button>
-                        ) : (
-                            isAttachmentImage ? (
-                                 <div className="relative w-32 h-32">
-                                    <NextImage src={attachmentUrl} alt="Vorschau" fill className="rounded-md object-cover" />
-                                    <Button
-                                        type="button"
-                                        variant="destructive"
-                                        size="icon"
-                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                                        onClick={clearAttachment}
-                                    >
-                                        <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                </div>
-                            ) : (
-                                 <div className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted">
-                                    <File className="h-4 w-4 text-muted-foreground" />
-                                    <span className="truncate" title={attachmentName}>{attachmentName}</span>
-                                     <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-6 w-6 rounded-full flex-shrink-0"
-                                        onClick={clearAttachment}
-                                    >
-                                        <Trash2 className="h-3 w-3 text-destructive" />
-                                    </Button>
-                                </div>
-                            )
                         )}
                       </div>
                       <div className="flex-shrink-0">
                         <Button type="submit" disabled={isFormDisabled} size="lg">
                           {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Speichern & Tags
+                          Sichern+Tags
                         </Button>
                       </div>
                     </div>
@@ -412,6 +390,7 @@ export default function NotesPage() {
                         onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
                         className="hidden"
                         disabled={isUploading}
+                        accept="image/*,.pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
                     />
                   </form>
                 )}
