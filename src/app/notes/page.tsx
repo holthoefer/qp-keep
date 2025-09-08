@@ -39,9 +39,9 @@ export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [attachmentUrl, setAttachmentUrl] = useState('');
   const [attachmentName, setAttachmentName] = useState('');
+  const [isAttachmentImage, setIsAttachmentImage] = useState(false);
 
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,12 +53,10 @@ export default function NotesPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState('');
-  const [justUploaded, setJustUploaded] = useState(false);
   
   useEffect(() => {
     if (authLoading) return;
@@ -80,7 +78,6 @@ export default function NotesPage() {
       }
     );
     
-    // Check for message from agent
     const agentMessage = searchParams.get('message');
     if (agentMessage) {
         setTitle('Agent');
@@ -94,6 +91,15 @@ export default function NotesPage() {
   const handleLogout = async () => {
     await logout();
     router.push('/');
+  };
+
+  const clearAttachment = () => {
+    setAttachmentUrl('');
+    setAttachmentName('');
+    setIsAttachmentImage(false);
+    if(attachmentInputRef.current) {
+        attachmentInputRef.current.value = '';
+    }
   };
   
   const handleSaveNote = async (e: React.FormEvent) => {
@@ -112,15 +118,11 @@ export default function NotesPage() {
         userEmail: user.email!,
         title,
         content,
-        imageUrl,
         attachmentUrl,
       });
       setTitle('');
       setContent('');
-      setImageUrl('');
-      setAttachmentUrl('');
-      setAttachmentName('');
-      setJustUploaded(false);
+      clearAttachment();
       toast({
         title: "Notiz gespeichert!",
         description: "Ihre Notiz wurde erfolgreich hinzugefügt und wird gerade getaggt.",
@@ -157,24 +159,17 @@ export default function NotesPage() {
     }
   }
   
-  const handleUpload = (file: File, type: 'image' | 'attachment') => {
+  const handleUpload = (file: File) => {
     if (!user) return;
     setIsUploading(true);
     setUploadProgress(0);
     setUploadError(null);
-    setJustUploaded(false);
 
     const storage = getAppStorage();
     if (!storage) {
       setUploadError("Storage-Dienst ist nicht initialisiert.");
       setIsUploading(false);
       return;
-    }
-
-    if (type === 'image' && !file.type.startsWith('image/')) {
-        setUploadError("Bitte nur Bilddateien hochladen.");
-        setIsUploading(false);
-        return;
     }
 
     const storageRef = ref(storage, `uploads/notes/${user.uid}/${Date.now()}_${file.name}`);
@@ -193,17 +188,19 @@ export default function NotesPage() {
       },
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        if (type === 'image') {
-            setImageUrl(downloadURL);
-            setJustUploaded(true);
-        } else {
-            setAttachmentUrl(downloadURL);
-            setAttachmentName(file.name);
-        }
+        setAttachmentUrl(downloadURL);
+        setAttachmentName(file.name);
+        setIsAttachmentImage(file.type.startsWith('image/'));
         setIsUploading(false);
         toast({ title: 'Upload erfolgreich', description: 'Die Datei ist bereit zum Speichern.' });
       }
     );
+  };
+  
+  const isImage = (url: string): boolean => {
+    if (!url) return false;
+    // Check based on common image file extensions
+    return /\.(jpg|jpeg|png|gif|webp)$/i.test(url.split('?')[0]);
   };
 
   const isFormDisabled = isSaving || profile?.status === 'inactive' || isUploading;
@@ -226,7 +223,6 @@ export default function NotesPage() {
               <Link href="/" aria-label="Zur Startseite">
                 <NextImage src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
               </Link>
-              {/* Desktop View: Full Buttons */}
               <div className="hidden md:flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                       <LayoutGrid className="mr-2 h-4 w-4" />
@@ -263,8 +259,6 @@ export default function NotesPage() {
                       </Button>
                   )}
               </div>
-
-              {/* Mobile View: Icons and Dropdown */}
               <div className="md:hidden flex items-center gap-1">
                   <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
                       <LayoutGrid className="h-4 w-4" />
@@ -276,7 +270,7 @@ export default function NotesPage() {
                       <FolderKanban className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
-                      <Wrench className="h-4 w-4" />
+                      <Wrench className="mr-2 h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
                       <Siren className="h-4 w-4" />
@@ -306,7 +300,6 @@ export default function NotesPage() {
                   </DropdownMenu>
               </div>
           </div>
-
           <div className="flex items-center gap-1 md:gap-2">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -365,56 +358,45 @@ export default function NotesPage() {
                     
                     <div className="flex justify-between items-end gap-4">
                       <div className="space-y-2">
-                        {!imageUrl && (
-                             <Button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                variant="outline"
-                                disabled={isUploading}
-                            >
-                                <ImageIcon className="mr-2 h-4 w-4" />
-                                Bild hochladen
-                            </Button>
-                        )}
-                         {imageUrl && (
-                            <div className="relative w-32 h-32">
-                                <NextImage src={justUploaded ? imageUrl : generateThumbnailUrl(imageUrl)} alt="Vorschau" fill className="rounded-md object-cover" />
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                                    onClick={() => { setImageUrl(''); setJustUploaded(false); }}
-                                >
-                                    <Trash2 className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        )}
-                        {!attachmentUrl && (
+                        {!attachmentUrl ? (
                              <Button
                                 type="button"
                                 onClick={() => attachmentInputRef.current?.click()}
                                 variant="outline"
                                 disabled={isUploading}
                             >
-                                <File className="mr-2 h-4 w-4" />
-                                Datei anhängen
+                                <UploadCloud className="mr-2 h-4 w-4" />
+                                Anhang hochladen
                             </Button>
-                        )}
-                        {attachmentUrl && (
-                            <div className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted">
-                                <LinkIcon className="h-4 w-4 text-muted-foreground" />
-                                <span className="truncate" title={attachmentName}>{attachmentName}</span>
-                                 <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 rounded-full flex-shrink-0"
-                                    onClick={() => { setAttachmentUrl(''); setAttachmentName(''); }}
-                                >
-                                    <Trash2 className="h-3 w-3 text-destructive" />
-                                </Button>
-                            </div>
+                        ) : (
+                            isAttachmentImage ? (
+                                 <div className="relative w-32 h-32">
+                                    <NextImage src={attachmentUrl} alt="Vorschau" fill className="rounded-md object-cover" />
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                                        onClick={clearAttachment}
+                                    >
+                                        <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                 <div className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted">
+                                    <File className="h-4 w-4 text-muted-foreground" />
+                                    <span className="truncate" title={attachmentName}>{attachmentName}</span>
+                                     <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 rounded-full flex-shrink-0"
+                                        onClick={clearAttachment}
+                                    >
+                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                    </Button>
+                                </div>
+                            )
                         )}
                       </div>
                       <div className="flex-shrink-0">
@@ -424,23 +406,13 @@ export default function NotesPage() {
                         </Button>
                       </div>
                     </div>
-
-                    <Input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'image')}
-                        className="hidden"
-                        accept="image/jpeg,image/png,image/gif"
-                        disabled={isUploading}
-                    />
                     <Input
                         type="file"
                         ref={attachmentInputRef}
-                        onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'attachment')}
+                        onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
                         className="hidden"
                         disabled={isUploading}
                     />
-
                   </form>
                 )}
               </CardContent>
@@ -496,31 +468,32 @@ export default function NotesPage() {
                     <CardContent>
                       <p className="whitespace-pre-wrap">{note.content}</p>
                     </CardContent>
-                    {(note.tags && note.tags.length > 0) || note.imageUrl || note.attachmentUrl ? (
+                    {(note.tags && note.tags.length > 0) || note.attachmentUrl ? (
                       <CardFooter className="flex-wrap gap-2 pt-4 justify-between items-end">
                         <div className="flex flex-wrap gap-2 items-center">
                             {note.tags?.map(tag => (
                                 <Badge key={tag} variant="secondary">{tag}</Badge>
                             ))}
-                            {note.attachmentUrl && (
+                        </div>
+                        {note.attachmentUrl && (
+                             isImage(note.attachmentUrl) ? (
+                                <button onClick={() => { setModalImageUrl(note.attachmentUrl!); setIsModalOpen(true); }} className="block">
+                                    <NextImage
+                                        src={generateThumbnailUrl(note.attachmentUrl)}
+                                        alt="Notiz-Anhang"
+                                        width={48}
+                                        height={48}
+                                        className="rounded object-cover aspect-square border"
+                                    />
+                                </button>
+                             ) : (
                                 <Button asChild variant="outline" size="sm">
                                     <a href={note.attachmentUrl} target="_blank" rel="noopener noreferrer">
                                         <LinkIcon className="mr-2 h-4 w-4" />
                                         Anhang
                                     </a>
                                 </Button>
-                            )}
-                        </div>
-                        {note.imageUrl && (
-                             <button onClick={() => { setModalImageUrl(note.imageUrl!); setIsModalOpen(true); }} className="block">
-                                <NextImage
-                                    src={generateThumbnailUrl(note.imageUrl)}
-                                    alt="Notiz-Anhang"
-                                    width={48}
-                                    height={48}
-                                    className="rounded object-cover aspect-square border"
-                                />
-                            </button>
+                             )
                         )}
                       </CardFooter>
                     ) : null}

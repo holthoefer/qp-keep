@@ -143,7 +143,6 @@ export interface Note {
     content: string;
     tags?: string[];
     createdAt: Timestamp;
-    imageUrl?: string;
     attachmentUrl?: string;
 }
 

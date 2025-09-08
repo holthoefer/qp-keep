@@ -31,7 +31,7 @@ export const getAppStorage = getFirebaseStorage;
 export { auth };
 
 // Note Management
-export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'> & { userEmail: string, imageUrl?: string, attachmentUrl?: string }) => {
+export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'> & { userEmail: string, attachmentUrl?: string }) => {
     const userProfile = await getProfile(note.userId);
     if (userProfile?.status !== 'active') {
         throw new Error('Ihr Konto ist inaktiv. Sie können keine neuen Notizen erstellen.');
@@ -51,9 +51,6 @@ export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'>
         createdAt: serverTimestamp(),
     };
 
-    if (!note.imageUrl) {
-        delete dataToSave.imageUrl;
-    }
     if (!note.attachmentUrl) {
         delete dataToSave.attachmentUrl;
     }
