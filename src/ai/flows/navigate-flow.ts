@@ -35,16 +35,15 @@ const availablePages = [
 
 const navigationTool = ai.defineTool(
     {
-        name: 'navigateToPage',
-        description: 'Navigiert den Benutzer zu einer bestimmten Seite der Anwendung.',
+        name: 'navigateToPath',
+        description: 'Navigiert den Benutzer zu einem bestimmten URL-Pfad der Anwendung.',
         inputSchema: z.object({
-            pageName: z.enum(availablePages.map(p => p.name) as [string, ...string[]]).describe("Der Name der Seite, zu der navigiert werden soll."),
+            path: z.string().describe("Der URL-Pfad der Zielseite, z.B. '/arbeitsplaetze' oder '/notes'."),
         }),
-        outputSchema: z.string().describe("Der URL-Pfad der Zielseite."),
+        outputSchema: z.string().describe("Der URL-Pfad, zu dem navigiert wurde."),
     },
     async (input) => {
-        const page = availablePages.find(p => p.name === input.pageName);
-        return page?.path || '/';
+        return input.path;
     }
 );
 
@@ -52,15 +51,17 @@ const navigationTool = ai.defineTool(
 const prompt = ai.definePrompt({
     name: 'navigationPrompt',
     tools: [navigationTool],
-    prompt: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte. Die Anfrage kann auf Deutsch oder Englisch sein. Nutze das bereitgestellte Tool und die Beschreibungen der Seiten, um das Navigationsziel zu bestimmen.
-Wenn du kein passendes Ziel findest, rufe kein Tool auf.
+    prompt: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte. Die Anfrage kann auf Deutsch oder Englisch sein.
     
-    Seitenbeschreibungen:
-    ${availablePages.map(p => `- ${p.name}: ${p.description}`).join('\n    ')}
+    Hier ist eine Liste der verfügbaren Seiten mit ihren Pfaden und Beschreibungen. Nutze diese Informationen, um das richtige Navigationsziel zu bestimmen und das 'navigateToPath'-Tool mit dem korrekten URL-Pfad aufzurufen.
+
+    Verfügbare Seiten:
+    ${availablePages.map(p => `- Pfad: ${p.path}\n  - Name/Beschreibung: ${p.name} - ${p.description}`).join('\n    ')}
 
     Benutzeranfrage: {{{prompt}}}
     
-    Analysiere die Anfrage und rufe das 'navigateToPage'-Tool mit dem am besten passenden Seitennamen auf.`,
+    Analysiere die Anfrage des Benutzers und finde den am besten passenden URL-Pfad aus der obigen Liste. Rufe dann das 'navigateToPath'-Tool mit genau diesem Pfad auf.
+    Wenn du absolut kein passendes Ziel findest, rufe kein Tool auf.`,
 });
 
 
