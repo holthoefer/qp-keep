@@ -67,7 +67,7 @@ export const navigateFlow = ai.defineFlow(
     },
     async (promptContent) => {
         const llmResponse = await prompt(promptContent);
-        const toolRequest = llmResponse.toolRequest();
+        const toolRequest = llmResponse.toolRequest;
 
         if (toolRequest) {
             const toolResponse = await toolRequest.run();
