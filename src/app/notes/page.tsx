@@ -53,6 +53,7 @@ export default function NotesPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState('');
+  const [justUploaded, setJustUploaded] = useState(false);
   
   useEffect(() => {
     if (authLoading) return;
@@ -111,6 +112,7 @@ export default function NotesPage() {
       setTitle('');
       setContent('');
       setImageUrl('');
+      setJustUploaded(false);
       toast({
         title: "Notiz gespeichert!",
         description: "Ihre Notiz wurde erfolgreich hinzugefügt und wird gerade getaggt.",
@@ -152,6 +154,7 @@ export default function NotesPage() {
     setIsUploading(true);
     setUploadProgress(0);
     setUploadError(null);
+    setJustUploaded(false);
 
     const storage = getAppStorage();
     if (!storage) {
@@ -176,6 +179,7 @@ export default function NotesPage() {
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
         setImageUrl(downloadURL);
+        setJustUploaded(true);
         setIsUploading(false);
         toast({ title: 'Upload erfolgreich', description: 'Das Bild ist bereit zum Speichern.' });
       }
@@ -359,13 +363,13 @@ export default function NotesPage() {
                         {uploadError && <p className="text-sm text-destructive mt-2">{uploadError}</p>}
                         {imageUrl && (
                             <div className="mt-2 relative w-24 h-24">
-                                <NextImage src={generateThumbnailUrl(imageUrl)} alt="Vorschau" width={96} height={96} className="rounded-md object-cover" />
+                                <NextImage src={justUploaded ? imageUrl : generateThumbnailUrl(imageUrl)} alt="Vorschau" width={96} height={96} className="rounded-md object-cover" />
                                 <Button
                                     type="button"
                                     variant="destructive"
                                     size="icon"
                                     className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                                    onClick={() => setImageUrl('')}
+                                    onClick={() => { setImageUrl(''); setJustUploaded(false); }}
                                 >
                                     <Trash2 className="h-3 w-3" />
                                 </Button>
