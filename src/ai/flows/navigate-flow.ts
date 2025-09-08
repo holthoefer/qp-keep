@@ -17,9 +17,8 @@ const NavigateInputSchema = z.string();
 
 export type NavigateOutput = z.infer<typeof NavigateOutputSchema>;
 const NavigateOutputSchema = z.object({
-    path: z.string().describe("The URL path the user should be redirected to. Should be one of the available tools. If no suitable page is found, this should be '/#not-found'.")
+    path: z.string().describe("The URL path the user should be redirected to. Should be one of the available paths. If no suitable page is found, this should be '/#not-found'.")
 });
-
 
 const availablePages = [
     { name: "Arbeitsplätze", path: "/arbeitsplaetze", description: "Zeigt eine Übersicht aller Arbeitsplätze (Workstations, WP) an." },
@@ -33,39 +32,24 @@ const availablePages = [
     { name: "Startseite", path: "/", description: "Die Haupt- oder Startseite der Anwendung (Homepage, Main Page, Home)." },
 ];
 
-const navigationTool = ai.defineTool(
-    {
-        name: 'navigateToPath',
-        description: 'Navigiert den Benutzer zu einem bestimmten URL-Pfad der Anwendung.',
-        inputSchema: z.object({
-            path: z.string().describe("Der URL-Pfad der Zielseite, z.B. '/arbeitsplaetze' oder '/notes'."),
-        }),
-        outputSchema: z.string().describe("Der URL-Pfad, zu dem navigiert wurde."),
-    },
-    async (input) => {
-        return input.path;
-    }
-);
-
-
 const prompt = ai.definePrompt({
     name: 'navigationPrompt',
-    tools: [navigationTool],
     input: { schema: z.object({ prompt: z.string() }) },
+    output: { schema: NavigateOutputSchema },
     prompt: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte. Die Anfrage kann auf Deutsch oder Englisch sein.
     
-    Hier ist eine Liste der verfügbaren Seiten mit ihren Pfaden und Beschreibungen. Nutze diese Informationen, um das richtige Navigationsziel zu bestimmen und das 'navigateToPath'-Tool mit dem korrekten URL-Pfad aufzurufen.
+Hier ist eine Liste der verfügbaren Seiten mit ihren Pfaden und Beschreibungen. Nutze diese Informationen, um das richtige Navigationsziel zu bestimmen und den korrekten URL-Pfad im 'path'-Feld der Ausgabe zurückzugeben.
 
-    Verfügbare Seiten:
-    ${availablePages.map(p => `- Pfad: ${p.path}\n  - Name/Beschreibung: ${p.name} - ${p.description}`).join('\n    ')}
+Verfügbare Seiten:
+${availablePages.map(p => `- Pfad: ${p.path}\n  - Name/Beschreibung: ${p.name} - ${p.description}`).join('\n    ')}
 
-    Analysiere die Anfrage des Benutzers und finde den am besten passenden URL-Pfad aus der obigen Liste. Rufe dann das 'navigateToPath'-Tool mit genau diesem Pfad auf.
-    Wenn du absolut kein passendes Ziel findest, rufe kein Tool auf.
-    
-    Benutzeranfrage: {{{prompt}}}
-    `,
+Analysiere die Anfrage des Benutzers und finde den am besten passenden URL-Pfad aus der obigen Liste.
+Wenn du absolut kein passendes Ziel findest, gib '/#not-found' als Pfad zurück.
+Antworte AUSSCHLIESSLICH mit dem JSON-Objekt, das das 'path'-Feld enthält.
+
+Benutzeranfrage: {{{prompt}}}
+`,
 });
-
 
 const navigateFlow = ai.defineFlow(
     {
@@ -74,18 +58,19 @@ const navigateFlow = ai.defineFlow(
         outputSchema: NavigateOutputSchema,
     },
     async (promptContent) => {
-        const llmResponse = await prompt({
-            prompt: promptContent,
-        });
-        const toolRequest = llmResponse.toolRequest;
-
-        if (toolRequest) {
-            const toolResponse = await toolRequest.run();
-            if (toolResponse?.output) {
-                return { path: toolResponse.output };
-            }
+        if (!promptContent) {
+            return { path: '/#not-found' };
         }
         
+        try {
+            const { output } = await prompt({ prompt: promptContent });
+            if (output) {
+                return output;
+            }
+        } catch (error) {
+            console.error("Error in navigateFlow:", error);
+        }
+
         return { path: '/#not-found' };
     }
 );
