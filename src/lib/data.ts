@@ -31,7 +31,7 @@ export const getAppStorage = getFirebaseStorage;
 export { auth };
 
 // Note Management
-export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'> & { userEmail: string }) => {
+export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'> & { userEmail: string, imageUrl?: string }) => {
     const userProfile = await getProfile(note.userId);
     if (userProfile?.status !== 'active') {
         throw new Error('Ihr Konto ist inaktiv. Sie können keine neuen Notizen erstellen.');
@@ -45,11 +45,17 @@ export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'>
         console.error("Error generating tags, saving note without them.", error);
     }
 
-    await addDoc(collection(db, 'notes'), {
+    const dataToSave: any = {
         ...note,
         tags: tags,
         createdAt: serverTimestamp(),
-    });
+    };
+
+    if (!note.imageUrl) {
+        delete dataToSave.imageUrl;
+    }
+
+    await addDoc(collection(db, 'notes'), dataToSave);
 };
 
 export const getNotes = (
