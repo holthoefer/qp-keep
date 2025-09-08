@@ -35,6 +35,7 @@ const toastVariants = cva(
           "destructive group border-destructive bg-destructive text-destructive-foreground",
         warning: 
           "warning group border-amber-500 bg-amber-500 text-white",
+        info: "info group border-blue-200 bg-blue-100 text-blue-900",
       },
     },
     defaultVariants: {
@@ -67,6 +68,7 @@ const ToastAction = React.forwardRef<
     className={cn(
       "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
       "group-[.warning]:border-muted/40 group-[.warning]:hover:border-amber-500/30 group-[.warning]:hover:bg-amber-500 group-[.warning]:hover:text-white group-[.warning]:focus:ring-amber-500",
+      "group-[.info]:border-blue-300/40 group-[.info]:hover:border-blue-400/30 group-[.info]:hover:bg-blue-200 group-[.info]:hover:text-blue-900 group-[.info]:focus:ring-blue-400",
       className
     )}
     {...props}
@@ -83,6 +85,7 @@ const ToastClose = React.forwardRef<
     className={cn(
       "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
       "group-[.warning]:text-amber-100 group-[.warning]:hover:text-white group-[.warning]:focus:ring-amber-400 group-[.warning]:focus:ring-offset-amber-600",
+       "group-[.info]:text-blue-500 group-[.info]:hover:text-blue-700 group-[.info]:focus:ring-blue-400 group-[.info]:focus:ring-offset-blue-600",
       className
     )}
     toast-close=""

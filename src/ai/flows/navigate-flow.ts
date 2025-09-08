@@ -12,13 +12,14 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const NavigateInputSchema = z.string();
 export type NavigateInput = z.infer<typeof NavigateInputSchema>;
+const NavigateInputSchema = z.string();
 
+export type NavigateOutput = z.infer<typeof NavigateOutputSchema>;
 const NavigateOutputSchema = z.object({
     path: z.string().describe("The URL path the user should be redirected to. Should be one of the available tools. If no suitable page is found, this should be '/#not-found'.")
 });
-export type NavigateOutput = z.infer<typeof NavigateOutputSchema>;
+
 
 const availablePages = [
     { name: "Arbeitsplätze", path: "/arbeitsplaetze", description: "Zeigt eine Übersicht aller Arbeitsplätze an." },
@@ -60,7 +61,7 @@ Wenn du kein passendes Ziel findest, rufe kein Tool auf.
 });
 
 
-export const navigateFlow = ai.defineFlow(
+const navigateFlow = ai.defineFlow(
     {
         name: 'navigateFlow',
         inputSchema: NavigateInputSchema,

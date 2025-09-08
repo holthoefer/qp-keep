@@ -42,9 +42,9 @@ export default function HomePage() {
         router.push(result.path);
       } else {
         toast({
+            variant: "info",
             title: "Unbekannter Befehl",
             description: `Ich habe "${agentInput}" nicht verstanden. Wohin möchten Sie gehen?`,
-            variant: "destructive",
             action: (
               <div className="flex flex-col gap-2">
                 <ToastAction altText="Arbeitsplätze" onClick={() => router.push('/arbeitsplaetze')}>Arbeitsplätze</ToastAction>
