@@ -26,6 +26,7 @@ export default function HomePage() {
   
   const [agentInput, setAgentInput] = useState('');
   const [isAgentProcessing, setIsAgentProcessing] = useState(false);
+  const isNoteOnlyUser = profile?.status === 'note';
 
   const handleLogout = async () => {
     await logout();
@@ -38,6 +39,19 @@ export default function HomePage() {
     setIsAgentProcessing(true);
     try {
       const result = await navigate(agentInput);
+      
+      // Restriction for 'note' status users
+      if (isNoteOnlyUser && result.path !== '/notes') {
+          toast({
+              variant: "destructive",
+              title: "Zugriff beschränkt",
+              description: "Mit Ihrem aktuellen Status können Sie nur die Notizenseite verwenden.",
+          });
+          setIsAgentProcessing(false);
+          setAgentInput('');
+          return;
+      }
+      
       if (result.path && result.path !== '/#not-found') {
         let finalPath = result.path;
         if(result.message) {
@@ -100,7 +114,7 @@ export default function HomePage() {
                     <Button 
                         onClick={() => router.push('/arbeitsplaetze')} 
                         className="w-full"
-                        disabled={profile?.status === 'inactive'}
+                        disabled={profile?.status === 'inactive' || isNoteOnlyUser}
                     >
                         <LayoutGrid className="mr-2 h-4 w-4" />
                         Arbeitsplätze
@@ -108,7 +122,7 @@ export default function HomePage() {
                     <Button 
                         onClick={() => router.push('/dna')} 
                         className="w-full"
-                        disabled={profile?.status === 'inactive'}
+                        disabled={profile?.status === 'inactive' || isNoteOnlyUser}
                     >
                         <Network className="mr-2 h-4 w-4" />
                         DNA  (akt. Merkmale)
@@ -116,7 +130,7 @@ export default function HomePage() {
                      <Button 
                         onClick={() => router.push('/events')} 
                         className="w-full"
-                        disabled={profile?.status === 'inactive'}
+                        disabled={profile?.status === 'inactive' || isNoteOnlyUser}
                     >
                         <Wrench className="mr-2 h-4 w-4" />
                         Events
@@ -124,7 +138,7 @@ export default function HomePage() {
                     <Button 
                         onClick={() => router.push('/incidents')} 
                         className="w-full"
-                        disabled={profile?.status === 'inactive'}
+                        disabled={profile?.status === 'inactive' || isNoteOnlyUser}
                     >
                         <Siren className="mr-2 h-4 w-4" />
                         Incidents
@@ -132,7 +146,7 @@ export default function HomePage() {
                      <Button 
                         onClick={() => router.push('/cp')} 
                         className="w-full"
-                        disabled={profile?.status === 'inactive'}
+                        disabled={profile?.status === 'inactive' || isNoteOnlyUser}
                     >
                         <Target className="mr-2 h-4 w-4" />
                         Control Plan {profile && !isAdmin && "(read)"}
@@ -140,7 +154,7 @@ export default function HomePage() {
                      <Button 
                         onClick={() => router.push('/lenkungsplan')} 
                         className="w-full"
-                        disabled={profile?.status === 'inactive'}
+                        disabled={profile?.status === 'inactive' || isNoteOnlyUser}
                     >
                         <Book className="mr-2 h-4 w-4" />
                         Plan-Ideen
@@ -188,13 +202,22 @@ export default function HomePage() {
                     </AlertDescription>
                 </Alert>
                 )}
+                {isNoteOnlyUser && (
+                <Alert variant="info" className="text-left">
+                    <ShieldAlert className="h-4 w-4" />
+                    <AlertTitle>Zugriff beschränkt</AlertTitle>
+                    <AlertDescription>
+                      Nur eigene Notizen zugelassen. Bitte beim Administrator qp@quapilot.com melden für weitere Funktionen.
+                    </AlertDescription>
+                </Alert>
+                )}
 
-                <div className="text-center">
+                <div className="text-center pt-2">
                     <Button onClick={handleLogout} variant="secondary" className="w-full">
                         <LogOut className="mr-2 h-4 w-4" />
                         Ausloggen
                     </Button>
-                    <p className="font-medium text-sm text-muted-foreground mt-2">{user.email}</p>
+                    <p className="font-medium text-sm text-muted-foreground mt-1">{user.email}</p>
                 </div>
             </div>
         </div>

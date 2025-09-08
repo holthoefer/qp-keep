@@ -82,7 +82,7 @@ export default function UserManagementPage() {
     }
   };
 
-  const handleStatusChange = async (uid: string, status: 'active' | 'inactive') => {
+  const handleStatusChange = async (uid: string, status: 'active' | 'inactive' | 'note') => {
     try {
       await updateUser(uid, { status });
       setUsers(users.map(u => u.uid === uid ? { ...u, status } : u));
@@ -283,19 +283,23 @@ export default function UserManagementPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center">
-                                            <Badge variant={u.status === 'active' ? 'default' : 'destructive'} className={u.status === 'active' ? 'bg-green-500 hover:bg-green-600' : ''}>
-                                                {u.status === 'active' ? 'Active' : 'Inactive'}
+                                            <Badge 
+                                                variant={u.status === 'active' ? 'default' : u.status === 'note' ? 'secondary' : 'destructive'} 
+                                                className={u.status === 'active' ? 'bg-green-500 hover:bg-green-600' : ''}
+                                            >
+                                                {u.status}
                                             </Badge>
                                             <Select
                                                 value={u.status}
-                                                onValueChange={(value: 'active' | 'inactive') => handleStatusChange(u.uid, value)}
+                                                onValueChange={(value: 'active' | 'inactive' | 'note') => handleStatusChange(u.uid, value)}
                                                 disabled={u.uid === user?.uid}
                                             >
-                                                <SelectTrigger className="w-[100px] ml-2 h-8">
+                                                <SelectTrigger className="w-[120px] ml-2 h-8">
                                                     <SelectValue placeholder="Status ändern" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="active">Active</SelectItem>
+                                                    <SelectItem value="note">Note</SelectItem>
                                                     <SelectItem value="inactive">Inactive</SelectItem>
                                                 </SelectContent>
                                             </Select>

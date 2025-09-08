@@ -267,7 +267,7 @@ export default function NotesPage() {
                       <FolderKanban className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
-                      <Wrench className="h-4 w-4" />
+                      <Wrench className="mr-2 h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
                       <Siren className="h-4 w-4" />

@@ -36,7 +36,7 @@ export const addNote = async (note: Omit<Note, 'id' | 'createdAt' | 'userEmail'>
     if (!user) throw new Error("Nicht authentifiziert.");
     
     const userProfile = await getProfile(user);
-    if (userProfile?.status !== 'active') {
+    if (userProfile?.status !== 'active' && userProfile?.status !== 'note') {
         throw new Error('Ihr Konto ist inaktiv. Sie können keine neuen Notizen erstellen.');
     }
     
@@ -112,7 +112,7 @@ export const getProfile = async (user: User): Promise<UserProfile | null> => {
                 displayName: user.displayName,
                 photoURL: user.photoURL,
                 role: 'user', // Default role
-                status: 'active', // Default status
+                status: 'note', // Default status for new users
             };
             await setDoc(userDocRef, {
                 ...newUserProfile,

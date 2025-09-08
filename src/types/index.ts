@@ -152,7 +152,7 @@ export interface UserProfile {
     displayName?: string | null;
     photoURL?: string | null;
     role: 'user' | 'admin';
-    status: 'active' | 'inactive';
+    status: 'active' | 'inactive' | 'note';
     createdAt: Timestamp;
     roles?: string[];
 }
