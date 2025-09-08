@@ -16,7 +16,7 @@ const NavigateInputSchema = z.string();
 export type NavigateInput = z.infer<typeof NavigateInputSchema>;
 
 const NavigateOutputSchema = z.object({
-    path: z.string().describe("The URL path the user should be redirected to. Should be one of the available tools.")
+    path: z.string().describe("The URL path the user should be redirected to. Should be one of the available tools. If no suitable page is found, this should be '/#not-found'.")
 });
 export type NavigateOutput = z.infer<typeof NavigateOutputSchema>;
 
@@ -52,6 +52,7 @@ const prompt = ai.definePrompt({
     name: 'navigationPrompt',
     tools: [navigationTool],
     prompt: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte. Nutze das bereitgestellte Tool, um das Navigationsziel zu bestimmen.
+Wenn du kein passendes Ziel findest, rufe kein Tool auf.
     
     Benutzeranfrage: {{{prompt}}}
     
@@ -74,7 +75,8 @@ export const navigateFlow = ai.defineFlow(
             return { path: toolResponse };
         }
         
-        return { path: '/' };
+        // Return a specific value if no tool was called
+        return { path: '/#not-found' };
     }
 );
 

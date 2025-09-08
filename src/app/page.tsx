@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { navigate } from '@/ai/flows/navigate-flow';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 
 export default function HomePage() {
@@ -37,13 +38,20 @@ export default function HomePage() {
     setIsAgentProcessing(true);
     try {
       const result = await navigate(agentInput);
-      if (result.path) {
+      if (result.path && result.path !== '/#not-found') {
         router.push(result.path);
       } else {
         toast({
             title: "Unbekannter Befehl",
-            description: "Ich konnte Ihre Anfrage leider nicht verstehen.",
-            variant: "destructive"
+            description: `Ich habe "${agentInput}" nicht verstanden. Wohin möchten Sie gehen?`,
+            variant: "destructive",
+            action: (
+              <div className="flex flex-col gap-2">
+                <ToastAction altText="Arbeitsplätze" onClick={() => router.push('/arbeitsplaetze')}>Arbeitsplätze</ToastAction>
+                <ToastAction altText="DNA" onClick={() => router.push('/dna')}>DNA</ToastAction>
+                <ToastAction altText="Events" onClick={() => router.push('/events')}>Events</ToastAction>
+              </div>
+            )
         });
       }
     } catch (e: any) {
@@ -73,11 +81,13 @@ export default function HomePage() {
                  www.quapilot.com
                </a>
             </div>
-            <Link href="/qpinfo" aria-label="Zur Info-Seite" className="flex justify-center">
-                <Button variant="ghost" className="mb-8 flex flex-col items-center justify-center space-y-4 h-auto">
-                    <Image src={logo} alt="qp Loop Logo" width={256} height={256} className="h-64 w-64 text-primary" />
-                </Button>
-            </Link>
+            <div className="flex justify-center">
+                <Link href="/qpinfo" aria-label="Zur Info-Seite" className="flex justify-center">
+                    <Button variant="ghost" className="mb-8 flex flex-col items-center justify-center space-y-4 h-auto">
+                        <Image src={logo} alt="qp Loop Logo" width={256} height={256} className="h-64 w-64 text-primary" />
+                    </Button>
+                </Link>
+            </div>
           
             <div className="space-y-4">
                 <p className="font-medium">{user.email}</p>
@@ -97,7 +107,7 @@ export default function HomePage() {
                         disabled={profile?.status === 'inactive'}
                     >
                         <Network className="mr-2 h-4 w-4" />
-                        DNA (akt. Merkmale)
+                        DNA  (akt. Merkmale)
                     </Button>
                      <Button 
                         onClick={() => router.push('/events')} 
