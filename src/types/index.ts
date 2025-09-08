@@ -144,6 +144,7 @@ export interface Note {
     tags?: string[];
     createdAt: Timestamp;
     imageUrl?: string;
+    attachmentUrl?: string;
 }
 
 export interface UserProfile {
@@ -226,5 +227,3 @@ export interface Event {
     lot?: string;
     attachmentUrl?: string;
 }
-
-    

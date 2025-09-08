@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Wrench, StickyNote, MoreVertical, UploadCloud, ImageIcon } from 'lucide-react';
+import { Loader2, Trash2, Shield, ShieldAlert, UserCircle, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, Siren, Wrench, StickyNote, MoreVertical, UploadCloud, ImageIcon, Link as LinkIcon, File } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -40,6 +40,9 @@ export default function NotesPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [attachmentUrl, setAttachmentUrl] = useState('');
+  const [attachmentName, setAttachmentName] = useState('');
+
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +52,9 @@ export default function NotesPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState('');
@@ -108,10 +113,13 @@ export default function NotesPage() {
         title,
         content,
         imageUrl,
+        attachmentUrl,
       });
       setTitle('');
       setContent('');
       setImageUrl('');
+      setAttachmentUrl('');
+      setAttachmentName('');
       setJustUploaded(false);
       toast({
         title: "Notiz gespeichert!",
@@ -149,7 +157,7 @@ export default function NotesPage() {
     }
   }
   
-  const handleUpload = (file: File) => {
+  const handleUpload = (file: File, type: 'image' | 'attachment') => {
     if (!user) return;
     setIsUploading(true);
     setUploadProgress(0);
@@ -162,6 +170,13 @@ export default function NotesPage() {
       setIsUploading(false);
       return;
     }
+
+    if (type === 'image' && !file.type.startsWith('image/')) {
+        setUploadError("Bitte nur Bilddateien hochladen.");
+        setIsUploading(false);
+        return;
+    }
+
     const storageRef = ref(storage, `uploads/notes/${user.uid}/${Date.now()}_${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -178,10 +193,15 @@ export default function NotesPage() {
       },
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        setImageUrl(downloadURL);
-        setJustUploaded(true);
+        if (type === 'image') {
+            setImageUrl(downloadURL);
+            setJustUploaded(true);
+        } else {
+            setAttachmentUrl(downloadURL);
+            setAttachmentName(file.name);
+        }
         setIsUploading(false);
-        toast({ title: 'Upload erfolgreich', description: 'Das Bild ist bereit zum Speichern.' });
+        toast({ title: 'Upload erfolgreich', description: 'Die Datei ist bereit zum Speichern.' });
       }
     );
   };
@@ -340,50 +360,87 @@ export default function NotesPage() {
                       rows={6}
                       disabled={isFormDisabled}
                     />
+                     {isUploading && <Progress value={uploadProgress} className="mt-2 w-full" />}
+                     {uploadError && <p className="text-sm text-destructive mt-2">{uploadError}</p>}
                     
                     <div className="flex justify-between items-end gap-4">
-                        <div className="space-y-2">
-                           <Button
+                      <div className="space-y-2">
+                        {!imageUrl && (
+                             <Button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 variant="outline"
                                 disabled={isUploading}
                             >
-                                <UploadCloud className="mr-2 h-4 w-4" />
-                                {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Bild hochladen'}
+                                <ImageIcon className="mr-2 h-4 w-4" />
+                                Bild hochladen
                             </Button>
-                             <Input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
-                                className="hidden"
-                                accept="image/jpeg,image/png,image/gif"
+                        )}
+                         {imageUrl && (
+                            <div className="relative w-32 h-32">
+                                <NextImage src={justUploaded ? imageUrl : generateThumbnailUrl(imageUrl)} alt="Vorschau" fill className="rounded-md object-cover" />
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                                    onClick={() => { setImageUrl(''); setJustUploaded(false); }}
+                                >
+                                    <Trash2 className="h-3 w-3" />
+                                </Button>
+                            </div>
+                        )}
+                        {!attachmentUrl && (
+                             <Button
+                                type="button"
+                                onClick={() => attachmentInputRef.current?.click()}
+                                variant="outline"
                                 disabled={isUploading}
-                            />
-                            {isUploading && <Progress value={uploadProgress} className="mt-2 w-full" />}
-                            {uploadError && <p className="text-sm text-destructive mt-2">{uploadError}</p>}
-                            {imageUrl && (
-                                <div className="mt-2 relative w-32 h-32">
-                                    <NextImage src={justUploaded ? imageUrl : generateThumbnailUrl(imageUrl)} alt="Vorschau" fill className="rounded-md object-cover" />
-                                    <Button
-                                        type="button"
-                                        variant="destructive"
-                                        size="icon"
-                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                                        onClick={() => { setImageUrl(''); setJustUploaded(false); }}
-                                    >
-                                        <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-                        <div className="flex-shrink-0">
-                          <Button type="submit" disabled={isFormDisabled} size="lg">
-                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Speichern & Tags
-                          </Button>
-                        </div>
+                            >
+                                <File className="mr-2 h-4 w-4" />
+                                Datei anhängen
+                            </Button>
+                        )}
+                        {attachmentUrl && (
+                            <div className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted">
+                                <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                                <span className="truncate" title={attachmentName}>{attachmentName}</span>
+                                 <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 rounded-full flex-shrink-0"
+                                    onClick={() => { setAttachmentUrl(''); setAttachmentName(''); }}
+                                >
+                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                </Button>
+                            </div>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0">
+                        <Button type="submit" disabled={isFormDisabled} size="lg">
+                          {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Speichern & Tags
+                        </Button>
+                      </div>
                     </div>
+
+                    <Input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'image')}
+                        className="hidden"
+                        accept="image/jpeg,image/png,image/gif"
+                        disabled={isUploading}
+                    />
+                    <Input
+                        type="file"
+                        ref={attachmentInputRef}
+                        onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], 'attachment')}
+                        className="hidden"
+                        disabled={isUploading}
+                    />
+
                   </form>
                 )}
               </CardContent>
@@ -439,12 +496,20 @@ export default function NotesPage() {
                     <CardContent>
                       <p className="whitespace-pre-wrap">{note.content}</p>
                     </CardContent>
-                    {(note.tags && note.tags.length > 0) || note.imageUrl ? (
+                    {(note.tags && note.tags.length > 0) || note.imageUrl || note.attachmentUrl ? (
                       <CardFooter className="flex-wrap gap-2 pt-4 justify-between items-end">
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 items-center">
                             {note.tags?.map(tag => (
                                 <Badge key={tag} variant="secondary">{tag}</Badge>
                             ))}
+                            {note.attachmentUrl && (
+                                <Button asChild variant="outline" size="sm">
+                                    <a href={note.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                                        <LinkIcon className="mr-2 h-4 w-4" />
+                                        Anhang
+                                    </a>
+                                </Button>
+                            )}
                         </div>
                         {note.imageUrl && (
                              <button onClick={() => { setModalImageUrl(note.imageUrl!); setIsModalOpen(true); }} className="block">
