@@ -17,7 +17,8 @@ const NavigateInputSchema = z.string();
 
 export type NavigateOutput = z.infer<typeof NavigateOutputSchema>;
 const NavigateOutputSchema = z.object({
-    path: z.string().describe("The URL path the user should be redirected to. Should be one of the available paths. If no suitable page is found, this should be '/#not-found'.")
+    path: z.string().describe("The URL path the user should be redirected to. Should be one of the available paths. If no suitable page is found, this should be '/#not-found'."),
+    message: z.string().optional().describe("An optional message to display on the target page, extracted from the user's prompt (e.g., a greeting).")
 });
 
 const availablePages = [
@@ -36,7 +37,7 @@ const prompt = ai.definePrompt({
     name: 'navigationPrompt',
     input: { schema: z.object({ prompt: z.string() }) },
     output: { schema: NavigateOutputSchema },
-    prompt: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte. Die Anfrage kann auf Deutsch oder Englisch sein.
+    prompt: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte und ob eine zusätzliche Nachricht angezeigt werden soll. Die Anfrage kann auf Deutsch oder Englisch sein.
     
 Hier ist eine Liste der verfügbaren Seiten mit ihren Pfaden und Beschreibungen. Nutze diese Informationen, um das richtige Navigationsziel zu bestimmen und den korrekten URL-Pfad im 'path'-Feld der Ausgabe zurückzugeben.
 
@@ -44,8 +45,10 @@ Verfügbare Seiten:
 ${availablePages.map(p => `- Pfad: ${p.path}\n  - Name/Beschreibung: ${p.name} - ${p.description}`).join('\n    ')}
 
 Analysiere die Anfrage des Benutzers und finde den am besten passenden URL-Pfad aus der obigen Liste.
+Wenn die Anfrage eine zusätzliche Nachricht, einen Gruß oder eine Anweisung enthält, die auf der Zielseite angezeigt werden soll (z.B. "wünsche einen guten Morgen"), extrahiere diesen Text und füge ihn in das 'message'-Feld ein.
+
 Wenn du absolut kein passendes Ziel findest, gib '/#not-found' als Pfad zurück.
-Antworte AUSSCHLIESSLICH mit dem JSON-Objekt, das das 'path'-Feld enthält.
+Antworte AUSSCHLIESSLICH mit dem JSON-Objekt, das die Felder enthält.
 
 Benutzeranfrage: {{{prompt}}}
 `,

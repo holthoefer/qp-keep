@@ -2,9 +2,10 @@
 
 'use client';
 
+import * as React from 'react';
 import { WorkstationGrid } from "@/components/workstations/WorkstationGrid";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
 import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, Network, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote } from "lucide-react";
 import {
@@ -19,11 +20,25 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import logo from '../Logo.png';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 
 export default function ArbeitsplaetzePage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user, logout, isAdmin } = useAuth();
+    const { toast } = useToast();
+    
+    React.useEffect(() => {
+        const message = searchParams.get('message');
+        if(message) {
+            toast({
+                title: "Agenten-Nachricht",
+                description: message,
+                duration: 4000,
+            })
+        }
+    }, [searchParams, toast]);
     
     const handleLogout = async () => {
         await logout();

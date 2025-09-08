@@ -39,7 +39,11 @@ export default function HomePage() {
     try {
       const result = await navigate(agentInput);
       if (result.path && result.path !== '/#not-found') {
-        router.push(result.path);
+        let finalPath = result.path;
+        if(result.message) {
+            finalPath += `?message=${encodeURIComponent(result.message)}`;
+        }
+        router.push(finalPath);
       } else {
         toast({
             variant: "info",
