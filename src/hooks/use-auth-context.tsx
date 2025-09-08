@@ -41,12 +41,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setLoading(true);
             if (currentUser) {
-                // Ensure profile is created before proceeding
-                await saveOrUpdateUserProfile(currentUser); 
-                const userProfile = await getProfile(currentUser.uid);
-                
-                // If profile is still null after creation attempt, it's a problem.
-                // However, for now, we'll proceed and let other parts of the app handle a null profile.
+                // Try to get profile
+                let userProfile = await getProfile(currentUser.uid);
+
+                // If profile doesn't exist, create it and then refetch it
+                if (!userProfile) {
+                    await saveOrUpdateUserProfile(currentUser);
+                    userProfile = await getProfile(currentUser.uid); // Refetch after creation
+                }
                 
                 setUser(currentUser);
                 setProfile(userProfile);
