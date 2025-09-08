@@ -341,47 +341,48 @@ export default function NotesPage() {
                       disabled={isFormDisabled}
                     />
                     
-                    <div className="space-y-2">
-                        <Button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            variant="outline"
-                            disabled={isUploading}
-                        >
-                            <UploadCloud className="mr-2 h-4 w-4" />
-                            {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Bild hochladen'}
-                        </Button>
-                        <Input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
-                            className="hidden"
-                            accept="image/jpeg,image/png,image/gif"
-                            disabled={isUploading}
-                        />
-                        {isUploading && <Progress value={uploadProgress} className="mt-2" />}
-                        {uploadError && <p className="text-sm text-destructive mt-2">{uploadError}</p>}
-                        {imageUrl && (
-                            <div className="mt-2 relative w-24 h-24">
-                                <NextImage src={justUploaded ? imageUrl : generateThumbnailUrl(imageUrl)} alt="Vorschau" width={96} height={96} className="rounded-md object-cover" />
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                                    onClick={() => { setImageUrl(''); setJustUploaded(false); }}
-                                >
-                                    <Trash2 className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="flex items-center justify-end">
-                      <Button type="submit" disabled={isFormDisabled}>
-                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Speichern & Tags generieren
-                      </Button>
+                    <div className="flex justify-between items-end gap-4">
+                        <div className="space-y-2">
+                           <Button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                variant="outline"
+                                disabled={isUploading}
+                            >
+                                <UploadCloud className="mr-2 h-4 w-4" />
+                                {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Bild hochladen'}
+                            </Button>
+                             <Input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
+                                className="hidden"
+                                accept="image/jpeg,image/png,image/gif"
+                                disabled={isUploading}
+                            />
+                            {isUploading && <Progress value={uploadProgress} className="mt-2 w-full" />}
+                            {uploadError && <p className="text-sm text-destructive mt-2">{uploadError}</p>}
+                            {imageUrl && (
+                                <div className="mt-2 relative w-32 h-32">
+                                    <NextImage src={justUploaded ? imageUrl : generateThumbnailUrl(imageUrl)} alt="Vorschau" fill className="rounded-md object-cover" />
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                                        onClick={() => { setImageUrl(''); setJustUploaded(false); }}
+                                    >
+                                        <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex-shrink-0">
+                          <Button type="submit" disabled={isFormDisabled} size="lg">
+                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Speichern & Tags
+                          </Button>
+                        </div>
                     </div>
                   </form>
                 )}
