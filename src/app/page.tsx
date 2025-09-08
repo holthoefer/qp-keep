@@ -65,6 +65,13 @@ export default function HomePage() {
         setAgentInput('');
     }
   };
+  
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // Prevents adding a new line
+        handleAgentSubmit();
+    }
+  };
 
   // State 1: AuthProvider handles the main loading state
   if (authLoading) {
@@ -176,6 +183,7 @@ export default function HomePage() {
                     placeholder="Sagen Sie dem Agenten, was Sie tun möchten..."
                     value={agentInput}
                     onChange={(e) => setAgentInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     disabled={isAgentProcessing}
                   />
                   <Button onClick={handleAgentSubmit} className="w-full" disabled={isAgentProcessing || !agentInput.trim()}>

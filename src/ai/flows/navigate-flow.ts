@@ -22,15 +22,15 @@ const NavigateOutputSchema = z.object({
 
 
 const availablePages = [
-    { name: "Arbeitsplätze", path: "/arbeitsplaetze", description: "Zeigt eine Übersicht aller Arbeitsplätze an." },
-    { name: "DNA", path: "/dna", description: "Zeigt die DNA-Ansicht der aktiven Merkmale." },
+    { name: "Arbeitsplätze", path: "/arbeitsplaetze", description: "Zeigt eine Übersicht aller Arbeitsplätze (Workstations, WP) an." },
+    { name: "DNA", path: "/dna", description: "Zeigt die DNA-Ansicht der aktiven Merkmale an (active characteristics)." },
     { name: "Events", path: "/events", description: "Zeigt die Liste der Shopfloor-Events an oder erlaubt das Erstellen eines neuen Events." },
-    { name: "Incidents", path: "/incidents", description: "Zeigt die Liste der Incidents an oder erlaubt das Erstellen eines neuen Incidents." },
-    { name: "Control Plan", path: "/cp", description: "Zeigt die Übersicht der Control Plans (Lenkungspläne)." },
-    { name: "Notizen", path: "/notes", description: "Zeigt die Notizenseite an, auf der Notizen erstellt und angezeigt werden können." },
-    { name: "Plan-Ideen", path: "/lenkungsplan", description: "Zeigt die Seite für Plan-Ideen und Entwürfe (Lenkungsplan-Rohfassungen)." },
-    { name: "Admin", path: "/admin/users", description: "Zeigt die Admin-Konsole zur Benutzerverwaltung." },
-    { name: "Startseite", path: "/", description: "Die Haupt- oder Startseite der Anwendung." },
+    { name: "Incidents", path: "/incidents", description: "Zeigt die Liste der Incidents (Vorfälle) an oder erlaubt das Erstellen eines neuen Incidents." },
+    { name: "Control Plan", path: "/cp", description: "Zeigt die Übersicht der Control Plans (Lenkungspläne, CP) an." },
+    { name: "Notizen", path: "/notes", description: "Zeigt die Notizenseite an, auf der Notizen erstellt und angezeigt werden können (Notes)." },
+    { name: "Plan-Ideen", path: "/lenkungsplan", description: "Zeigt die Seite für Plan-Ideen und Entwürfe (Lenkungsplan-Rohfassungen, LP) an." },
+    { name: "Admin", path: "/admin/users", description: "Zeigt die Admin-Konsole zur Benutzerverwaltung (User Management) an." },
+    { name: "Startseite", path: "/", description: "Die Haupt- oder Startseite der Anwendung (Homepage, Main Page, Home)." },
 ];
 
 const navigationTool = ai.defineTool(
@@ -52,9 +52,12 @@ const navigationTool = ai.defineTool(
 const prompt = ai.definePrompt({
     name: 'navigationPrompt',
     tools: [navigationTool],
-    prompt: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte. Nutze das bereitgestellte Tool, um das Navigationsziel zu bestimmen.
+    prompt: `Du bist ein Navigations-Agent. Deine Aufgabe ist es, aus der Anfrage des Benutzers zu ermitteln, zu welcher Seite er navigieren möchte. Die Anfrage kann auf Deutsch oder Englisch sein. Nutze das bereitgestellte Tool und die Beschreibungen der Seiten, um das Navigationsziel zu bestimmen.
 Wenn du kein passendes Ziel findest, rufe kein Tool auf.
     
+    Seitenbeschreibungen:
+    ${availablePages.map(p => `- ${p.name}: ${p.description}`).join('\n    ')}
+
     Benutzeranfrage: {{{prompt}}}
     
     Analysiere die Anfrage und rufe das 'navigateToPage'-Tool mit dem am besten passenden Seitennamen auf.`,
