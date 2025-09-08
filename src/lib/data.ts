@@ -379,7 +379,7 @@ export const getAuftraege = async (): Promise<Auftrag[]> => {
 export const getAuftrag = async (po: string): Promise<Auftrag | null> => {
   const docRef = doc(db, 'auftraege', po);
   const docSnap = await getDoc(docRef);
-  return docSnap.exists() ? { id: doc.id, ...doc.data() } as Auftrag : null;
+  return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Auftrag : null;
 };
 
 export const saveAuftrag = async (auftrag: Auftrag): Promise<void> => {

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -40,8 +41,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setLoading(true);
             if (currentUser) {
-                await saveOrUpdateUserProfile(currentUser);
+                // Ensure profile is created before proceeding
+                await saveOrUpdateUserProfile(currentUser); 
                 const userProfile = await getProfile(currentUser.uid);
+                
+                // If profile is still null after creation attempt, it's a problem.
+                // However, for now, we'll proceed and let other parts of the app handle a null profile.
+                
                 setUser(currentUser);
                 setProfile(userProfile);
 
