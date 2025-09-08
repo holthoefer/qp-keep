@@ -100,36 +100,26 @@ export const deleteNote = async (noteId: string) => {
 }
 
 // User Profile Management
-export const saveOrUpdateUserProfile = async (user: User) => {
-    const userRef = doc(db, 'users', user.uid);
-    const docSnap = await getDoc(userRef);
-
-    if (!docSnap.exists()) {
-        await setDoc(userRef, {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            role: 'user', // Default role
-            status: 'active', // Default status
-            createdAt: serverTimestamp()
-        });
-    }
-};
-
 export const getProfile = async (user: User): Promise<UserProfile | null> => {
     const userDocRef = doc(db, 'users', user.uid);
     try {
-        let userDocSnap = await getDoc(userDocRef);
+        const userDocSnap = await getDoc(userDocRef);
         if (!userDocSnap.exists()) {
             console.log(`Profile for ${user.uid} not found, creating it...`);
-            await saveOrUpdateUserProfile(user);
-            // After creating, we must re-fetch the document.
-            userDocSnap = await getDoc(userDocRef);
-            if (!userDocSnap.exists()) {
-                // If it still doesn't exist, something is wrong.
-                throw new Error("Failed to create and fetch user profile.");
-            }
+            const newUserProfile: Omit<UserProfile, 'createdAt'> = {
+                uid: user.uid,
+                email: user.email!,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+                role: 'user', // Default role
+                status: 'active', // Default status
+            };
+            await setDoc(userDocRef, {
+                ...newUserProfile,
+                createdAt: serverTimestamp()
+            });
+            // Return the newly created profile data, creating a client-side timestamp
+            return { ...newUserProfile, createdAt: new Timestamp(Date.now() / 1000, 0) };
         }
         return { uid: userDocSnap.id, ...userDocSnap.data() } as UserProfile;
     } catch (error) {

@@ -3,82 +3,77 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if a user is an admin
+  
+    // Helper function to check if the user is an admin
     function isAdmin() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Helper function to check if a user is active
-    function isActive() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
-    }
-
-    // Users can read their own profile, admins can read any profile
+    // Rules for user profiles
     match /users/{userId} {
-      allow read: if request.auth.uid == userId || isAdmin();
-      allow write: if isAdmin(); // Only admins can change roles/status
-      allow create: if request.auth.uid == userId;
+      allow read, create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId || isAdmin();
+      
+      // Admins can read/write any user profile
+      allow list, delete, write: if isAdmin();
     }
     
-    // Notes can be created by active users.
-    // They can only be read/deleted by their owner, or by an admin.
+    // Rules for notes
     match /notes/{noteId} {
-      allow read: if request.auth.uid == resource.data.userId || isAdmin();
-      allow create: if request.auth.uid == request.resource.data.userId && isActive();
-      allow delete: if request.auth.uid == resource.data.userId || isAdmin();
-      allow update: if request.auth.uid == resource.data.userId;
+      // Any authenticated user with an 'active' profile can create notes.
+      allow create: if request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+      
+      // Users can read/update/delete their own notes.
+      allow read, update, delete: if request.auth.uid == resource.data.userId;
+      
+      // Admins can read/delete any note.
+      allow read, delete: if isAdmin();
     }
 
-    // Control Plans (simple & advanced), Auftraege, Workstations, Events, Incidents
-    // should be readable by any authenticated user.
-    // Write access is restricted to admins for most.
-    match /{collection}/{docId} {
-       allow read: if request.auth != null;
-    }
-    
+    // Public collections (read-only for all authenticated users)
     match /controlplan/{planId} {
-        allow write: if isAdmin();
-    }
-    
-    match /lenkungsplan/{planId} {
-        allow write: if isAdmin();
+       allow read: if request.auth != null;
+       allow write: if isAdmin();
     }
 
-    match /control-plans/{planId} {
-        allow write: if request.auth != null;
+    match /lenkungsplan/{planId} {
+       allow read, write: if request.auth != null;
     }
     
     match /workstations/{wsId} {
-        allow write: if request.auth != null;
+       allow read: if request.auth != null;
+       allow write: if request.auth != null;
     }
     
     match /auftraege/{auftragId} {
-        allow write: if isAdmin();
+       allow read: if request.auth != null;
+       allow write: if isAdmin();
     }
     
-    match /dna/{dnaId} {
-      allow read, write: if request.auth != null;
+     match /dna/{dnaId} {
+       allow read, write: if request.auth != null;
     }
     
     match /samples/{sampleId} {
-       allow read, write: if request.auth != null;
-    }
-
-    match /events/{eventId} {
-      allow create: if request.auth.uid == request.resource.data.userId && isActive();
-      allow read: if request.auth != null;
-      // Only owner or admin can update
-      allow update: if (request.auth.uid == resource.data.userId || isAdmin()) && isActive();
-      // Only admin can delete
-      allow delete: if isAdmin();
+        allow read, write: if request.auth != null;
+        allow delete: if isAdmin();
     }
 
     match /incidents/{incidentId} {
-       allow create: if request.auth != null && isActive();
-       allow read: if request.auth != null;
-       allow update: if request.auth.uid == resource.data.reportedBy.uid || isAdmin();
+        allow read, write: if request.auth != null;
+        allow delete: if isAdmin();
+    }
+    
+    match /events/{eventId} {
+       allow read, write: if request.auth != null;
        allow delete: if isAdmin();
+    }
+    
+    // Advanced Control Plans
+    match /control-plans/{planId} {
+        allow read: if request.auth != null;
+        // Only admins can write/delete
+        allow write, delete: if isAdmin();
     }
   }
 }

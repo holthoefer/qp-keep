@@ -46,18 +46,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(currentUser);
                 setProfile(userProfile);
 
-                const userRoles: string[] = [];
-                if (userProfile?.role) {
-                    userRoles.push(userProfile.role);
+                if (userProfile) {
+                    const userRoles: string[] = [];
+                    if (userProfile.role) {
+                        userRoles.push(userProfile.role);
+                    }
+                    
+                    // Special override for development admin
+                    if (currentUser.email === 'holthofer@gmail.com' && !userRoles.includes('admin')) {
+                        userRoles.push('admin');
+                    }
+                    setRoles(userRoles);
+                } else {
+                    setRoles([]);
                 }
-                
-                // Special override for development admin
-                if (currentUser.email === 'holthofer@gmail.com' && !userRoles.includes('admin')) {
-                    userRoles.push('admin');
-                }
-
-                setRoles(userRoles);
-
             } else {
                 setUser(null);
                 setProfile(null);
