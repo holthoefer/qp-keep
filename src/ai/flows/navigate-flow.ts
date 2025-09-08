@@ -27,7 +27,7 @@ const availablePages = [
     { name: "Events", path: "/events", description: "Zeigt die Liste der Shopfloor-Events an oder erlaubt das Erstellen eines neuen Events." },
     { name: "Incidents", path: "/incidents", description: "Zeigt die Liste der Incidents (Vorfälle) an oder erlaubt das Erstellen eines neuen Incidents." },
     { name: "Control Plan", path: "/cp", description: "Zeigt die Übersicht der Control Plans (Lenkungspläne, CP) an." },
-    { name: "Notizen", path: "/notes", description: "Zeigt die Notizenseite an. Wenn der Benutzer eine neue Notiz erstellen möchte (z.B. 'Notiz: ...'), navigiere hierher und extrahiere den Inhalt in das 'message'-Feld. Formatiere den extrahierten Text in einem sauberen E-Mail-Stil (Anrede, Hauptteil, Grußformel), falls der Kontext dies nahelegt. Der Titel der Notiz wird automatisch auf 'Agent😎' gesetzt." },
+    { name: "Notizen", path: "/notes", description: "Zeigt die Notizenseite an. Wenn der Benutzer eine neue Notiz erstellen möchte (z.B. 'Notiz: ...'), navigiere hierher und extrahiere den Inhalt in das 'message'-Feld. Formatiere den extrahierten Text in einem sauberen E-Mail-Stil (Anrede, Hauptteil mit Absätzen und ggf. Aufzählungspunkten, Grußformel), falls der Kontext dies nahelegt. Der Titel der Notiz wird automatisch auf 'Agent😎' gesetzt." },
     { name: "Plan-Ideen", path: "/lenkungsplan", description: "Zeigt die Seite für Plan-Ideen und Entwürfe (Lenkungsplan-Rohfassungen, LP) an." },
     { name: "Admin", path: "/admin/users", description: "Zeigt die Admin-Konsole zur Benutzerverwaltung (User Management) an." },
     { name: "Startseite", path: "/", description: "Die Haupt- oder Startseite der Anwendung (Homepage, Main Page, Home)." },
@@ -48,7 +48,7 @@ Analysiere die Anfrage des Benutzers und finde den am besten passenden URL-Pfad 
 
 Sonderfälle:
 - Wenn die Anfrage eine zusätzliche Nachricht, einen Gruß oder eine Anweisung enthält (z.B. "wünsche einen guten Morgen"), extrahiere diesen Text und füge ihn in das 'message'-Feld ein.
-- Wenn der Benutzer explizit eine neue Notiz erstellen möchte (z.B. durch "Notiz:", "Notiere:", "Neue Notiz:"), navigiere zur '/notes'-Seite und extrahiere den gesamten nachfolgenden Text als Inhalt für das 'message'-Feld. Formatiere den extrahierten Text in einem sauberen E-Mail-Stil (Anrede, Hauptteil, Grußformel), falls der Kontext dies nahelegt.
+- Wenn der Benutzer explizit eine neue Notiz erstellen möchte (z.B. durch "Notiz:", "Notiere:", "Neue Notiz:"), navigiere zur '/notes'-Seite und extrahiere den gesamten nachfolgenden Text als Inhalt für das 'message'-Feld. Formatiere den extrahierten Text in einem sauberen E-Mail-Stil (Anrede, Hauptteil, Grußformel), gegebenenfalls mit Aufzählungspunkten (Bullet Points), falls der Kontext dies nahelegt.
 
 Wenn du absolut kein passendes Ziel findest, gib '/#not-found' als Pfad zurück.
 Antworte AUSSCHLIESSLICH mit dem JSON-Objekt, das die Felder enthält.
