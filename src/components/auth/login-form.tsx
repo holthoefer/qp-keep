@@ -63,9 +63,9 @@ export function LoginForm() {
       await signupWithEmail(email, password);
       
       toast({ 
-        title: "Konto erstellt", 
-        description: "Bitte überprüfen Sie Ihren Posteingang, um Ihre E-Mail zu bestätigen.",
-        duration: 10000,
+        title: "Konto erfolgreich erstellt",
+        description: "Sie werden nun angemeldet.",
+        duration: 3000,
       });
 
       // Auth state change is handled by the AuthProvider
