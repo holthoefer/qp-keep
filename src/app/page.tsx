@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { LoginForm } from '@/components/auth/login-form';
 import { useAuth } from '@/hooks/use-auth-context';
-import { Loader2, LogOut, ShieldAlert, LayoutGrid, StickyNote, Wrench, Siren, Network, Target, Book, Shield } from 'lucide-react';
+import { Loader2, LogOut, ShieldAlert, LayoutGrid, StickyNote, Wrench, Siren, Network, Target, Book, Shield, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { type UserProfile } from '@/lib/data';
@@ -13,14 +13,49 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Image from 'next/image';
 import logo from './Logo.png';
 import Link from 'next/link';
+import { navigate } from '@/ai/flows/navigate-flow';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function HomePage() {
   const { user, profile, loading: authLoading, logout, isAdmin } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   
+  const [agentInput, setAgentInput] = useState('');
+  const [isAgentProcessing, setIsAgentProcessing] = useState(false);
+
   const handleLogout = async () => {
     await logout();
     router.refresh(); 
+  };
+  
+  const handleAgentSubmit = async () => {
+    if (!agentInput.trim()) return;
+    
+    setIsAgentProcessing(true);
+    try {
+      const result = await navigate(agentInput);
+      if (result.path) {
+        router.push(result.path);
+      } else {
+        toast({
+            title: "Unbekannter Befehl",
+            description: "Ich konnte Ihre Anfrage leider nicht verstehen.",
+            variant: "destructive"
+        });
+      }
+    } catch (e: any) {
+       toast({
+            title: "Fehler beim Agenten",
+            description: e.message || "Ein unerwarteter Fehler ist aufgetreten.",
+            variant: "destructive"
+        });
+    } finally {
+        setIsAgentProcessing(false);
+        setAgentInput('');
+    }
   };
 
   // State 1: AuthProvider handles the main loading state
@@ -31,7 +66,7 @@ export default function HomePage() {
   // State 2: User is logged in
   if (user) {
     return (
-      <main className="flex min-h-screen w-full flex-col items-center justify-start md:justify-center bg-background p-4 pt-8 md:pt-4">
+      <main className="flex min-h-screen w-full flex-col items-center justify-start bg-background p-4 pt-8 md:pt-4">
         <div className="w-full max-w-md text-center">
             <div className="mb-4">
                <a href="https://www.quapilot.com" target="_blank" rel="noopener noreferrer" className="text-lg text-muted-foreground hover:text-primary transition-colors">
@@ -83,12 +118,12 @@ export default function HomePage() {
                      <Button 
                         onClick={() => router.push('/cp')} 
                         className="w-full"
-                        disabled={profile?.status === 'inactive'}
+                        disabled={profile_?.status === 'inactive'}
                     >
                         <Target className="mr-2 h-4 w-4" />
                         Control Plan {profile && !isAdmin && "(read)"}
                     </Button>
-                     <Button 
+                    <Button 
                         onClick={() => router.push('/notes')} 
                         className="w-full"
                         disabled={profile?.status === 'inactive'}
@@ -96,7 +131,7 @@ export default function HomePage() {
                         <StickyNote className="mr-2 h-4 w-4" />
                         Notizen
                     </Button>
-                    <Button 
+                     <Button 
                         onClick={() => router.push('/lenkungsplan')} 
                         className="w-full"
                         disabled={profile?.status === 'inactive'}
@@ -125,6 +160,20 @@ export default function HomePage() {
                     </AlertDescription>
                 </Alert>
                 )}
+                
+                <div className="space-y-2 pt-4">
+                  <Textarea 
+                    placeholder="Sagen Sie dem Agenten, was Sie tun möchten..."
+                    value={agentInput}
+                    onChange={(e) => setAgentInput(e.target.value)}
+                    disabled={isAgentProcessing}
+                  />
+                  <Button onClick={handleAgentSubmit} className="w-full" disabled={isAgentProcessing || !agentInput.trim()}>
+                    {isAgentProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                    An Agenten senden
+                  </Button>
+                </div>
+
 
                 <Button onClick={handleLogout} variant="secondary" className="w-full">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -144,7 +193,7 @@ export default function HomePage() {
           <div className="flex items-center justify-center gap-4">
             <Image src={logo} alt="QuaPilot Logo" width={48} height={48} className="h-12 w-12" />
             <h1 className="font-headline text-4xl font-bold tracking-tighter">
-              QuaPilot<sup>&reg;</sup> (qp)
+              QuaPilot® (qp)
             </h1>
           </div>
           <p className="text-muted-foreground">Loop-in Notizen und Stichproben</p>
