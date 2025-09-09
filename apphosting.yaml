@@ -5,3 +5,10 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+  secrets:
+    # Make the Gemini API key available to the app as an environment variable.
+    # The value is fetched from Google Cloud Secret Manager.
+    - secret: GEMINI_API_KEY
+      # This is the environment variable name that will be available in your app.
+      # You can use it via process.env.GEMINI_API_KEY in your Node.js code.
+      env: GEMINI_API_KEY
