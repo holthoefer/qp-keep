@@ -1,15 +1,16 @@
 # Settings to manage and configure a Firebase App Hosting backend.
 # https://firebase.google.com/docs/app-hosting/configure
 
-# Pass the Gemini API key as a build-time environment variable.
-buildConfig:
-  # The value is fetched from a substitution variable set in the Cloud Build trigger.
-  buildEnvVars:
-    - var: GEMINI_API_KEY
-      value: ${_GEMINI_API_KEY}
-runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
-  maxInstances: 1
-  # The build-time environment variable is automatically made available
-  # to the running app. We don't need the 'secrets' block here anymore.
+backend:
+  # Pass the Gemini API key as a build-time environment variable.
+  buildConfig:
+    # The value is fetched from a substitution variable set in the Cloud Build trigger.
+    buildEnvVars:
+      - var: GEMINI_API_KEY
+        value: ${_GEMINI_API_KEY}
+  runConfig:
+    # Increase this value if you'd like to automatically spin up
+    # more instances in response to increased traffic.
+    maxInstances: 1
+    # The build-time environment variable is automatically made available
+    # to the running app. We don't need the 'secrets' block here anymore.
