@@ -222,7 +222,7 @@ export default function HomePage() {
             </div>
         </div>
          <div className="w-full max-w-md text-center mt-auto pb-2">
-           <a href="https://www.quapilot.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+           <a href="https://www.quapilot.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
              www.quapilot.com
            </a>
         </div>
@@ -246,7 +246,7 @@ export default function HomePage() {
         <LoginForm />
       </div>
        <div className="absolute bottom-4 text-center">
-           <a href="https://www.quapilot.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+           <a href="https://www.quapilot.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors">
              www.quapilot.com
            </a>
         </div>
