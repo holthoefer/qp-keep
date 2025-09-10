@@ -288,6 +288,7 @@ function MerkmaleCardsPage() {
             <Link href="/" aria-label="Zur Startseite">
               <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
             </Link>
+            {/* Desktop and Tablet Landscape View */}
             <div className="hidden lg:flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                     <LayoutGrid className="mr-2 h-4 w-4" />
@@ -328,23 +329,42 @@ function MerkmaleCardsPage() {
                     </Button>
                 )}
             </div>
+            {/* Mobile View */}
             <div className="lg:hidden flex items-center gap-1">
+                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
+                    <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
+                    <Network className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
+                    <StickyNote className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
+                    <Wrench className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
+                    <Siren className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
+                   <Target className="h-4 w-4" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                      <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => router.push('/arbeitsplaetze')}><LayoutGrid className="mr-2 h-4 w-4" /><span>WP</span></DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/dna')}><Network className="mr-2 h-4 w-4" /><span>DNA</span></DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/PO')}><FolderKanban className="mr-2 h-4 w-4" /><span>PO</span></DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/notes')}><StickyNote className="mr-2 h-4 w-4" /><span>Notiz</span></DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/events')}><Wrench className="mr-2 h-4 w-4" /><span>Events</span></DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/incidents')}><Siren className="mr-2 h-4 w-4" /><span>Incidents</span></DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/cp')}><Target className="mr-2 h-4 w-4" /><span>CP</span></DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}><Book className="mr-2 h-4 w-4" /><span>LP</span></DropdownMenuItem>
-                    {isAdmin && <DropdownMenuSeparator />}
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => router.push('/PO')}>
+                        <FolderKanban className="mr-2 h-4 w-4" />
+                        <span>PO</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
+                        <Book className="mr-2 h-4 w-4" />
+                        <span>LP</span>
+                    </DropdownMenuItem>
+                     {isAdmin && <DropdownMenuSeparator />}
                     {isAdmin && (
                         <DropdownMenuItem onClick={() => router.push('/admin/users')}>
                             <Shield className="mr-2 h-4 w-4" />
@@ -392,18 +412,7 @@ function MerkmaleCardsPage() {
                         <ArrowLeft className="h-4 w-4" />
                         <span className="sr-only">Zurück zu Arbeitsplätze</span>
                     </Button>
-                    {workstation?.imageUrl && (
-                        <div className="flex-shrink-0">
-                            <Image
-                                src={generateThumbnailUrl(workstation.imageUrl)}
-                                alt={`Bild für Arbeitsplatz ${workstation.AP}`}
-                                width={40}
-                                height={40}
-                                className="rounded-md object-cover aspect-square border"
-                            />
-                        </div>
-                    )}
-                     <div className="flex-grow">
+                    <div className='flex-grow'>
                       {isLoading ? (
                         <>
                           <Skeleton className="h-7 w-48" />
@@ -411,18 +420,21 @@ function MerkmaleCardsPage() {
                         </>
                       ) : workstation && processStep && controlPlan ? (
                         <>
-                            <CardTitle className="text-lg">
-                                {workstation.AP}: {controlPlan.planNumber} / {processStep.processNumber} - {processStep.machineDevice}
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Badge variant="secondary">CP</Badge> {controlPlan.planNumber} <Badge variant="secondary">OP</Badge> {processStep.processNumber}
                             </CardTitle>
+                            <CardDescription className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline">LOT</Badge> {workstation.LOTcurrent || 'N/A'}
+                            </CardDescription>
                         </>
                       ) : (
                         <>
-                          <CardTitle>Merkmalsübersicht (Karten)</CardTitle>
+                          <CardTitle>Merkmalsübersicht</CardTitle>
                         </>
                       )}
                     </div>
                 </div>
-                 <div className="flex items-start self-start sm:self-end justify-end gap-2 flex-shrink-0 w-full sm:w-auto">
+                 <div className="flex items-start self-start sm:self-end justify-end gap-2 flex-shrink-0 w-full sm:w-auto sm:flex-col sm:items-end md:flex-row">
                     {controlPlan?.imageUrl && (
                         <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
                             <Image
@@ -547,3 +559,4 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
