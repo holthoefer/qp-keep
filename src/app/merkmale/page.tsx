@@ -433,15 +433,19 @@ function MerkmaleCardsPage() {
                                       <Badge variant="outline">PO</Badge>{auftrag.PO}
                                   </CardTitle>
                                   <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
-                                      <Badge variant="secondary">OP</Badge> {processStep.processNumber}
-                                  </CardDescription>
-                                  <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
                                       <Badge variant="secondary">CP</Badge> {controlPlan.planNumber}
+                                      <span className="text-muted-foreground">/</span>
+                                      <Badge variant="secondary">OP</Badge> {processStep.processNumber}
                                   </CardDescription>
                                   {workstation.LOTcurrent && (
                                      <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
                                         <Badge variant="secondary">LOT</Badge> {workstation.LOTcurrent}
-                                        {processStep.Instruction && <span className="text-blue-600">{processStep.Instruction}</span>}
+                                        {workstation.Bemerkung && <span className="text-muted-foreground italic pl-2">{workstation.Bemerkung}</span>}
+                                    </CardDescription>
+                                  )}
+                                  {processStep.remark && (
+                                     <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
+                                        <span className="text-blue-600">{processStep.remark}</span>
                                     </CardDescription>
                                   )}
                               </>
@@ -451,6 +455,17 @@ function MerkmaleCardsPage() {
                       </div>
                   </div>
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      {auftrag?.imageUrl && (
+                          <button onClick={(e) => handleImageClick(e, auftrag.imageUrl!, `Bild für Auftrag ${auftrag.PO}`)} className="flex-shrink-0">
+                              <Image
+                                  src={generateThumbnailUrl(auftrag.imageUrl)}
+                                  alt={`Bild für Auftrag ${auftrag.PO}`}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-md object-cover aspect-square border"
+                              />
+                          </button>
+                      )}
                       {controlPlan?.imageUrl && (
                           <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
                               <Image
@@ -462,11 +477,11 @@ function MerkmaleCardsPage() {
                               />
                           </button>
                       )}
-                      {auftrag?.imageUrl && (
-                          <button onClick={(e) => handleImageClick(e, auftrag.imageUrl!, `Bild für Auftrag ${auftrag.PO}`)} className="flex-shrink-0">
+                      {processStep?.imageUrl && (
+                          <button onClick={(e) => handleImageClick(e, processStep.imageUrl!, `Bild für Prozess ${processStep.processNumber}`)} className="flex-shrink-0">
                               <Image
-                                  src={generateThumbnailUrl(auftrag.imageUrl)}
-                                  alt={`Bild für Auftrag ${auftrag.PO}`}
+                                  src={generateThumbnailUrl(processStep.imageUrl)}
+                                  alt={`Bild für Prozess ${processStep.processNumber}`}
                                   width={40}
                                   height={40}
                                   className="rounded-md object-cover aspect-square border"
@@ -575,5 +590,6 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
 
 
