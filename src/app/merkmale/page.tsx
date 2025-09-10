@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -431,12 +432,12 @@ function MerkmaleCardsPage() {
                                       <Badge variant="outline">PO</Badge>{auftrag.PO}
                                   </CardTitle>
                                   <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
-                                      <Badge variant="secondary">CP</Badge> {controlPlan.planNumber}
-                                      <Badge variant="secondary">OP</Badge> {processStep.processNumber}
+                                      <Badge variant="secondary">CP</Badge>{controlPlan.planNumber}
+                                      <Badge variant="secondary">OP</Badge>{processStep.processNumber}
                                   </CardDescription>
                                    {workstation.LOTcurrent && (
                                      <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
-                                        <Badge variant="secondary">LOT</Badge> {workstation.LOTcurrent}
+                                        <Badge variant="secondary">LOT</Badge>{workstation.LOTcurrent}
                                         {workstation.Bemerkung && <span className="text-muted-foreground italic pl-2">{workstation.Bemerkung}</span>}
                                     </CardDescription>
                                   )}
@@ -452,7 +453,7 @@ function MerkmaleCardsPage() {
                       </div>
                   </div>
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      {auftrag?.imageUrl && (
+                      {auftrag?.imageUrl && generateThumbnailUrl(auftrag.imageUrl) && (
                           <button onClick={(e) => handleImageClick(e, auftrag.imageUrl!, `Bild für Auftrag ${auftrag.PO}`)} className="flex-shrink-0">
                               <Image
                                   src={generateThumbnailUrl(auftrag.imageUrl)}
@@ -463,7 +464,7 @@ function MerkmaleCardsPage() {
                               />
                           </button>
                       )}
-                      {controlPlan?.imageUrl && (
+                      {controlPlan?.imageUrl && generateThumbnailUrl(controlPlan.imageUrl) && (
                           <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
                               <Image
                                   src={generateThumbnailUrl(controlPlan.imageUrl)}
@@ -474,7 +475,7 @@ function MerkmaleCardsPage() {
                               />
                           </button>
                       )}
-                      {processStep?.imageUrl && (
+                      {processStep?.imageUrl && generateThumbnailUrl(processStep.imageUrl) && (
                           <button onClick={(e) => handleImageClick(e, processStep.imageUrl!, `Bild für Prozess ${processStep.processNumber}`)} className="flex-shrink-0">
                               <Image
                                   src={generateThumbnailUrl(processStep.imageUrl)}
@@ -587,4 +588,3 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
-
