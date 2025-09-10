@@ -29,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2, Book, Shield, Target, LogOut, LayoutGrid, FolderKanban, Network, FileImage, StickyNote, Wrench, Siren, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Diamond, AlertTriangle, Edit, List, ImageIcon, Loader2, Book, Shield, Target, LogOut, LayoutGrid, FolderKanban, Network, FileImage, StickyNote, Wrench, Siren, MoreVertical, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { cn } from '@/lib/utils';
@@ -135,7 +135,7 @@ function MerkmaleCardsPage() {
           getWorkstations(),
           getAuftraege(),
           getControlPlans(),
-          getDnaData(), // Fetch all DNA initially
+          getDnaData(),
         ]);
 
         const currentWorkstation = workstations.find((ws) => ws.AP === decodedApId);
@@ -208,17 +208,17 @@ function MerkmaleCardsPage() {
   
   const formatSpec = (char: Characteristic) => {
     let spec = '';
-    if (char.nominal && char.lsl && char.usl) {
+    if (char.nominal !== undefined && char.lsl !== undefined && char.usl !== undefined) {
         spec = `${char.nominal} (${char.lsl} - ${char.usl})`;
-    } else if (char.nominal && (char.lsl || char.usl)) {
+    } else if (char.nominal !== undefined && (char.lsl !== undefined || char.usl !== undefined)) {
         spec = `${char.nominal} (${char.lsl ? `> ${char.lsl}` : ''}${char.usl ? `< ${char.usl}` : ''})`;
-    } else if (char.lsl && char.usl) {
+    } else if (char.lsl !== undefined && char.usl !== undefined) {
         spec = `${char.lsl} - ${char.usl}`;
-    } else if (char.nominal) {
-        spec = String(char.nominal);
-    } else if (char.lsl) {
+    } else if (char.nominal !== undefined) {
+        return String(char.nominal);
+    } else if (char.lsl !== undefined) {
         spec = `> ${char.lsl}`;
-    } else if (char.usl) {
+    } else if (char.usl !== undefined) {
         spec = `< ${char.usl}`;
     } else {
         return 'N/A';
@@ -276,6 +276,8 @@ function MerkmaleCardsPage() {
     await logout();
     router.push('/');
   };
+  
+  const isImage = (url: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(url.split('?')[0]);
 
 
   return (
@@ -334,9 +336,6 @@ function MerkmaleCardsPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
                     <Network className="h-4 w-4" />
                 </Button>
-                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
-                    <FolderKanban className="h-4 w-4" />
-                </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
                     <StickyNote className="h-4 w-4" />
                 </Button>
@@ -356,6 +355,10 @@ function MerkmaleCardsPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => router.push('/PO')}>
+                        <FolderKanban className="mr-2 h-4 w-4" />
+                        <span>PO</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
                         <Book className="mr-2 h-4 w-4" />
                         <span>LP</span>
@@ -429,15 +432,19 @@ function MerkmaleCardsPage() {
                               <>
                                   <CardTitle className="text-lg flex flex-wrap items-center gap-2">
                                       {workstation.AP}
-                                      <Badge variant="outline">PO</Badge>{auftrag.PO}
+                                      <Badge variant="outline">PO</Badge>
+                                      {auftrag.PO}
                                   </CardTitle>
                                   <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
-                                      <Badge variant="secondary">CP</Badge>{controlPlan.planNumber}
-                                      <Badge variant="secondary">OP</Badge>{processStep.processNumber}
+                                      <Badge variant="secondary">CP</Badge>
+                                      {controlPlan.planNumber}
+                                      <Badge variant="secondary">OP</Badge>
+                                      {processStep.processNumber}
                                   </CardDescription>
                                    {workstation.LOTcurrent && (
                                      <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
-                                        <Badge variant="secondary">LOT</Badge>{workstation.LOTcurrent}
+                                        <Badge variant="secondary">LOT</Badge>
+                                        {workstation.LOTcurrent}
                                         {workstation.Bemerkung && <span className="text-muted-foreground italic pl-2">{workstation.Bemerkung}</span>}
                                     </CardDescription>
                                   )}
@@ -453,37 +460,27 @@ function MerkmaleCardsPage() {
                       </div>
                   </div>
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      {auftrag?.imageUrl && generateThumbnailUrl(auftrag.imageUrl) && (
-                          <button onClick={(e) => handleImageClick(e, auftrag.imageUrl!, `Bild für Auftrag ${auftrag.PO}`)} className="flex-shrink-0">
-                              <Image
-                                  src={generateThumbnailUrl(auftrag.imageUrl)}
-                                  alt={`Bild für Auftrag ${auftrag.PO}`}
-                                  width={40}
-                                  height={40}
-                                  className="rounded-md object-cover aspect-square border"
-                              />
-                          </button>
+                      {auftrag?.imageUrl && (
+                         isImage(auftrag.imageUrl) ? (
+                            <button onClick={(e) => handleImageClick(e, auftrag!.imageUrl!, `Bild für Auftrag ${auftrag!.PO}`)} className="flex-shrink-0">
+                              <Image src={generateThumbnailUrl(auftrag.imageUrl)} alt={`Bild für Auftrag ${auftrag.PO}`} width={40} height={40} className="rounded-md object-cover aspect-square border"/>
+                            </button>
+                         ) : (
+                            <a href={auftrag.imageUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                <div className="w-10 h-10 flex items-center justify-center bg-muted rounded-md text-muted-foreground hover:bg-muted/80 border">
+                                    <LinkIcon className="h-5 w-5" />
+                                </div>
+                            </a>
+                         )
                       )}
-                      {controlPlan?.imageUrl && generateThumbnailUrl(controlPlan.imageUrl) && (
+                      {controlPlan?.imageUrl && (
                           <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
-                              <Image
-                                  src={generateThumbnailUrl(controlPlan.imageUrl)}
-                                  alt={`Bild für Control Plan ${controlPlan.planNumber}`}
-                                  width={40}
-                                  height={40}
-                                  className="rounded-md object-cover aspect-square border"
-                              />
+                              <Image src={generateThumbnailUrl(controlPlan.imageUrl)} alt={`Bild für Control Plan ${controlPlan.planNumber}`} width={40} height={40} className="rounded-md object-cover aspect-square border"/>
                           </button>
                       )}
-                      {processStep?.imageUrl && generateThumbnailUrl(processStep.imageUrl) && (
+                      {processStep?.imageUrl && (
                           <button onClick={(e) => handleImageClick(e, processStep.imageUrl!, `Bild für Prozess ${processStep.processNumber}`)} className="flex-shrink-0">
-                              <Image
-                                  src={generateThumbnailUrl(processStep.imageUrl)}
-                                  alt={`Bild für Prozess ${processStep.processNumber}`}
-                                  width={40}
-                                  height={40}
-                                  className="rounded-md object-cover aspect-square border"
-                              />
+                              <Image src={generateThumbnailUrl(processStep.imageUrl)} alt={`Bild für Prozess ${processStep.processNumber}`} width={40} height={40} className="rounded-md object-cover aspect-square border"/>
                           </button>
                       )}
                   </div>

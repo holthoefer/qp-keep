@@ -100,14 +100,7 @@ export default function POPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (auth.loading) return;
-    if (!auth.user) {
-      router.push('/');
-      return;
-    }
-
-    const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
       setLoading(true);
       try {
         const [auftraegeData, plans] = await Promise.all([
@@ -123,10 +116,16 @@ export default function POPage() {
       } finally {
         setLoading(false);
       }
-    };
+    }, []);
 
+  useEffect(() => {
+    if (auth.loading) return;
+    if (!auth.user) {
+      router.push('/');
+      return;
+    }
     fetchData();
-  }, [auth.user, auth.loading, router]);
+  }, [auth.user, auth.loading, router, fetchData]);
 
   const handleLogout = async () => {
     await auth.logout();
@@ -191,6 +190,7 @@ export default function POPage() {
       }
       setIsDialogOpen(false);
       setEditingItem(null);
+      fetchData(); // Refetch data
     } catch (err: any) {
       console.error(err);
       toast({ title: 'Fehler beim Speichern', description: err.message, variant: 'destructive' });
@@ -231,6 +231,7 @@ export default function POPage() {
     try {
         await deleteAuftrag(id);
         toast({ title: 'Auftrag gelöscht' });
+        fetchData(); // Refetch data
     } catch (err) {
         console.error(err);
         toast({ title: 'Fehler beim Löschen', variant: 'destructive' });
@@ -492,7 +493,7 @@ export default function POPage() {
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setItemToDelete(item.id); }}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </AlertDialogTrigger>
@@ -504,7 +505,7 @@ export default function POPage() {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setItemToDelete(null)}>Abbrechen</AlertDialogCancel>
+                                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Abbrechen</AlertDialogCancel>
                                 <AlertDialogAction onClick={() => handleDelete(item.id)}>Löschen</AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
