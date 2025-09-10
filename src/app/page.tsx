@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -155,7 +156,7 @@ export default function HomePage() {
                         disabled={profile?.status === 'inactive' || isNoteOnlyUser}
                     >
                         <FolderKanban className="mr-2 h-4 w-4" />
-                        Auftrag
+                        Auftrag - PO
                     </Button>
                     <Button 
                         onClick={() => router.push('/notes')} 
@@ -177,7 +178,7 @@ export default function HomePage() {
                     )}
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Textarea 
                     placeholder="Sagen Sie dem Agenten, was Sie tun möchten..."
                     value={agentInput}
