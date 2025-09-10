@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, StickyNote, Wrench, Siren, ArrowLeft, MoreVertical } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, StickyNote, Wrench, Siren, ArrowLeft, MoreVertical, UploadCloud } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -47,6 +47,7 @@ import {
   type Auftrag,
   getControlPlans,
   type ControlPlan,
+  getAppStorage,
 } from '@/lib/data';
 import {
     Select,
@@ -68,6 +69,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Image from 'next/image';
 import logo from '../Logo.png';
 import Link from 'next/link';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Progress } from '@/components/ui/progress';
 
 
 type AuftragFormData = Omit<Auftrag, 'id'>;
@@ -90,6 +93,11 @@ export default function POPage() {
   const { toast } = useToast();
   const isAdmin = auth.roles.includes('admin');
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (auth.loading) return;
@@ -129,13 +137,51 @@ export default function POPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleUpload = (file: File) => {
+    const poNumber = formData.PO;
+    if (!poNumber) {
+        setUploadError("Bitte geben Sie zuerst eine Auftragsnummer an, bevor Sie hochladen.");
+        return;
+    }
+    
+    setIsUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+
+    const storage = getAppStorage();
+    if (!storage) {
+        setUploadError("Storage-Dienst ist nicht initialisiert.");
+        setIsUploading(false);
+        return;
+    }
+    const storageRef = ref(storage, `uploads/auftraege/${poNumber}/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error('Upload Error:', error);
+        setUploadError('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
+        setIsUploading(false);
+      },
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        setFormData(prev => ({...prev, imageUrl: downloadURL}));
+        setIsUploading(false);
+        toast({ title: 'Upload erfolgreich', description: 'URL wurde dem Formular hinzugefügt.' });
+      }
+    );
+  };
 
   const handleSave = async () => {
     if (!isAdmin) return;
 
     try {
       if (editingItem) {
-        // Can't change PO (the ID), so we can just use the full formData
         await updateAuftrag(editingItem.id, formData);
         toast({ title: 'Auftrag aktualisiert' });
       } else {
@@ -158,6 +204,9 @@ export default function POPage() {
         Anmerkung: item.Anmerkung || '',
         imageUrl: item.imageUrl || '',
     });
+    setUploadError(null);
+    setIsUploading(false);
+    setUploadProgress(0);
     setIsDialogOpen(true);
   };
   
@@ -169,6 +218,9 @@ export default function POPage() {
         Anmerkung: '',
         imageUrl: '',
     });
+    setUploadError(null);
+    setIsUploading(false);
+    setUploadProgress(0);
     setIsDialogOpen(true);
   };
   
@@ -345,8 +397,28 @@ export default function POPage() {
                         <Textarea id="Anmerkung" value={formData.Anmerkung} onChange={(e) => handleFormChange(e, 'Anmerkung')} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="imageUrl">Image URL</Label>
-                        <Input id="imageUrl" value={formData.imageUrl} onChange={(e) => handleFormChange(e, 'imageUrl')} />
+                        <Label htmlFor="imageUrl">Bild</Label>
+                        <div className="flex items-center gap-2">
+                          <Button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              variant="outline"
+                              disabled={isUploading || !formData.PO}
+                          >
+                              <UploadCloud className="mr-2 h-4 w-4" />
+                              {isUploading ? `${Math.round(uploadProgress)}%` : 'Hochladen'}
+                          </Button>
+                          <Input id="imageUrl" value={formData.imageUrl} onChange={(e) => handleFormChange(e, 'imageUrl')} placeholder="https://..." className="flex-grow" />
+                        </div>
+                         <Input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
+                            className="hidden"
+                            accept="image/*"
+                         />
+                         {isUploading && <Progress value={uploadProgress} className="mt-2" />}
+                         {uploadError && <p className="text-sm text-destructive mt-2">{uploadError}</p>}
                     </div>
                   </div>
                   <DialogFooter>
@@ -366,6 +438,7 @@ export default function POPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-20">Bild</TableHead>
                   <TableHead>Auftrags-Nr. (PO)</TableHead>
                   <TableHead>Control Plan</TableHead>
                   <TableHead>Anmerkung</TableHead>
@@ -375,19 +448,28 @@ export default function POPage() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 4: 3} className="h-24 text-center">
+                    <TableCell colSpan={isAdmin ? 5: 4} className="h-24 text-center">
                       <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                     </TableCell>
                   </TableRow>
                 ) : items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 4: 3} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 5: 4} className="h-24 text-center text-muted-foreground">
                       Keine Aufträge gefunden.
                     </TableCell>
                   </TableRow>
                 ) : (
                   items.map((item) => (
                     <TableRow key={item.id} onClick={() => handleRowClick(item)} className="cursor-pointer">
+                       <TableCell className="p-1">
+                          {item.imageUrl ? (
+                            <Image src={item.imageUrl} alt={`Bild für ${item.PO}`} width={64} height={64} className="rounded-md object-cover w-16 h-16"/>
+                          ) : (
+                             <div className="w-16 h-16 flex items-center justify-center bg-muted rounded-md text-muted-foreground">
+                                <FileImage className="h-6 w-6" />
+                             </div>
+                          )}
+                      </TableCell>
                       <TableCell className="font-medium">{item.PO}</TableCell>
                       <TableCell>{item.CP}</TableCell>
                       <TableCell className="truncate max-w-xs">{item.Anmerkung}</TableCell>

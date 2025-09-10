@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -334,6 +333,9 @@ function MerkmaleCardsPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
                     <Network className="h-4 w-4" />
                 </Button>
+                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
+                    <FolderKanban className="h-4 w-4" />
+                </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
                     <StickyNote className="h-4 w-4" />
                 </Button>
@@ -353,10 +355,6 @@ function MerkmaleCardsPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => router.push('/PO')}>
-                        <FolderKanban className="mr-2 h-4 w-4" />
-                        <span>PO</span>
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
                         <Book className="mr-2 h-4 w-4" />
                         <span>LP</span>
@@ -429,15 +427,14 @@ function MerkmaleCardsPage() {
                           ) : workstation && processStep && controlPlan && auftrag ? (
                               <>
                                   <CardTitle className="text-lg flex flex-wrap items-center gap-2">
-                                      <Badge variant="outline">AP</Badge>{workstation.AP}
+                                      {workstation.AP}
                                       <Badge variant="outline">PO</Badge>{auftrag.PO}
                                   </CardTitle>
                                   <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
                                       <Badge variant="secondary">CP</Badge> {controlPlan.planNumber}
-                                      <span className="text-muted-foreground">/</span>
                                       <Badge variant="secondary">OP</Badge> {processStep.processNumber}
                                   </CardDescription>
-                                  {workstation.LOTcurrent && (
+                                   {workstation.LOTcurrent && (
                                      <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
                                         <Badge variant="secondary">LOT</Badge> {workstation.LOTcurrent}
                                         {workstation.Bemerkung && <span className="text-muted-foreground italic pl-2">{workstation.Bemerkung}</span>}
@@ -590,6 +587,4 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
-
-
 
