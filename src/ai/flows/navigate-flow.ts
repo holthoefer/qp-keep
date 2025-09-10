@@ -24,6 +24,7 @@ const NavigateOutputSchema = z.object({
 const availablePages = [
     { name: "Arbeitsplätze", path: "/arbeitsplaetze", description: "Zeigt eine Übersicht aller Arbeitsplätze (Workstations, WP) an." },
     { name: "DNA", path: "/dna", description: "Zeigt die DNA-Ansicht der aktiven Merkmale an (active characteristics)." },
+    { name: "Aufträge", path: "/PO", description: "Zeigt die Auftragsliste an. (Stichworte: Auftrag, Aufträge, Orders, PO)" },
     { name: "Events", path: "/events", description: "Zeigt die Liste der Shopfloor-Events an oder erlaubt das Erstellen eines neuen Events." },
     { name: "Incidents", path: "/incidents", description: "Zeigt die Liste der Incidents (Vorfälle) an oder erlaubt das Erstellen eines neuen Incidents." },
     { name: "Control Plan", path: "/cp", description: "Zeigt die Übersicht der Control Plans (Lenkungspläne, CP) an." },

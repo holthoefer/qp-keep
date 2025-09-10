@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { LoginForm } from '@/components/auth/login-form';
 import { useAuth } from '@/hooks/use-auth-context';
-import { Loader2, LogOut, ShieldAlert, LayoutGrid, StickyNote, Wrench, Siren, Network, Target, Book, Shield, Send } from 'lucide-react';
+import { Loader2, LogOut, ShieldAlert, LayoutGrid, StickyNote, Wrench, Siren, Network, Target, Book, Shield, Send, FolderKanban } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { type UserProfile } from '@/lib/data';
@@ -152,12 +152,12 @@ export default function HomePage() {
                         Control Plan {profile && !isAdmin && "(read)"}
                     </Button>
                      <Button 
-                        onClick={() => router.push('/lenkungsplan')} 
+                        onClick={() => router.push('/PO')} 
                         className="w-full"
                         disabled={profile?.status === 'inactive' || isNoteOnlyUser}
                     >
-                        <Book className="mr-2 h-4 w-4" />
-                        Plan-Ideen
+                        <FolderKanban className="mr-2 h-4 w-4" />
+                        Aufträge
                     </Button>
                     <Button 
                         onClick={() => router.push('/notes')} 
