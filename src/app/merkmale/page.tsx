@@ -338,7 +338,7 @@ function MerkmaleCardsPage() {
                     <StickyNote className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
-                    <Wrench className="h-4 w-4" />
+                    <Wrench className="mr-2 h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
                     <Siren className="h-4 w-4" />
@@ -434,8 +434,16 @@ function MerkmaleCardsPage() {
                                   </CardTitle>
                                   <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
                                       <Badge variant="secondary">OP</Badge> {processStep.processNumber}
-                                      <Badge variant="secondary">LOT</Badge> {workstation.LOTcurrent || 'N/A'}
                                   </CardDescription>
+                                  <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
+                                      <Badge variant="secondary">CP</Badge> {controlPlan.planNumber}
+                                  </CardDescription>
+                                  {workstation.LOTcurrent && (
+                                     <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
+                                        <Badge variant="secondary">LOT</Badge> {workstation.LOTcurrent}
+                                        {processStep.Instruction && <span className="text-blue-600">{processStep.Instruction}</span>}
+                                    </CardDescription>
+                                  )}
                               </>
                           ) : (
                               <CardTitle>Merkmalsübersicht</CardTitle>
@@ -567,4 +575,5 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
 
