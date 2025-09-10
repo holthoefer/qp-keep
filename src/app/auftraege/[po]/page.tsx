@@ -24,14 +24,14 @@ import { generateThumbnailUrl } from '@/lib/image-utils';
 
 
 interface AuftragDetailPageProps {
-  params: { po: string };
+  params: Promise<{ po: string }>;
   isModal?: boolean;
   onClose?: () => void;
 }
 
 export default function AuftragDetailPage({ params, isModal = false, onClose }: AuftragDetailPageProps) {
   const router = useRouter();
-  const { po } = params;
+  const { po } = React.use(params);
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -432,3 +432,5 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
     </>
   );
 }
+
+    
