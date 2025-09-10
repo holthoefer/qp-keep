@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, StickyNote, Wrench, Siren, ArrowLeft, MoreVertical, UploadCloud } from 'lucide-react';
+import { Loader2, PlusCircle, Edit, Trash2, Shield, ListChecks, Target, Book, LayoutGrid, FolderKanban, Network, LogOut, FileImage, StickyNote, Wrench, Siren, ArrowLeft, MoreVertical, UploadCloud, Link as LinkIcon } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -71,6 +71,7 @@ import logo from '../Logo.png';
 import Link from 'next/link';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
+import { generateThumbnailUrl } from '@/lib/image-utils';
 
 
 type AuftragFormData = Omit<Auftrag, 'id'>;
@@ -245,6 +246,9 @@ export default function POPage() {
   if (loading || auth.loading) {
     return null; // AuthProvider shows LoadingScreen
   }
+  
+  const isImage = (url: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(url.split('?')[0]);
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -397,7 +401,7 @@ export default function POPage() {
                         <Textarea id="Anmerkung" value={formData.Anmerkung} onChange={(e) => handleFormChange(e, 'Anmerkung')} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="imageUrl">Bild</Label>
+                        <Label htmlFor="imageUrl">Anhang</Label>
                         <div className="flex items-center gap-2">
                           <Button
                               type="button"
@@ -415,7 +419,7 @@ export default function POPage() {
                             ref={fileInputRef}
                             onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
                             className="hidden"
-                            accept="image/*"
+                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
                          />
                          {isUploading && <Progress value={uploadProgress} className="mt-2" />}
                          {uploadError && <p className="text-sm text-destructive mt-2">{uploadError}</p>}
@@ -438,7 +442,7 @@ export default function POPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-20">Bild</TableHead>
+                  <TableHead className="w-20">Anhang</TableHead>
                   <TableHead>Auftrags-Nr. (PO)</TableHead>
                   <TableHead>Control Plan</TableHead>
                   <TableHead>Anmerkung</TableHead>
@@ -463,7 +467,15 @@ export default function POPage() {
                     <TableRow key={item.id} onClick={() => handleRowClick(item)} className="cursor-pointer">
                        <TableCell className="p-1">
                           {item.imageUrl ? (
-                            <Image src={item.imageUrl} alt={`Bild für ${item.PO}`} width={64} height={64} className="rounded-md object-cover w-16 h-16"/>
+                             isImage(item.imageUrl) ? (
+                                <Image src={generateThumbnailUrl(item.imageUrl)} alt={`Anhang für ${item.PO}`} width={64} height={64} className="rounded-md object-cover w-16 h-16"/>
+                             ) : (
+                                <a href={item.imageUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                    <div className="w-16 h-16 flex items-center justify-center bg-muted rounded-md text-muted-foreground hover:bg-muted/80">
+                                        <LinkIcon className="h-6 w-6" />
+                                    </div>
+                                </a>
+                             )
                           ) : (
                              <div className="w-16 h-16 flex items-center justify-center bg-muted rounded-md text-muted-foreground">
                                 <FileImage className="h-6 w-6" />

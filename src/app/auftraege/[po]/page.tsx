@@ -16,10 +16,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
-import { StorageBrowser } from '@/components/cp/StorageBrowser';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { generateThumbnailUrl } from '@/lib/image-utils';
 
 
@@ -46,7 +44,6 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState(0);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
-  const [isBrowserOpen, setIsBrowserOpen] = React.useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
   const [justUploaded, setJustUploaded] = React.useState(false);
@@ -96,7 +93,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
         if (isModal && onClose) {
           onClose();
         } else {
-            router.push('/auftraege');
+            router.push('/PO');
         }
     } catch(e: any) {
         toast({
@@ -118,10 +115,6 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
 
   const handleUpload = (file: File) => {
     if (!auftrag) return;
-     if (!file.type.startsWith('image/')) {
-        setUploadError("Ungültiger Dateityp. Bitte nur Bilder hochladen.");
-        return;
-    }
 
     if (file.size > 10 * 1024 * 1024) {
       setUploadError("Die Datei ist größer als 10 MB. Bitte wählen Sie eine kleinere Datei.");
@@ -204,12 +197,6 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
       toast({ title: 'URL kopiert!', description: 'Die Bild-URL wurde in die Zwischenablage kopiert.' });
   }
 
-  const handleImageSelectFromBrowser = async (url: string) => {
-    setIsBrowserOpen(false);
-    setImageUrl(url); // Set image url but don't save yet
-    setJustUploaded(false);
-  }
-
   const handleDragEvents = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -236,7 +223,9 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
     }
   };
 
+  const isImage = (url: string) => /\.(jpg|jpeg|png|gif|webp)$/i.test(url.split('?')[0]);
   const isInvalidSrc = !imageUrl || hasImageError || !imageUrl.startsWith('http');
+  const isUrlImage = imageUrl && isImage(imageUrl);
   const isUrlChanged = imageUrl !== originalImageUrl;
   const displayUrl = justUploaded ? imageUrl : generateThumbnailUrl(imageUrl);
   
@@ -244,7 +233,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
     if(onClose) {
       onClose();
     } else {
-      router.push('/auftraege');
+      router.push('/PO');
     }
   }
 
@@ -255,11 +244,6 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
         onOpenChange={setIsImageModalOpen}
         imageUrl={imageUrl}
         imageAlt={`Vollbildansicht für Auftrag ${auftrag?.PO}`}
-      />
-      <StorageBrowser 
-        isOpen={isBrowserOpen}
-        onOpenChange={setIsBrowserOpen}
-        onImageSelect={handleImageSelectFromBrowser}
       />
       <div className={cn("h-full overflow-y-auto", isModal ? "p-0" : "p-4 md:p-8")}>
       {!isModal && (
@@ -284,7 +268,7 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
       ) : auftrag ? (
         <Card className={cn("max-w-2xl mx-auto", isModal && "border-none shadow-none")}>
            <CardHeader className={cn(isModal && "pt-0")}>
-            <CardTitle className="text-lg">Bild zum Auftrag</CardTitle>
+            <CardTitle className="text-lg">Anhang zum Auftrag</CardTitle>
             <CardDescription>
               Details für Auftrag <span className="font-mono">{auftrag.PO}</span>
             </CardDescription>
@@ -302,14 +286,14 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
                     disabled={isUploading || isSaving}
                     >
                     <UploadCloud className="mr-2 h-4 w-4" />
-                    {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Bild auswählen & hochladen'}
+                    {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Datei auswählen & hochladen'}
                 </Button>
                 <Input
                     id="file-upload"
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
-                    accept="image/jpeg,image/png,image/gif"
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
                     className="hidden"
                     disabled={isUploading || isSaving}
                 />
@@ -332,15 +316,23 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
                 >
                     <CardContent className="p-4">
                        <div className={cn("aspect-video w-full bg-muted rounded-md flex items-center justify-center relative", isDragging && "pointer-events-none")}>
-                        {isInvalidSrc ? (
-                            <Image
-                                src="https://placehold.co/600x400.png"
-                                alt="Error or no image placeholder"
-                                width={600}
-                                height={400}
-                                className="rounded-md object-contain w-full aspect-video"
-                                data-ai-hint="placeholder"
-                            />
+                        {isInvalidSrc || !isUrlImage ? (
+                            <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                              {isUrlImage ? (
+                                <>
+                                 <AlertTriangle className="h-10 w-10" />
+                                 <span>Bild konnte nicht geladen werden</span>
+                                </>
+                              ) : imageUrl ? (
+                                <>
+                                  <AlertTriangle className="h-10 w-10" />
+                                  <span>Keine Vorschau für diesen Dateityp</span>
+                                  <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline mt-2">Datei öffnen</a>
+                                </>
+                              ) : (
+                                <span>Kein Anhang vorhanden</span>
+                              )}
+                           </div>
                         ) : (
                             <button onClick={() => setIsImageModalOpen(true)} className="block w-full cursor-pointer focus:outline-none group">
                                  <Image
@@ -361,60 +353,27 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
                          {isDragging && (
                           <div className="absolute inset-0 bg-primary/20 flex flex-col items-center justify-center rounded-md border-2 border-dashed border-primary">
                             <UploadCloud className="h-12 w-12 text-primary" />
-                            <p className="mt-2 text-lg font-semibold text-primary">Bild hier ablegen</p>
+                            <p className="mt-2 text-lg font-semibold text-primary">Datei hier ablegen</p>
                           </div>
                         )}
                         </div>
                     </CardContent>
                 </Card>
-                 {hasImageError && (
-                    <Alert variant="destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>Fehler beim Laden des Bildes</AlertTitle>
-                        <AlertDescription>
-                            Die angegebene URL konnte nicht geladen werden oder ist ungültig. Bitte laden Sie ein neues Bild hoch.
-                        </AlertDescription>
-                    </Alert>
-                )}
+            </div>
+            
+            <div className="space-y-2 pt-4">
+                <Label htmlFor="imageUrl">Anhang-URL</Label>
+                <div className="flex items-center gap-2">
+                    <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className="flex-grow" disabled={isSaving || isUploading}/>
+                    <Button onClick={handleCopyUrl} variant="outline" size="icon" disabled={isSaving || isUploading || !imageUrl} aria-label="Copy URL">
+                        <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button onClick={handleClearUrl} variant="outline" size="icon" disabled={isSaving || isUploading} aria-label="Clear URL">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
 
-            <Accordion type="single" collapsible>
-                <AccordionItem value="item-1">
-                    <AccordionTrigger>
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                            <ChevronDown className="h-4 w-4 no-rotate" />
-                            <span className="text-sm">Bildverwaltung</span>
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="imageUrl">Bild-URL (.jpg, .png, .gif)</Label>
-                            <div className="flex items-center gap-2">
-                                <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className="flex-grow" disabled={isSaving || isUploading}/>
-                                <Button onClick={handleCopyUrl} variant="outline" size="icon" disabled={isSaving || isUploading || !imageUrl} aria-label="Copy URL">
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                                <Button onClick={handleClearUrl} variant="outline" size="icon" disabled={isSaving || isUploading} aria-label="Clear URL">
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Oder aus Storage auswählen</Label>
-                            <Button
-                                onClick={() => setIsBrowserOpen(true)}
-                                variant="outline"
-                                className="w-full"
-                                disabled={isUploading || isSaving}
-                            >
-                                <LibraryBig className="mr-2 h-4 w-4" />
-                                Storage durchsuchen
-                            </Button>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
           </CardContent>
            <CardFooter className={cn(isModal && "pt-0")}>
                 <Button onClick={handleSave} className="w-full" disabled={isSaving || isUploading || !isUrlChanged}>
@@ -432,5 +391,3 @@ export default function AuftragDetailPage({ params, isModal = false, onClose }: 
     </>
   );
 }
-
-    

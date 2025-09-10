@@ -3,6 +3,14 @@ export const generateThumbnailUrl = (originalUrl?: string | null): string => {
     if (!originalUrl) {
         return 'https://placehold.co/200x200.png?text=No+Image';
     }
+    
+    // Check for common image extensions
+    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(originalUrl.split('?')[0]);
+    if (!isImage) {
+        // Return a placeholder or a generic icon URL for non-image files
+        return ''; // Let the component decide how to render this
+    }
+
     try {
         // Firebase Storage adds _200x200 before the file extension.
         // We need to handle URLs with and without query parameters.
