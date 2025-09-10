@@ -177,7 +177,7 @@ function MerkmaleCardsPage() {
             'Am Arbeitsplatz ist kein Prozessschritt (OP) aktiv.'
           );
         }
-
+        
         const currentProcessStep = currentControlPlan.processSteps.find(
           (step) => step.processNumber === currentWorkstation.OPcurrent
         );
@@ -187,7 +187,6 @@ function MerkmaleCardsPage() {
           );
         }
         
-        // Filter DNA data based on the active combination on the workstation
         const relevantDna = allDna.filter(d => 
             d.WP === currentWorkstation.AP &&
             d.PO === currentWorkstation.POcurrent &&
@@ -257,10 +256,8 @@ function MerkmaleCardsPage() {
   };
 
   const handlePointClick = (sampleId: string) => {
-    // This function will be called from the chart
     if (!sampleId) return;
 
-    // prevent default navigation if a point on chart is clicked
     if ((event?.target as HTMLElement).closest('a, button, [role="button"]')) {
       event?.preventDefault();
     }
@@ -406,58 +403,69 @@ function MerkmaleCardsPage() {
             />
           <Card>
             <CardHeader className="bg-muted/50 rounded-t-lg">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-                 <div className="flex items-start gap-4 flex-grow">
-                    <Button variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')}>
-                        <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Zurück zu Arbeitsplätze</span>
-                    </Button>
-                    <div className='flex-grow'>
-                      {isLoading ? (
-                        <>
-                          <Skeleton className="h-7 w-48" />
-                          <Skeleton className="h-5 w-64 mt-2" />
-                        </>
-                      ) : workstation && processStep && controlPlan ? (
-                        <>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <Badge variant="secondary">CP</Badge> {controlPlan.planNumber} <Badge variant="secondary">OP</Badge> {processStep.processNumber}
-                            </CardTitle>
-                            <CardDescription className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline">LOT</Badge> {workstation.LOTcurrent || 'N/A'}
-                            </CardDescription>
-                        </>
-                      ) : (
-                        <>
-                          <CardTitle>Merkmalsübersicht</CardTitle>
-                        </>
+              <div className="flex justify-between items-start gap-4">
+                  <div className="flex items-start gap-4 flex-grow">
+                      <Button variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')}>
+                          <ArrowLeft className="h-4 w-4" />
+                          <span className="sr-only">Zurück zu Arbeitsplätze</span>
+                      </Button>
+                      {workstation?.imageUrl && (
+                          <button onClick={(e) => handleImageClick(e, workstation.imageUrl!, `Bild für AP ${workstation.AP}`)} className="hidden sm:block flex-shrink-0">
+                              <Image
+                                  src={generateThumbnailUrl(workstation.imageUrl)}
+                                  alt={`Bild für Arbeitsplatz ${workstation.AP}`}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-md object-cover aspect-square border"
+                              />
+                          </button>
                       )}
-                    </div>
-                </div>
-                 <div className="flex items-start self-start sm:self-end justify-end gap-2 flex-shrink-0 w-full sm:w-auto sm:flex-col sm:items-end md:flex-row">
-                    {controlPlan?.imageUrl && (
-                        <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
-                            <Image
-                                src={generateThumbnailUrl(controlPlan.imageUrl)}
-                                alt={`Bild für Control Plan ${controlPlan.planNumber}`}
-                                width={40}
-                                height={40}
-                                className="rounded-md object-cover aspect-square border"
-                            />
-                        </button>
-                    )}
-                    {processStep?.imageUrl && (
-                        <button onClick={(e) => handleImageClick(e, processStep.imageUrl!, `Bild für Prozess ${processStep.processNumber}`)} className="flex-shrink-0">
-                            <Image
-                                src={generateThumbnailUrl(processStep.imageUrl)}
-                                alt={`Bild für Prozess ${processStep.processNumber}`}
-                                width={40}
-                                height={40}
-                                className="rounded-md object-cover aspect-square border"
-                            />
-                        </button>
-                    )}
-                </div>
+                      <div className='flex-grow'>
+                          {isLoading ? (
+                              <>
+                                  <Skeleton className="h-7 w-48" />
+                                  <Skeleton className="h-5 w-64 mt-2" />
+                              </>
+                          ) : workstation && processStep && controlPlan && auftrag ? (
+                              <>
+                                  <CardTitle className="text-lg flex flex-wrap items-center gap-2">
+                                      <Badge variant="outline">AP</Badge>{workstation.AP}
+                                      <Badge variant="outline">PO</Badge>{auftrag.PO}
+                                  </CardTitle>
+                                  <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
+                                      <Badge variant="secondary">OP</Badge> {processStep.processNumber}
+                                      <Badge variant="secondary">LOT</Badge> {workstation.LOTcurrent || 'N/A'}
+                                  </CardDescription>
+                              </>
+                          ) : (
+                              <CardTitle>Merkmalsübersicht</CardTitle>
+                          )}
+                      </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      {controlPlan?.imageUrl && (
+                          <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
+                              <Image
+                                  src={generateThumbnailUrl(controlPlan.imageUrl)}
+                                  alt={`Bild für Control Plan ${controlPlan.planNumber}`}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-md object-cover aspect-square border"
+                              />
+                          </button>
+                      )}
+                      {auftrag?.imageUrl && (
+                          <button onClick={(e) => handleImageClick(e, auftrag.imageUrl!, `Bild für Auftrag ${auftrag.PO}`)} className="flex-shrink-0">
+                              <Image
+                                  src={generateThumbnailUrl(auftrag.imageUrl)}
+                                  alt={`Bild für Auftrag ${auftrag.PO}`}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-md object-cover aspect-square border"
+                              />
+                          </button>
+                      )}
+                  </div>
               </div>
             </CardHeader>
             <CardContent className="bg-muted/30">
