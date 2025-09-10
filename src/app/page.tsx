@@ -177,7 +177,7 @@ export default function HomePage() {
                     )}
                 </div>
                 
-                <div className="space-y-2 pt-2">
+                <div className="space-y-2">
                   <Textarea 
                     placeholder="Sagen Sie dem Agenten, was Sie tun möchten..."
                     value={agentInput}
