@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth-context';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
