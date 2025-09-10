@@ -135,7 +135,7 @@ function MerkmaleCardsPage() {
           getWorkstations(),
           getAuftraege(),
           getControlPlans(),
-          getDnaData(),
+          getDnaData(), // Fetch all DNA initially
         ]);
 
         const currentWorkstation = workstations.find((ws) => ws.AP === decodedApId);
@@ -187,6 +187,7 @@ function MerkmaleCardsPage() {
           );
         }
         
+        // Filter DNA data based on the active combination on the workstation
         const relevantDna = allDna.filter(d => 
             d.WP === currentWorkstation.AP &&
             d.PO === currentWorkstation.POcurrent &&
@@ -287,8 +288,7 @@ function MerkmaleCardsPage() {
             <Link href="/" aria-label="Zur Startseite">
               <Image src={logo} alt="qp Logo" width={32} height={32} className="h-8 w-8" />
             </Link>
-            {/* Desktop View: Full Buttons */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => router.push('/arbeitsplaetze')}>
                     <LayoutGrid className="mr-2 h-4 w-4" />
                     WP
@@ -328,41 +328,23 @@ function MerkmaleCardsPage() {
                     </Button>
                 )}
             </div>
-             {/* Mobile View: Icons and Dropdown */}
-            <div className="md:hidden flex items-center gap-1">
-                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/arbeitsplaetze')}>
-                    <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/dna')}>
-                    <Network className="h-4 w-4" />
-                </Button>
-                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/PO')}>
-                    <FolderKanban className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
-                    <StickyNote className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
-                    <Wrench className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
-                    <Siren className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
-                    <Target className="h-4 w-4" />
-                </Button>
+            <div className="lg:hidden flex items-center gap-1">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                      <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
-                        <Book className="mr-2 h-4 w-4" />
-                        <span>LP</span>
-                    </DropdownMenuItem>
-                     {isAdmin && <DropdownMenuSeparator />}
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => router.push('/arbeitsplaetze')}><LayoutGrid className="mr-2 h-4 w-4" /><span>WP</span></DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/dna')}><Network className="mr-2 h-4 w-4" /><span>DNA</span></DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/PO')}><FolderKanban className="mr-2 h-4 w-4" /><span>PO</span></DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/notes')}><StickyNote className="mr-2 h-4 w-4" /><span>Notiz</span></DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/events')}><Wrench className="mr-2 h-4 w-4" /><span>Events</span></DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/incidents')}><Siren className="mr-2 h-4 w-4" /><span>Incidents</span></DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/cp')}><Target className="mr-2 h-4 w-4" /><span>CP</span></DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}><Book className="mr-2 h-4 w-4" /><span>LP</span></DropdownMenuItem>
+                    {isAdmin && <DropdownMenuSeparator />}
                     {isAdmin && (
                         <DropdownMenuItem onClick={() => router.push('/admin/users')}>
                             <Shield className="mr-2 h-4 w-4" />
@@ -404,7 +386,7 @@ function MerkmaleCardsPage() {
             />
           <Card>
             <CardHeader className="bg-muted/50 rounded-t-lg">
-              <div className="flex justify-between items-start gap-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                  <div className="flex items-start gap-4 flex-grow">
                     <Button variant="outline" size="icon" onClick={() => router.push('/arbeitsplaetze')}>
                         <ArrowLeft className="h-4 w-4" />
@@ -440,7 +422,7 @@ function MerkmaleCardsPage() {
                       )}
                     </div>
                 </div>
-                <div className="flex items-start gap-2 flex-shrink-0">
+                 <div className="flex items-start self-start sm:self-end justify-end gap-2 flex-shrink-0 w-full sm:w-auto">
                     {controlPlan?.imageUrl && (
                         <button onClick={(e) => handleImageClick(e, controlPlan.imageUrl!, `Bild für CP ${controlPlan.planNumber}`)} className="flex-shrink-0">
                             <Image
