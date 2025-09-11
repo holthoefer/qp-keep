@@ -232,6 +232,7 @@ function MerkmaleCardsPage() {
   
   const getErfassungUrl = (char: Characteristic) => {
       if (!decodedApId || !processStep || !auftrag) return '#';
+      // Ensure we pass the IDs for reliable fetching/creation on the erfasung page
       return `/erfassung?ap=${encodeURIComponent(decodedApId)}&ps=${processStep.id}&char=${char.id}&po=${auftrag.PO}&op=${processStep.processNumber}&charNum=${char.itemNumber}`;
   }
   
@@ -442,10 +443,9 @@ function MerkmaleCardsPage() {
                                       {processStep.processNumber}
                                   </CardDescription>
                                    {workstation.LOTcurrent && (
-                                     <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
-                                        <Badge variant="secondary">LOT</Badge>
-                                        {workstation.LOTcurrent}
-                                        {workstation.Bemerkung && <span className="text-muted-foreground italic pl-2">{workstation.Bemerkung}</span>}
+                                     <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                                        <span><Badge variant="secondary">LOT</Badge> {workstation.LOTcurrent}</span>
+                                        {workstation.Bemerkung && <span className="text-muted-foreground italic">{workstation.Bemerkung}</span>}
                                     </CardDescription>
                                   )}
                                   {processStep.remark && (
