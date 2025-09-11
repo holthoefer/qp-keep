@@ -2,13 +2,15 @@
 'use client';
 
 import * as React from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, TooltipProps, Cell } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, TooltipProps, Cell, LabelList } from 'recharts';
 import type { DNA, SampleData } from '@/types';
 import { getSamplesForDna } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
 import { format } from 'date-fns';
 import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { ImageIcon } from 'lucide-react';
+import { generateThumbnailUrl } from '@/lib/image-utils';
+import Image from 'next/image';
 
 const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
@@ -16,7 +18,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) =
     return (
       <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
         <div className="flex justify-between items-center">
-            <p className="font-bold">{`Wert: ${payload[0].value}`}</p>
+            <p className="font-bold">{`Fehlerhafte Teile: ${payload[0].value}`}</p>
             {data.imageUrl && <ImageIcon className="h-4 w-4 ml-2 text-primary" />}
         </div>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
@@ -31,9 +33,15 @@ const CustomizedLabel = (props: any) => {
     if (payload && payload.imageUrl) {
         return (
              <g transform={`translate(${x + width / 2}, ${y - 4})`}>
-                <text x={0} y={0} dy={0} textAnchor="middle" fill="hsl(var(--primary))" style={{ fontSize: '10px', fontWeight: 'bold' }}>
-                    Bild
-                </text>
+                <foreignObject x={-16} y={-36} width={32} height={32}>
+                    <Image 
+                        src={generateThumbnailUrl(payload.imageUrl)} 
+                        alt="Sample thumbnail"
+                        width={32}
+                        height={32}
+                        className="rounded-sm border-2 border-primary"
+                    />
+                </foreignObject>
             </g>
         );
     }
@@ -89,7 +97,7 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
         data.map(sample => {
             const defectiveCount = sample.values.reduce((sum, val) => sum + (val === 1 ? 1 : 0), 0);
             return {
-                ...sample, // Pass the whole sample object to the payload
+                ...sample, 
                 value: defectiveCount,
                 name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
             };
@@ -109,7 +117,7 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formattedData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }} onClick={handleChartClick}>
+            <BarChart data={formattedData} margin={{ top: 40, right: 30, left: 20, bottom: 20 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" tick={<CustomXAxisTick chartData={formattedData} />} interval="preserveStartEnd" />
                 <YAxis style={{ fontSize: '12px' }} width={30} allowDecimals={false} />
@@ -117,7 +125,8 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
                     content={<CustomTooltip />}
                     cursor={{fill: 'rgba(206, 212, 218, 0.2)'}}
                 />
-                <Bar dataKey="value" label={<CustomizedLabel />}>
+                <Bar dataKey="value">
+                    <LabelList dataKey="value" content={<CustomizedLabel />} />
                     {
                         formattedData.map((entry, index) => {
                              return <Cell key={`cell-${index}`} fill={entry.value > 0 ? 'hsl(var(--destructive))' : '#8884d8'}/>
