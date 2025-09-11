@@ -38,14 +38,18 @@ const CustomizedLabel = (props: any) => {
 };
 
 const CustomXAxisTick = (props: any) => {
-    const { x, y, payload } = props;
-    const { value, imageUrl } = payload.payload;
+    const { x, y, payload, chartData } = props;
+    const tickValue = payload.value;
+    
+    // Find the corresponding full data object for this tick
+    const dataPoint = chartData.find((d: any) => d.name === tickValue);
+    const imageUrl = dataPoint?.imageUrl;
     const isBlue = !!imageUrl;
 
     return (
         <g transform={`translate(${x},${y})`}>
             <text x={0} y={0} dy={16} textAnchor="end" fill={isBlue ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'} style={{ fontSize: '10px' }} transform="rotate(-35)">
-                {value}
+                {tickValue}
             </text>
         </g>
     );
@@ -83,7 +87,6 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
                 ...sample,
                 value: defectiveCount,
                 name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
-                imageUrl: sample.imageUrl, 
             };
         }).slice(-50),
     [data, dnaData.SampleSize]);
@@ -98,15 +101,12 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
             onPointClick(sampleId);
         }
     }
-    
-    const chartData = formattedData.map(d => ({...d, value: d.name}));
-
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }} onClick={handleChartClick}>
+            <BarChart data={formattedData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="value" tick={<CustomXAxisTick />} interval="preserveStartEnd" />
+                <XAxis dataKey="name" tick={<CustomXAxisTick chartData={formattedData} />} interval="preserveStartEnd" />
                 <YAxis style={{ fontSize: '12px' }} width={30} allowDecimals={false} />
                 <Tooltip 
                     content={<CustomTooltip />}
@@ -115,9 +115,8 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
                 <Legend formatter={(value) => <span className="text-muted-foreground">{value}</span>} />
                 <Bar dataKey="value" name="Fehlerhafte Teile" fill="#8884d8" label={<CustomizedLabel />}>
                     {
-                        chartData.map((entry, index) => {
-                             const originalEntry = formattedData[index];
-                             return <Cell key={`cell-${index}`} fill={originalEntry.value > 0 ? 'hsl(var(--destructive))' : '#8884d8'}/>
+                        formattedData.map((entry, index) => {
+                             return <Cell key={`cell-${index}`} fill={entry.value > 0 ? 'hsl(var(--destructive))' : '#8884d8'}/>
                         })
                     }
                 </Bar>
