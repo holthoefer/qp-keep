@@ -266,11 +266,18 @@ export async function saveControlPlan(plan: ControlPlan | Omit<ControlPlan, 'id'
         throw new Error('Plan Number is a required field.');
     }
 
-    const docRef = isNew ? doc(collection(db, 'control-plans')) : doc(db, 'control-plans', plan.id);
+    const docRef = doc(db, 'control-plans', plan.planNumber);
     
+    if (isNew) {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            throw new Error(`Ein Control Plan mit der Nummer ${plan.planNumber} existiert bereits.`);
+        }
+    }
+
     const dataToSave: ControlPlan = {
         ...plan,
-        id: docRef.id, // always use the reference's ID
+        id: docRef.id,
         lastChangedBy: userId,
         revisionDate: new Date().toISOString(),
         ...(isNew && { createdAt: new Date().toISOString() }),
@@ -436,7 +443,6 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
     if (docSnap.exists()) {
         return docSnap.data() as DNA;
     } else {
-        // Ensure all required sub-objects exist before trying to create the DNA record.
         const cp = await getControlPlan(auftrag.CP);
         if (!cp) throw new Error(`Control Plan ${auftrag.CP} not found.`);
 
