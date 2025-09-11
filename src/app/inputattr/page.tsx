@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, AlertTriangle, Diamond, Database, ImageIcon, ChevronDown, Edit, Save, FileImage, RefreshCw, X, Network, Undo, StickyNote, Loader2 } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Diamond, Database, ImageIcon, ChevronDown, Edit, Save, FileImage, RefreshCw, X, Network, Undo, StickyNote, Loader2, Minus, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   getWorkstations,
@@ -366,7 +366,7 @@ function InputAttrPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [sampleInput, setSampleInput] = React.useState('');
+  const [defectiveCount, setDefectiveCount] = React.useState(0);
   const [sampleNote, setSampleNote] = React.useState('');
   const [chartRefreshKey, setChartRefreshKey] = React.useState(0);
   
@@ -379,27 +379,6 @@ function InputAttrPage() {
     if (!dnaData || typeof dnaData.SampleSize !== 'number') return 0;
     return dnaData.SampleSize;
   }, [dnaData]);
-  
-  const currentValues = React.useMemo(() => {
-    return sampleInput.split(/[\s\n]+/).filter(v => v.trim() !== '' && !isNaN(parseFloat(v)));
-  }, [sampleInput]);
-
-  const isSaveDisabled = React.useMemo(() => {
-    if (isSaving) return true;
-    
-    const numValues = currentValues.length;
-
-    if (requiredSampleSize > 0) {
-        return numValues !== requiredSampleSize;
-    }
-    
-    return numValues === 0;
-  }, [isSaving, currentValues.length, requiredSampleSize]);
-
-  const inputPlaceholder = requiredSampleSize > 0 
-    ? `${requiredSampleSize} Werte eingeben...` 
-    : 'Dezimalzahlen (.) mit Space oder Semikolon oder Zeilenumbruch trennen ...';
-
 
   const handlePointClick = (sampleId: string) => {
     const isLatest = dnaData?.lastCheckTimestamp === sampleId;
@@ -480,45 +459,9 @@ function InputAttrPage() {
     fetchData();
   }, [decodedApId, psId, charId, po, opNum, charNum]);
   
-  const handleSampleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    let value = e.target.value;
-
-    let sanitizedValue = value
-        .replace(/(\d),(\d)/g, '$1.$2')
-        .replace(/[,/\\;a-zA-Z]/g, '\n'); 
-    
-    setSampleInput(sanitizedValue);
-    
-    const values = sanitizedValue.split(/[\s\n]+/).filter(v => v.trim() !== '' && !isNaN(parseFloat(v)));
-    
-    if (requiredSampleSize > 0 && values.length > requiredSampleSize) {
-        toast({
-            variant: "destructive",
-            title: 'Zu viele Werte',
-            description: `Es werden nur ${requiredSampleSize} Werte benötigt. Bitte korrigieren Sie die Eingabe.`,
-            duration: 2000,
-        });
-    }
-  };
-  
-  const checkForExceptions = (values: number[], mean: number, stddev: number, dna: DNA): { text: string | null; variant: 'destructive' | 'warning' | null } => {
-    const { LSL, USL } = dna;
-
-    for (const value of values) {
-        if (USL !== undefined && USL !== null && value > USL) {
-            return { text: `Out of Spec (High): Wert ${value}`, variant: 'destructive' };
-        }
-        if (LSL !== undefined && LSL !== null && value < LSL) {
-            return { text: `Out of Spec (Low): Wert ${value}`, variant: 'destructive' };
-        }
-    }
-
-    return { text: null, variant: null };
-  };
-  
   const handleSave = async () => {
-    if (!sampleInput || !workstation || !characteristic || !po || !dnaData) {
-        toast({ title: "Fehler", description: "Nicht alle benötigten Daten sind vorhanden.", variant: 'destructive' });
+    if (!workstation || !characteristic || !po || !dnaData || requiredSampleSize <= 0) {
+        toast({ title: "Fehler", description: "Nicht alle benötigten Daten sind vorhanden oder Stichprobengröße ist 0.", variant: 'destructive' });
         return;
     }
 
@@ -526,29 +469,23 @@ function InputAttrPage() {
         toast({ title: "Fehler", description: "Das Merkmal hat keine gültige ID. Bitte speichern Sie zuerst den Control Plan.", variant: 'destructive' });
         return;
     }
-
-    const values = currentValues.map(parseFloat);
-
-    if (values.some(isNaN)) {
-        toast({ title: "Eingabefehler", description: "Die Eingabe enthält ungültige Zeichen. Bitte nur Zahlen und unterstützte Trennzeichen verwenden.", variant: 'destructive' });
-        return;
-    }
-     if (values.length === 0) {
-        toast({ title: "Keine Werte", description: "Bitte geben Sie mindestens einen Wert ein.", variant: 'destructive' });
-        return;
-    }
     
     setIsSaving(true);
-    
-    const sum = values.reduce((a, b) => a + b, 0);
-    const mean = sum / values.length;
-    const stddev = Math.sqrt(values.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / (values.length > 1 ? values.length -1 : 1));
-    const exception = checkForExceptions(values, mean, stddev, dnaData);
 
+    const values = Array(requiredSampleSize).fill(0);
+    for (let i = 0; i < defectiveCount; i++) {
+        values[i] = 1;
+    }
+
+    const mean = defectiveCount / requiredSampleSize; // For attribute charts, this is often the proportion p
+    const stddev = Math.sqrt(mean * (1 - mean)); // StdDev for binomial distribution (p-chart)
+    const hasException = defectiveCount > 0;
+    
     let finalNote = sampleNote.trim();
-    if (exception.text) {
+    if (hasException) {
+        const exceptionText = `Anzahl fehlerhafter Teile: ${defectiveCount}`;
         const separator = finalNote ? '\n' : '';
-        finalNote = `${finalNote}${separator}${exception.text}`;
+        finalNote = `${finalNote}${separator}${exceptionText}`;
     }
 
     const sampleData: Omit<SampleData, 'id' | 'userEmail'> = {
@@ -562,22 +499,20 @@ function InputAttrPage() {
         values: values,
         dnaId: dnaData.idDNA,
         note: finalNote,
-        exception: !!exception.text,
+        exception: hasException,
     };
 
     try {
         const savedSample = await saveSampleData(sampleData, undefined, true);
         
-        const toastVariant = exception.text ? (exception.variant || 'warning') : 'default';
-        const toastTitle = exception.text ? 'Grenzwertverletzung!' : 'Stichprobe gespeichert';
-        const toastDescription = exception.text ? exception.text : `Mittelwert: ${mean.toFixed(4)}`;
-        const toastDuration = exception.text ? 4000 : 2000;
+        const toastTitle = hasException ? 'Stichprobe auffällig' : 'Stichprobe i.O.';
+        const toastDescription = `Anzahl fehlerhafter Teile: ${defectiveCount}`;
         
         toast({
             title: toastTitle,
             description: toastDescription,
-            variant: toastVariant as "default" | "destructive" | "warning",
-            duration: toastDuration,
+            variant: hasException ? "warning" : "default",
+            duration: 3000,
             action: (
               <ToastAction altText="Notiz/Bild bearbeiten" onClick={() => handlePointClick(savedSample.id)}>
                 Notiz/Bild bearbeiten
@@ -590,7 +525,7 @@ function InputAttrPage() {
             setDnaData(updatedDna);
         }
 
-        setSampleInput('');
+        setDefectiveCount(0);
         setSampleNote('');
         refreshAllData();
 
@@ -614,34 +549,8 @@ function InputAttrPage() {
     
     const formatSpec = (char: Characteristic | null) => {
         if (!char) return 'N/A';
-        let spec = '';
-        const nominal = char.nominal !== undefined ? char.nominal : '';
-        const lsl = char.lsl !== undefined ? char.lsl : '';
-        const usl = char.usl !== undefined ? char.usl : '';
-    
-        if (nominal !== '' && lsl !== '' && usl !== '') {
-            spec = `${nominal} (${lsl} - ${usl})`;
-        } else if (nominal !== '' && (lsl !== '' || usl !== '')) {
-            spec = `${nominal} (${lsl ? `> ${lsl}` : ''}${usl ? `< ${usl}` : ''})`;
-        } else if (lsl !== '' && usl !== '') {
-            spec = `${lsl} - ${usl}`;
-        } else if (nominal !== '') {
-            return String(nominal);
-        } else if (lsl !== '') {
-            spec = `> ${lsl}`;
-        } else if (usl !== '') {
-            spec = `< ${usl}`;
-        } else {
-            return 'N/A';
-        }
-
-        if(char.units) {
-            spec += ` ${char.units}`;
-        }
-        return spec;
+        return `Attributiv, Stichprobe: ${dnaData?.SampleSize || char.sampleSize || 'N/A'}`;
     };
-    
-    const textareaRows = requiredSampleSize > 0 ? Math.max(requiredSampleSize + 1, 3) : 3;
 
     const handleImageClick = (url: string, alt: string) => {
         setModalImageUrl(url);
@@ -665,6 +574,34 @@ function InputAttrPage() {
             toast({ variant: "destructive", title: "Fehler", description: "Letzte Stichprobe konnte nicht geladen werden." });
         }
     };
+
+    const handleDefectiveChange = (amount: number) => {
+        setDefectiveCount(prev => {
+            const newValue = prev + amount;
+            if (newValue < 0) return 0;
+            if (requiredSampleSize > 0 && newValue > requiredSampleSize) return requiredSampleSize;
+            return newValue;
+        });
+    };
+    
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value === '') {
+        setDefectiveCount(0);
+        return;
+      }
+      const numValue = parseInt(value, 10);
+      if (!isNaN(numValue)) {
+        if (numValue < 0) {
+            setDefectiveCount(0);
+        } else if (requiredSampleSize > 0 && numValue > requiredSampleSize) {
+            setDefectiveCount(requiredSampleSize);
+        } else {
+            setDefectiveCount(numValue);
+        }
+      }
+    };
+
 
   return (
     <DashboardClient>
@@ -794,15 +731,27 @@ function InputAttrPage() {
                 )}
 
                 <div className="grid grid-cols-2 gap-x-4 items-start pt-2">
-                    <Textarea 
-                        id="sample-input"
-                        value={sampleInput}
-                        onChange={handleSampleInputChange}
-                        placeholder={inputPlaceholder}
-                        rows={textareaRows}
-                        style={{ height: `${textareaRows * 1.5 + 1}rem`}}
-                        className="bg-blue-500/10"
-                    />
+                    <div className="space-y-2">
+                        <Label>Anzahl fehlerhafter Teile</Label>
+                        <div className="flex items-center gap-2">
+                            <Button type="button" variant="outline" size="icon" onClick={() => handleDefectiveChange(-1)} disabled={defectiveCount <= 0 || isSaving}>
+                                <Minus className="h-4 w-4" />
+                            </Button>
+                            <Input 
+                                id="sample-input"
+                                type="number"
+                                value={defectiveCount}
+                                onChange={handleInputChange}
+                                className="bg-blue-500/10 text-center text-lg font-bold"
+                                min={0}
+                                max={requiredSampleSize}
+                            />
+                            <Button type="button" variant="outline" size="icon" onClick={() => handleDefectiveChange(1)} disabled={(requiredSampleSize > 0 && defectiveCount >= requiredSampleSize) || isSaving}>
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">in Stichprobe von {requiredSampleSize} Teilen</p>
+                    </div>
                     <div className="flex flex-col h-full">
                         <Textarea 
                             id="sample-note"
@@ -811,7 +760,7 @@ function InputAttrPage() {
                             placeholder="Note..."
                             className="flex-grow bg-blue-500/10"
                         />
-                         <Button onClick={handleSave} disabled={isSaveDisabled} className="mt-2 w-full bg-primary hover:bg-primary/90">
+                         <Button onClick={handleSave} disabled={isSaving || requiredSampleSize <= 0} className="mt-2 w-full bg-primary hover:bg-primary/90">
                             <Save className="mr-2 h-4 w-4" />
                             Save
                         </Button>
@@ -851,3 +800,4 @@ export default function InputAttrPageWrapper() {
         </React.Suspense>
     );
 }
+
