@@ -63,17 +63,16 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
     }, [dnaData.idDNA]);
 
     const formattedData = React.useMemo(() => 
-        data.flatMap(sample => 
-            // For attribute charts, mean represents the fraction of defective items.
-            // We want to show the count of defective items.
-            // value = mean * sampleSize
-            sample.values.map((_, index) => ({ // Assuming values has SampleSize length
+        data.flatMap(sample => {
+            const defectiveCount = sample.mean * (dnaData.SampleSize || 1);
+            return [{
                 ...sample,
-                value: sample.mean * (dnaData.SampleSize || 1), // This might need adjustment based on how data is stored
-                name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}-${index + 1}`,
-            }))
-        ).slice(-50), // Take the last 50 points if there are many
-     [data, dnaData.SampleSize]);
+                value: defectiveCount,
+                name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
+                imageUrl: sample.imageUrl, 
+            }];
+        }).slice(-50),
+    [data, dnaData.SampleSize]);
 
     if (isLoading) {
         return <Skeleton className="h-full w-full" />;
