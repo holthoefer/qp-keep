@@ -50,6 +50,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import logo from '../Logo.png';
+import { BarChartComponent } from '@/components/BarChart';
 
 
 export const dynamic = 'force-dynamic';
@@ -503,6 +504,7 @@ function MerkmaleCardsPage() {
                       const dnaId = `${controlPlan.planNumber}~${processStep.processNumber}~${char.itemNumber}~${workstation!.AP}~${auftrag!.PO}`;
                       const dnaForChar = dnaData.find(d => d.idDNA === dnaId);
                       const erfassungUrl = getErfassungUrl(char);
+                      const isAttributeChart = char.charType === 'A';
                        return (
                          <Card 
                             key={`${processStep.id}-${char.id}`}
@@ -543,7 +545,11 @@ function MerkmaleCardsPage() {
                                 </div>
                                 <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
                                     {dnaForChar ? (
-                                        <SampleChart dnaData={dnaForChar} onPointClick={(sampleId) => handlePointClick(sampleId)} />
+                                        isAttributeChart ? (
+                                            <BarChartComponent dnaData={dnaForChar} onPointClick={(sampleId) => handlePointClick(sampleId)} />
+                                        ) : (
+                                            <SampleChart dnaData={dnaForChar} onPointClick={(sampleId) => handlePointClick(sampleId)} />
+                                        )
                                     ) : (
                                         <div className="h-full flex items-center justify-center text-xs text-muted-foreground bg-gray-50 rounded-md">
                                             No DNA data for chart
