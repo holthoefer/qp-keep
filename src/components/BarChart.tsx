@@ -15,7 +15,10 @@ const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) =
     const data: SampleData = payload[0].payload;
     return (
       <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
-        <p className="font-bold">{`Wert: ${payload[0].value}`}</p>
+        <div className="flex justify-between items-center">
+            <p className="font-bold">{`Wert: ${payload[0].value}`}</p>
+            {data.imageUrl && <ImageIcon className="h-4 w-4 ml-2 text-primary" />}
+        </div>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
       </div>
     );
@@ -24,7 +27,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) =
 };
 
 const CustomizedLabel = (props: any) => {
-    const { x, y, width, payload } = props;
+    const { x, y, width, value, payload } = props;
     if (payload && payload.imageUrl) {
         return (
              <g transform={`translate(${x + width / 2}, ${y - 4})`}>
@@ -41,6 +44,7 @@ const CustomXAxisTick = (props: any) => {
     const { x, y, payload, chartData } = props;
     if (!payload || !chartData) return null;
     
+    // The payload.value is the "name" property from our formatted data
     const tickValue = payload.value;
     
     const dataPoint = chartData.find((d: any) => d.name === tickValue);
@@ -85,7 +89,7 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
         data.map(sample => {
             const defectiveCount = sample.values.reduce((sum, val) => sum + (val === 1 ? 1 : 0), 0);
             return {
-                ...sample,
+                ...sample, // Pass the whole sample object to the payload
                 value: defectiveCount,
                 name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
             };
