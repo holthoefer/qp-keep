@@ -211,15 +211,15 @@ function MerkmaleCardsPage() {
     if (char.nominal !== undefined && char.lsl !== undefined && char.usl !== undefined) {
         spec = `${char.nominal} (${char.lsl} - ${char.usl})`;
     } else if (char.nominal !== undefined && (char.lsl !== undefined || char.usl !== undefined)) {
-        spec = `${char.nominal} (${char.lsl ? `> ${char.lsl}` : ''}${char.usl ? `< ${char.usl}` : ''})`;
+        spec = `${char.nominal} (${char.lsl ? `> ${lsl}` : ''}${char.usl ? `< ${usl}` : ''})`;
     } else if (char.lsl !== undefined && char.usl !== undefined) {
         spec = `${char.lsl} - ${char.usl}`;
     } else if (char.nominal !== undefined) {
         return String(char.nominal);
     } else if (char.lsl !== undefined) {
-        spec = `> ${char.lsl}`;
+        spec = `> ${lsl}`;
     } else if (char.usl !== undefined) {
-        spec = `< ${char.usl}`;
+        spec = `< ${usl}`;
     } else {
         return 'N/A';
     }
@@ -231,10 +231,10 @@ function MerkmaleCardsPage() {
   }
   
   const getErfassungUrl = (char: Characteristic) => {
-      if (!decodedApId || !processStep || !auftrag) return '#';
-      // Ensure we pass the IDs for reliable fetching/creation on the erfasung page
-      return `/erfassung?ap=${encodeURIComponent(decodedApId)}&ps=${processStep.id}&char=${char.id}&po=${auftrag.PO}&op=${processStep.processNumber}&charNum=${char.itemNumber}`;
-  }
+    if (!decodedApId || !processStep || !auftrag) return '#';
+    const baseUrl = char.charType === 'A' ? '/inputattr' : '/erfassung';
+    return `${baseUrl}?ap=${encodeURIComponent(decodedApId)}&ps=${processStep.id}&char=${char.id}&po=${auftrag.PO}&op=${processStep.processNumber}&charNum=${char.itemNumber}`;
+}
   
   const handleNavigateToErfassung = (e: React.MouseEvent, url: string) => {
     if ((e.target as HTMLElement).closest('a, button, [role="button"]')) {
@@ -338,13 +338,13 @@ function MerkmaleCardsPage() {
                     <Network className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
-                    <StickyNote className="h-4 w-4" />
+                    <StickyNote className="mr-2 h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
                     <Wrench className="mr-2 h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
-                    <Siren className="h-4 w-4" />
+                    <Siren className="mr-2 h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
                    <Target className="h-4 w-4" />
