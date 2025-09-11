@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, TooltipProps, Cell } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, TooltipProps, Cell } from 'recharts';
 import type { DNA, SampleData } from '@/types';
 import { getSamplesForDna } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
@@ -41,7 +41,6 @@ const CustomXAxisTick = (props: any) => {
     const { x, y, payload, chartData } = props;
     const tickValue = payload.value;
     
-    // Find the corresponding full data object for this tick
     const dataPoint = chartData.find((d: any) => d.name === tickValue);
     const imageUrl = dataPoint?.imageUrl;
     const isBlue = !!imageUrl;
@@ -82,14 +81,14 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
 
     const formattedData = React.useMemo(() => 
         data.map(sample => {
-            const defectiveCount = sample.mean * (dnaData.SampleSize || 1);
+            const defectiveCount = sample.values.reduce((sum, val) => sum + (val === 1 ? 1 : 0), 0);
             return {
                 ...sample,
                 value: defectiveCount,
                 name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
             };
         }).slice(-50),
-    [data, dnaData.SampleSize]);
+    [data]);
 
     if (isLoading) {
         return <Skeleton className="h-full w-full" />;
@@ -112,7 +111,6 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
                     content={<CustomTooltip />}
                     cursor={{fill: 'rgba(206, 212, 218, 0.2)'}}
                 />
-                <Legend formatter={(value) => <span className="text-muted-foreground">{value}</span>} />
                 <Bar dataKey="value" name="Fehlerhafte Teile" fill="#8884d8" label={<CustomizedLabel />}>
                     {
                         formattedData.map((entry, index) => {
