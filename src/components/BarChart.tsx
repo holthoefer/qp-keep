@@ -52,15 +52,19 @@ const CustomXAxisTick = (props: any) => {
     const { x, y, payload, chartData } = props;
     if (!payload || !chartData) return null;
     
-    // The payload.value is the "name" property from our formatted data
     const tickValue = payload.value;
     
     const dataPoint = chartData.find((d: any) => d.name === tickValue);
-    const isBlue = !!dataPoint?.imageUrl;
+    const hasImage = !!dataPoint?.imageUrl;
+
+    const style = {
+        fontSize: hasImage ? '12px' : '10px',
+        fontWeight: hasImage ? 'bold' : 'normal',
+    };
 
     return (
         <g transform={`translate(${x},${y})`}>
-            <text x={0} y={0} dy={16} textAnchor="end" fill={isBlue ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'} style={{ fontSize: '10px' }} transform="rotate(-35)">
+            <text x={0} y={0} dy={16} textAnchor="end" fill={hasImage ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'} style={style} transform="rotate(-35)">
                 {tickValue}
             </text>
         </g>
