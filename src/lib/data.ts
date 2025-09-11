@@ -436,24 +436,34 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
     if (docSnap.exists()) {
         return docSnap.data() as DNA;
     } else {
+        // Ensure all required sub-objects exist before trying to create the DNA record.
+        const cp = await getControlPlan(auftrag.CP);
+        if (!cp) throw new Error(`Control Plan ${auftrag.CP} not found.`);
+
+        const ps = cp.processSteps.find(p => p.processNumber === processStep.processNumber);
+        if (!ps) throw new Error(`Process Step ${processStep.processNumber} not found in Control Plan.`);
+
+        const char = ps.characteristics.find(c => c.itemNumber === characteristic.itemNumber);
+        if (!char) throw new Error(`Characteristic ${characteristic.itemNumber} not found in Process Step.`);
+
         const newDna: DNA = {
             idDNA,
-            idPs: processStep.id,
-            idChar: characteristic.id,
+            idPs: ps.id,
+            idChar: char.id,
             CP: auftrag.CP,
-            OP: processStep.processNumber,
-            Char: characteristic.itemNumber,
+            OP: ps.processNumber,
+            Char: char.itemNumber,
             WP: workstation.AP,
             PO: auftrag.PO,
-            LSL: characteristic.lsl,
-            LCL: characteristic.lcl,
-            CL: characteristic.cl,
-            UCL: characteristic.ucl,
-            USL: characteristic.usl,
-            sUSL: characteristic.sUSL,
-            SampleSize: characteristic.sampleSize,
-            Frequency: characteristic.frequency,
-            imageUrl: characteristic.imageUrl,
+            LSL: char.lsl,
+            LCL: char.lcl,
+            CL: char.cl,
+            UCL: char.ucl,
+            USL: char.usl,
+            sUSL: char.sUSL,
+            SampleSize: char.sampleSize,
+            Frequency: char.frequency,
+            imageUrl: char.imageUrl,
         };
         await setDoc(docRef, newDna);
         return newDna;
