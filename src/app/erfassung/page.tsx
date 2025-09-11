@@ -423,17 +423,17 @@ function ErfassungPage() {
     router.push(url);
   };
 
-  const fetchDna = React.useCallback(async () => {
-    if (workstation && auftrag && processStep && characteristic) {
-      const dna = await getOrCreateDnaData(workstation, auftrag, processStep, characteristic);
+  const fetchDna = React.useCallback(async (ws: Workstation, auftragData: Auftrag, ps: ProcessStep, char: Characteristic) => {
+      const dna = await getOrCreateDnaData(ws, auftragData, ps, char);
       setDnaData(dna);
-    }
-  }, [workstation, auftrag, processStep, characteristic]);
+  }, []);
 
   const refreshAllData = React.useCallback(() => {
-    fetchDna();
+    if (workstation && auftrag && processStep && characteristic) {
+      fetchDna(workstation, auftrag, processStep, characteristic);
+    }
     setChartRefreshKey(prev => prev + 1);
-  }, [fetchDna]);
+  }, [workstation, auftrag, processStep, characteristic, fetchDna]);
 
   React.useEffect(() => {
     if (!decodedApId || !po || (!psId && !opNum) || (!charId && !charNum)) {
@@ -446,56 +446,36 @@ function ErfassungPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const [workstations, auftraege, controlPlans] = await Promise.all([
+        const [allWorkstations, allAuftraege, allControlPlans] = await Promise.all([
           getWorkstations(),
           getAuftraege(),
           getControlPlans(),
         ]);
 
-        const currentWorkstation = workstations.find((ws) => ws.AP === decodedApId);
-        if (!currentWorkstation) {
-          throw new Error(`Arbeitsplatz mit AP ${decodedApId} nicht gefunden.`);
-        }
+        const currentWorkstation = allWorkstations.find((ws) => ws.AP === decodedApId);
+        if (!currentWorkstation) throw new Error(`Arbeitsplatz mit AP ${decodedApId} nicht gefunden.`);
         setWorkstation(currentWorkstation);
 
-        const currentAuftrag = auftraege.find((a) => a.PO === po);
-        if (!currentAuftrag || !currentAuftrag.CP) {
-          throw new Error(`Kein Control Plan für Auftrag ${po} gefunden.`);
-        }
-        
-        const currentControlPlan = controlPlans.find(
-          (cp) => cp.planNumber === currentAuftrag.CP
-        );
-        if (!currentControlPlan) {
-          throw new Error(
-            `Control Plan ${currentAuftrag.CP} konnte nicht geladen werden.`
-          );
-        }
-        setControlPlan(currentControlPlan);
+        const currentAuftrag = allAuftraege.find((a) => a.PO === po);
+        if (!currentAuftrag) throw new Error(`Auftrag ${po} nicht gefunden.`);
         setAuftrag(currentAuftrag);
+        
+        if (!currentAuftrag.CP) throw new Error(`Kein Control Plan für Auftrag ${po} gefunden.`);
+        const currentControlPlan = allControlPlans.find(cp => cp.planNumber === currentAuftrag.CP);
+        if (!currentControlPlan) throw new Error(`Control Plan ${currentAuftrag.CP} konnte nicht geladen werden.`);
+        setControlPlan(currentControlPlan);
 
-
-        const currentProcessStep = currentControlPlan.processSteps.find(
-          (step) => step.id === psId || step.processNumber === opNum
-        );
-        if (!currentProcessStep) {
-          throw new Error(
-            `Prozessschritt ${psId || opNum} nicht im Control Plan gefunden.`
-          );
-        }
+        const currentProcessStep = currentControlPlan.processSteps.find(step => step.id === psId || step.processNumber === opNum);
+        if (!currentProcessStep) throw new Error(`Prozessschritt ${psId || opNum} nicht im Control Plan gefunden.`);
         setProcessStep(currentProcessStep);
 
-        const currentCharacteristic = currentProcessStep.characteristics.find(
-          (char) => char.id === charId || char.itemNumber === charNum
-        );
-        if (!currentCharacteristic) {
-          throw new Error(`Merkmal ${charId || charNum} nicht im Prozessschritt gefunden.`);
-        }
+        const currentCharacteristic = currentProcessStep.characteristics.find(char => char.id === charId || char.itemNumber === charNum);
+        if (!currentCharacteristic) throw new Error(`Merkmal ${charId || charNum} nicht im Prozessschritt gefunden.`);
         setCharacteristic(currentCharacteristic);
 
+        // Now with all data loaded, get or create DNA
         const dna = await getOrCreateDnaData(currentWorkstation, currentAuftrag, currentProcessStep, currentCharacteristic);
         setDnaData(dna);
-
 
       } catch (e: any) {
         setError(e.message);
@@ -622,8 +602,8 @@ function ErfassungPage() {
             ),
         });
         
-        if (savedSample.dnaId) {
-            const updatedDna = await getOrCreateDnaData(workstation, { PO: po, CP: dnaData.CP, Anmerkung: sampleNote, id: po, imageUrl: '' }, processStep!, characteristic);
+        if (savedSample.dnaId && processStep && characteristic && auftrag) {
+            const updatedDna = await getOrCreateDnaData(workstation, auftrag, processStep, characteristic);
             setDnaData(updatedDna);
         }
 
