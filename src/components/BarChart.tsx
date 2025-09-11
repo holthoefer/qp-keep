@@ -27,10 +27,10 @@ const CustomizedLabel = (props: any) => {
     const { x, y, width, payload } = props;
     if (payload && payload.imageUrl) {
         return (
-             <g transform={`translate(${x + width / 2}, ${y - 10})`}>
-                <foreignObject x={-8} y={-8} width={16} height={16}>
-                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                </foreignObject>
+             <g transform={`translate(${x + width / 2}, ${y - 4})`}>
+                <text x={0} y={0} dy={0} textAnchor="middle" fill="hsl(var(--primary))" style={{ fontSize: '10px', fontWeight: 'bold' }}>
+                    Bild
+                </text>
             </g>
         );
     }
@@ -44,8 +44,7 @@ const CustomXAxisTick = (props: any) => {
     const tickValue = payload.value;
     
     const dataPoint = chartData.find((d: any) => d.name === tickValue);
-    const imageUrl = dataPoint?.imageUrl;
-    const isBlue = !!imageUrl;
+    const isBlue = !!dataPoint?.imageUrl;
 
     return (
         <g transform={`translate(${x},${y})`}>
@@ -55,6 +54,7 @@ const CustomXAxisTick = (props: any) => {
         </g>
     );
 };
+
 
 interface BarChartComponentProps {
     dnaData: DNA;
@@ -113,7 +113,7 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
                     content={<CustomTooltip />}
                     cursor={{fill: 'rgba(206, 212, 218, 0.2)'}}
                 />
-                <Bar dataKey="value" fill="#8884d8" label={<CustomizedLabel />}>
+                <Bar dataKey="value" label={<CustomizedLabel />}>
                     {
                         formattedData.map((entry, index) => {
                              return <Cell key={`cell-${index}`} fill={entry.value > 0 ? 'hsl(var(--destructive))' : '#8884d8'}/>
