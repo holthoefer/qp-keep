@@ -505,14 +505,14 @@ function InputAttrPage() {
     try {
         const savedSample = await saveSampleData(sampleData, undefined, true);
         
-        const toastTitle = hasException ? 'Stichprobe auffällig' : 'Stichprobe i.O.';
+        const toastTitle = hasException ? 'Grenzwertverletzung!' : 'Stichprobe i.O.';
         const toastDescription = `Anzahl fehlerhafter Teile: ${defectiveCount}`;
         
         toast({
             title: toastTitle,
             description: toastDescription,
-            variant: hasException ? "warning" : "default",
-            duration: 3000,
+            variant: hasException ? "destructive" : "default",
+            duration: hasException ? 4000 : 2000,
             action: (
               <ToastAction altText="Notiz/Bild bearbeiten" onClick={() => handlePointClick(savedSample.id)}>
                 Notiz/Bild bearbeiten
@@ -629,10 +629,6 @@ function InputAttrPage() {
                     </Link>
                 </Button>
             )}
-            <Button onClick={handleOpenLastNote} variant="secondary" size="sm" disabled={!dnaData}>
-                <StickyNote className="mr-2 h-4 w-4" />
-                +Note
-            </Button>
              <Button onClick={refreshAllData} variant="outline" size="sm">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
@@ -776,6 +772,16 @@ function InputAttrPage() {
       <div className='space-y-px mt-2'>
           {dnaData && (
             <Card>
+                {dnaData.imageUrlLatestSample && (
+                    <CardHeader className='pb-0'>
+                        <div className="flex justify-end">
+                            <Button onClick={handleOpenLastNote} variant="secondary" size="sm">
+                                <StickyNote className="mr-2 h-4 w-4" />
+                                Bild & Notiz
+                            </Button>
+                        </div>
+                    </CardHeader>
+                )}
               <CardContent className="h-[225px] w-full p-2">
                 <BarChartComponent key={chartRefreshKey} dnaData={dnaData} onPointClick={handlePointClick} />
               </CardContent>
