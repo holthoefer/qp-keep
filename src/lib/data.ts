@@ -441,7 +441,13 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-        return docSnap.data() as DNA;
+        const existingDna = docSnap.data() as DNA;
+        // Ensure charType is up-to-date
+        if (existingDna.charType !== characteristic.charType) {
+            await updateDoc(docRef, { charType: characteristic.charType });
+            return { ...existingDna, charType: characteristic.charType };
+        }
+        return existingDna;
     } else {
         const cp = await getControlPlan(auftrag.CP);
         if (!cp) throw new Error(`Control Plan ${auftrag.CP} not found.`);
@@ -469,6 +475,7 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
             sUSL: char.sUSL,
             SampleSize: char.sampleSize,
             Frequency: char.frequency,
+            charType: char.charType,
             imageUrl: char.imageUrl,
         };
         await setDoc(docRef, newDna);

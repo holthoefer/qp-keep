@@ -128,6 +128,7 @@ export interface DNA {
   sUSL?: number;
   SampleSize?: number;
   Frequency?: number;
+  charType?: CharType;
   Memo?: string;
   imageUrl?: string;
   imageUrlLatestSample?: string;

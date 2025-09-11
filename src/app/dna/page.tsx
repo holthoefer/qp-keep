@@ -39,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import logo from '../Logo.png';
+import { BarChartComponent } from '@/components/BarChart';
 
 export const DnaTimeTracker = ({ lastTimestamp, frequency, prefix }: { lastTimestamp?: string, frequency?: number, prefix?: string }) => {
   const [remainingMinutes, setRemainingMinutes] = React.useState<number | null>(null);
@@ -216,7 +217,8 @@ export default function DnaPage() {
       if (!dna.WP || !dna.PO || !dna.OP || !dna.Char) {
           return '#';
       }
-      return `/erfassung?ap=${dna.WP}&po=${dna.PO}&op=${dna.OP}&charNum=${dna.Char}`;
+      const baseUrl = dna.charType === 'A' ? '/inputattr' : '/erfassung';
+      return `${baseUrl}?ap=${dna.WP}&po=${dna.PO}&op=${dna.OP}&charNum=${dna.Char}`;
   }
 
   const handleImageClick = (e: React.MouseEvent, url: string, alt: string) => {
@@ -468,6 +470,7 @@ export default function DnaPage() {
                                 {dnaItems.map((dna) => {
                                     const erfassungUrl = getErfassungUrl(dna);
                                     const isLinkDisabled = erfassungUrl === '#';
+                                    const isAttributeChart = dna.charType === 'A';
 
                                     return (
                                         <Link key={dna.idDNA} href={erfassungUrl} className={`block group ${isLinkDisabled ? 'pointer-events-none' : ''}`}>
@@ -524,7 +527,11 @@ export default function DnaPage() {
                                                     </div>
                                                 )}
                                                  <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
-                                                    <SampleChart dnaData={dna} onPointClick={handlePointClick} />
+                                                    {isAttributeChart ? (
+                                                        <BarChartComponent dnaData={dna} onPointClick={handlePointClick} />
+                                                    ) : (
+                                                        <SampleChart dnaData={dna} onPointClick={handlePointClick} />
+                                                    )}
                                                  </div>
                                                 {isLinkDisabled && <Badge variant="destructive" className="mt-2">Unvollständige Daten für Link</Badge>}
                                             </CardContent>
