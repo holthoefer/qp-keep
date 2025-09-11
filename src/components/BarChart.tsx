@@ -63,14 +63,14 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
     }, [dnaData.idDNA]);
 
     const formattedData = React.useMemo(() => 
-        data.flatMap(sample => {
+        data.map(sample => {
             const defectiveCount = sample.mean * (dnaData.SampleSize || 1);
-            return [{
+            return {
                 ...sample,
                 value: defectiveCount,
                 name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
                 imageUrl: sample.imageUrl, 
-            }];
+            };
         }).slice(-50),
     [data, dnaData.SampleSize]);
 
