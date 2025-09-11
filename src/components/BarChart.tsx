@@ -39,9 +39,10 @@ const CustomizedLabel = (props: any) => {
 
 const CustomXAxisTick = (props: any) => {
     const { x, y, payload, chartData } = props;
+    if (!payload || !chartData) return null;
+    
     const tickValue = payload.value;
     
-    // Find the corresponding data point in the chart data
     const dataPoint = chartData.find((d: any) => d.name === tickValue);
     const imageUrl = dataPoint?.imageUrl;
     const isBlue = !!imageUrl;
