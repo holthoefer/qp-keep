@@ -2,12 +2,13 @@
 'use client';
 
 import * as React from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, TooltipProps } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, TooltipProps, Cell } from 'recharts';
 import type { DNA, SampleData } from '@/types';
 import { getSamplesForDna } from '@/lib/data';
 import { Skeleton } from './ui/skeleton';
 import { format } from 'date-fns';
 import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import { ImageIcon } from 'lucide-react';
 
 const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
@@ -20,6 +21,20 @@ const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) =
     );
   }
   return null;
+};
+
+const CustomizedLabel = (props: any) => {
+    const { x, y, width, value, payload } = props;
+    if (payload.imageUrl) {
+        return (
+             <g transform={`translate(${x + width / 2}, ${y - 10})`}>
+                <foreignObject x={-8} y={-8} width={16} height={16}>
+                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                </foreignObject>
+            </g>
+        );
+    }
+    return null;
 };
 
 interface BarChartComponentProps {
@@ -49,12 +64,16 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
 
     const formattedData = React.useMemo(() => 
         data.flatMap(sample => 
-            sample.values.map((value, index) => ({
+            // For attribute charts, mean represents the fraction of defective items.
+            // We want to show the count of defective items.
+            // value = mean * sampleSize
+            sample.values.map((_, index) => ({ // Assuming values has SampleSize length
                 ...sample,
-                value,
+                value: sample.mean * (dnaData.SampleSize || 1), // This might need adjustment based on how data is stored
                 name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}-${index + 1}`,
             }))
-        ), [data]);
+        ).slice(-50), // Take the last 50 points if there are many
+     [data, dnaData.SampleSize]);
 
     if (isLoading) {
         return <Skeleton className="h-full w-full" />;
@@ -69,16 +88,22 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} onClick={handleChartClick}>
+            <BarChart data={formattedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" style={{ fontSize: '10px' }} interval={Math.max(0, Math.floor(formattedData.length / 10) -1)} />
-                <YAxis style={{ fontSize: '12px' }} width={50} />
+                <YAxis style={{ fontSize: '12px' }} width={50} allowDecimals={false} />
                 <Tooltip 
                     content={<CustomTooltip />}
                     cursor={{fill: 'rgba(206, 212, 218, 0.2)'}}
                 />
                 <Legend />
-                <Bar dataKey="value" name="Attributiver Wert" fill="#8884d8" />
+                <Bar dataKey="value" name="Fehlerhafte Teile" fill="#8884d8" label={<CustomizedLabel />}>
+                    {
+                        formattedData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.value > 0 ? 'hsl(var(--destructive))' : '#8884d8'}/>
+                        ))
+                    }
+                </Bar>
             </BarChart>
         </ResponsiveContainer>
     );
