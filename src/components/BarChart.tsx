@@ -41,6 +41,7 @@ const CustomXAxisTick = (props: any) => {
     const { x, y, payload, chartData } = props;
     const tickValue = payload.value;
     
+    // Find the corresponding data point in the chart data
     const dataPoint = chartData.find((d: any) => d.name === tickValue);
     const imageUrl = dataPoint?.imageUrl;
     const isBlue = !!imageUrl;
@@ -111,7 +112,7 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
                     content={<CustomTooltip />}
                     cursor={{fill: 'rgba(206, 212, 218, 0.2)'}}
                 />
-                <Bar dataKey="value" name="Fehlerhafte Teile" fill="#8884d8" label={<CustomizedLabel />}>
+                <Bar dataKey="value" fill="#8884d8" label={<CustomizedLabel />}>
                     {
                         formattedData.map((entry, index) => {
                              return <Cell key={`cell-${index}`} fill={entry.value > 0 ? 'hsl(var(--destructive))' : '#8884d8'}/>
