@@ -25,7 +25,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) =
 
 const CustomizedLabel = (props: any) => {
     const { x, y, width, value, payload } = props;
-    if (payload.imageUrl) {
+    if (payload && payload.imageUrl) {
         return (
              <g transform={`translate(${x + width / 2}, ${y - 10})`}>
                 <foreignObject x={-8} y={-8} width={16} height={16}>
@@ -108,4 +108,3 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
         </ResponsiveContainer>
     );
 }
-
