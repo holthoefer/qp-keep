@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import * as React from 'react';
@@ -629,6 +627,10 @@ function InputAttrPage() {
                     </Link>
                 </Button>
             )}
+            <Button onClick={handleOpenLastNote} variant="secondary" size="sm" disabled={!dnaData}>
+                <StickyNote className="mr-2 h-4 w-4" />
+                +Note
+            </Button>
              <Button onClick={refreshAllData} variant="outline" size="sm">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Refresh
@@ -772,16 +774,6 @@ function InputAttrPage() {
       <div className='space-y-px mt-2'>
           {dnaData && (
             <Card>
-                {dnaData.imageUrlLatestSample && (
-                    <CardHeader className='pb-0'>
-                        <div className="flex justify-end">
-                            <Button onClick={handleOpenLastNote} variant="secondary" size="sm">
-                                <StickyNote className="mr-2 h-4 w-4" />
-                                Bild & Notiz
-                            </Button>
-                        </div>
-                    </CardHeader>
-                )}
               <CardContent className="h-[225px] w-full p-2">
                 <BarChartComponent key={chartRefreshKey} dnaData={dnaData} onPointClick={handlePointClick} />
               </CardContent>
