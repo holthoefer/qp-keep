@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) =
 };
 
 const CustomizedLabel = (props: any) => {
-    const { x, y, width, value, payload } = props;
+    const { x, y, width, payload } = props;
     if (payload && payload.imageUrl) {
         return (
              <g transform={`translate(${x + width / 2}, ${y - 10})`}>
@@ -35,6 +35,20 @@ const CustomizedLabel = (props: any) => {
         );
     }
     return null;
+};
+
+const CustomXAxisTick = (props: any) => {
+    const { x, y, payload } = props;
+    const { value, imageUrl } = payload.payload;
+    const isBlue = !!imageUrl;
+
+    return (
+        <g transform={`translate(${x},${y})`}>
+            <text x={0} y={0} dy={16} textAnchor="end" fill={isBlue ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'} style={{ fontSize: '10px' }} transform="rotate(-35)">
+                {value}
+            </text>
+        </g>
+    );
 };
 
 interface BarChartComponentProps {
@@ -84,23 +98,27 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
             onPointClick(sampleId);
         }
     }
+    
+    const chartData = formattedData.map(d => ({...d, value: d.name}));
+
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formattedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }} onClick={handleChartClick}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" style={{ fontSize: '10px' }} interval={Math.max(0, Math.floor(formattedData.length / 10) -1)} />
-                <YAxis style={{ fontSize: '12px' }} width={50} allowDecimals={false} />
+                <XAxis dataKey="value" tick={<CustomXAxisTick />} interval="preserveStartEnd" />
+                <YAxis style={{ fontSize: '12px' }} width={30} allowDecimals={false} />
                 <Tooltip 
                     content={<CustomTooltip />}
                     cursor={{fill: 'rgba(206, 212, 218, 0.2)'}}
                 />
-                <Legend />
+                <Legend formatter={(value) => <span className="text-muted-foreground">{value}</span>} />
                 <Bar dataKey="value" name="Fehlerhafte Teile" fill="#8884d8" label={<CustomizedLabel />}>
                     {
-                        formattedData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.value > 0 ? 'hsl(var(--destructive))' : '#8884d8'}/>
-                        ))
+                        chartData.map((entry, index) => {
+                             const originalEntry = formattedData[index];
+                             return <Cell key={`cell-${index}`} fill={originalEntry.value > 0 ? 'hsl(var(--destructive))' : '#8884d8'}/>
+                        })
                     }
                 </Bar>
             </BarChart>
