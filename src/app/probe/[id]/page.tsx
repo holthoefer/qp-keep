@@ -519,7 +519,14 @@ const generateHtmlWithCurrentData = (): string | null => {
     const currentSampleWithLatestChanges = { ...sample, imageUrl, note };
 
     const historicalDataString = historicalSamples.length > 0 
-        ? historicalSamples.map(s => `<tr><td>${new Date(s.timestamp).toLocaleString()}</td><td>${s.mean.toFixed(4)}</td><td>${s.stddev.toFixed(4)}</td><td>${s.values?.join(', ') ?? ''}</td><td>${s.note || ''}</td><td>${s.exception ? 'Ja' : 'Nein'}</td></tr>`).join('') 
+        ? historicalSamples.map(s => `<tr>
+            <td>${new Date(s.timestamp).toLocaleString()}</td>
+            <td>${s.mean !== undefined ? s.mean.toFixed(4) : (s.defects ?? 'N/A')}</td>
+            <td>${s.stddev !== undefined ? s.stddev.toFixed(4) : (s.sampleSize ?? 'N/A')}</td>
+            <td>${s.values?.join(', ') ?? ''}</td>
+            <td>${s.note || ''}</td>
+            <td>${s.exception ? 'Ja' : 'Nein'}</td>
+          </tr>`).join('') 
         : '<tr><td colspan="6">Keine historischen Daten</td></tr>';
 
     const skeleton = `<!DOCTYPE html>
@@ -579,9 +586,10 @@ const generateHtmlWithCurrentData = (): string | null => {
                     <table class="data-table">
                         <tbody>
                             <tr><th>Zeitstempel</th><td>${new Date(currentSampleWithLatestChanges.timestamp).toLocaleString()}</td></tr>
-                            <tr><th>Mittelwert</th><td>${currentSampleWithLatestChanges.mean.toFixed(4)}</td></tr>
-                            <tr><th>StdAbw</th><td>${currentSampleWithLatestChanges.stddev.toFixed(4)}</td></tr>
-                            <tr><th>Werte</th><td>${currentSampleWithLatestChanges.values?.join(', ') ?? ''}</td></tr>
+                            ${currentSampleWithLatestChanges.mean !== undefined ? `<tr><th>Mittelwert</th><td>${currentSampleWithLatestChanges.mean.toFixed(4)}</td></tr>` : ''}
+                            ${currentSampleWithLatestChanges.stddev !== undefined ? `<tr><th>StdAbw</th><td>${currentSampleWithLatestChanges.stddev.toFixed(4)}</td></tr>` : ''}
+                            ${currentSampleWithLatestChanges.values && currentSampleWithLatestChanges.values.length > 0 ? `<tr><th>Werte</th><td>${currentSampleWithLatestChanges.values.join(', ')}</td></tr>` : ''}
+                            ${currentSampleWithLatestChanges.defects !== undefined ? `<tr><th>Fehler</th><td>${currentSampleWithLatestChanges.defects}</td></tr>` : ''}
                             <tr><th>Ausnahme</th><td>${currentSampleWithLatestChanges.exception ? 'Ja' : 'Nein'}</td></tr>
                             <tr><th>Notiz</th><td>${currentSampleWithLatestChanges.note || ''}</td></tr>
                         </tbody>
@@ -593,7 +601,7 @@ const generateHtmlWithCurrentData = (): string | null => {
         <div class="section">
             <h2>Historische Stichproben (letzte 20)</h2>
             <table class="data-table">
-                <thead><tr><th>Zeitstempel</th><th>Mittelwert</th><th>StdAbw</th><th>Werte</th><th>Notiz</th><th>Ausnahme</th></tr></thead>
+                <thead><tr><th>Zeitstempel</th><th>Wert 1</th><th>Wert 2</th><th>Werte/Details</th><th>Notiz</th><th>Ausnahme</th></tr></thead>
                 <tbody>${historicalDataString}</tbody>
             </table>
         </div>
