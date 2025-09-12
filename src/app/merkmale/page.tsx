@@ -547,8 +547,8 @@ function MerkmaleCardsPage() {
                                    {dnaForChar?.checkStatus && <Badge variant="outline" className={cn(getStatusColorClass(dnaForChar.checkStatus))}>{dnaForChar.checkStatus}</Badge>}
                                 </div>
                                 {dnaForChar?.Memo && (
-                                    <div className="p-2 bg-muted/50 rounded-md">
-                                        <p className="text-muted-foreground line-clamp-3">{dnaForChar.Memo}</p>
+                                    <div className="p-2 bg-blue-100 rounded-md">
+                                        <p className="text-blue-800 line-clamp-3">{dnaForChar.Memo}</p>
                                     </div>
                                 )}
                                 <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
@@ -599,6 +599,3 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
-
-
-
