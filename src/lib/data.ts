@@ -445,21 +445,20 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         let needsUpdate = false;
         const updates: Partial<DNA> = {};
         
-        // This block ensures that if the characteristic in the control plan changes,
-        // the DNA record is updated to match.
-        const charSampleSize = characteristic.sampleSize;
-        if (charSampleSize !== undefined && charSampleSize !== null && typeof charSampleSize === 'number' && existingDna.SampleSize !== charSampleSize) {
-            updates.SampleSize = charSampleSize;
-            needsUpdate = true;
-        }
+        const isNumeric = (val: any): val is number => typeof val === 'number' && !isNaN(val);
 
-        const charFrequency = characteristic.frequency;
-        if (charFrequency !== undefined && charFrequency !== null && typeof charFrequency === 'number' && existingDna.Frequency !== charFrequency) {
-            updates.Frequency = charFrequency;
-            needsUpdate = true;
-        }
+        const checkAndUpdate = (dnaKey: keyof DNA, charKey: keyof Characteristic) => {
+            const charValue = characteristic[charKey];
+            if (isNumeric(charValue) && existingDna[dnaKey] !== charValue) {
+                updates[dnaKey] = charValue as any;
+                needsUpdate = true;
+            }
+        };
+
+        checkAndUpdate('SampleSize', 'sampleSize');
+        checkAndUpdate('Frequency', 'frequency');
         
-        if(characteristic.charType && existingDna.charType !== characteristic.charType) {
+        if (characteristic.charType && existingDna.charType !== characteristic.charType) {
             updates.charType = characteristic.charType;
             needsUpdate = true;
         }
@@ -471,7 +470,8 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         
         return existingDna;
     } else {
-        // Create a new DNA record if it doesn't exist
+        const isNumeric = (val: any): val is number => val !== null && val !== undefined && !isNaN(Number(val));
+        
         const newDna: DNA = {
             idDNA,
             idPs: processStep.id,
@@ -487,8 +487,8 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
             UCL: characteristic.ucl,
             USL: characteristic.usl,
             sUSL: characteristic.sUSL,
-            SampleSize: characteristic.sampleSize,
-            Frequency: characteristic.frequency,
+            SampleSize: isNumeric(characteristic.sampleSize) ? characteristic.sampleSize : undefined,
+            Frequency: isNumeric(characteristic.frequency) ? characteristic.frequency : undefined,
             charType: characteristic.charType,
             imageUrl: characteristic.imageUrl,
         };
@@ -702,5 +702,6 @@ export const deleteEvent = async (id: string) => {
     }
     await deleteDoc(doc(db, 'events', id));
 };
+
 
 
