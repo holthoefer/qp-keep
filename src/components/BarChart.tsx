@@ -57,12 +57,12 @@ const CustomXAxisTick = (props: any) => {
 
     const dataPoint = chartData?.find((d: any) => d.name === payload.value);
     
-    const isBlue = !!dataPoint?.imageUrl;
+    const hasImage = !!dataPoint?.imageUrl;
 
     const style = {
-        fontSize: '12px',
-        fontWeight: isBlue ? 'bold' : 'normal',
-        fill: isBlue ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+        fontSize: hasImage ? '14px' : '12px',
+        fontWeight: hasImage ? 'bold' : 'normal',
+        fill: 'hsl(var(--muted-foreground))',
     };
 
     return (
@@ -101,8 +101,8 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
     }, [dnaData.idDNA]);
 
     const formattedData = React.useMemo(() => {
-        const sampleSize = dnaData.SampleSize ?? 0;
         return data.map(sample => {
+            const sampleSize = sample.sampleSize ?? dnaData.SampleSize ?? 0;
             const defects = sample.defects ?? 0;
             const goodParts = sampleSize - defects;
             return {
@@ -137,10 +137,10 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
                     content={<CustomTooltip />}
                     cursor={{fill: 'rgba(206, 212, 218, 0.2)'}}
                 />
+                <Bar dataKey="defects" stackId="a" fill="hsl(var(--destructive))" />
                 <Bar dataKey="goodParts" stackId="a" fill="#8884d8">
                      <LabelList dataKey="defects" content={<CustomizedLabel />} />
                 </Bar>
-                <Bar dataKey="defects" stackId="a" fill="hsl(var(--destructive))" />
             </BarChart>
         </ResponsiveContainer>
     );

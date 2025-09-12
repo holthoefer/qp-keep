@@ -102,8 +102,10 @@ export interface SampleData {
   mean: number;
   stddev: number;
   timestamp: string;
-  values: number[];
+  values?: number[];
   defects?: number;
+  sampleSize?: number;
+  charType?: CharType;
   dnaId: string;
   note?: string;
   imageUrl?: string;

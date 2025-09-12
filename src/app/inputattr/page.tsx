@@ -440,9 +440,7 @@ function InputAttrPage() {
     }
     
     setIsSaving(true);
-
-    const mean = defectiveCount / requiredSampleSize;
-    const stddev = Math.sqrt(mean * (1 - mean));
+    
     const hasException = defectiveCount > 0;
     
     let finalNote = sampleNote.trim();
@@ -452,15 +450,15 @@ function InputAttrPage() {
         finalNote = `${finalNote}${separator}${exceptionText}`;
     }
 
-    const sampleData: Omit<SampleData, 'id' | 'userEmail' | 'values'> & {values?: number[]} = {
+    const sampleData: Omit<SampleData, 'id' | 'userEmail' | 'mean' | 'stddev' | 'values'> & {values?: number[]} = {
         workstationId: workstation.AP,
         characteristicId: characteristic.id,
         po: po,
         lot: workstation.LOTcurrent || 'N/A',
-        mean,
-        stddev,
         timestamp: new Date().toISOString(),
         defects: defectiveCount,
+        sampleSize: requiredSampleSize,
+        charType: dnaData.charType,
         dnaId: dnaData.idDNA,
         note: finalNote,
         exception: hasException,

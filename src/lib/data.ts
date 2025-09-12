@@ -521,9 +521,12 @@ export const saveSampleData = async (sampleData: Omit<SampleData, 'id' | 'userEm
       userEmail: user?.email || 'unknown'
     };
 
-    // Make sure we don't save an empty values array if we have defects
-    if (dataToSave.defects !== undefined && (!dataToSave.values || dataToSave.values.length === 0)) {
+    if (dataToSave.charType === 'A' && dataToSave.values) {
         delete dataToSave.values;
+    }
+    
+    if (dataToSave.charType !== 'A' && dataToSave.defects !== undefined) {
+        delete dataToSave.defects;
     }
 
 
