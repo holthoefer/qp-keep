@@ -52,7 +52,7 @@ interface AnalysisResultDialogProps {
 
 const AnalysisResultDialog: React.FC<AnalysisResultDialogProps> = ({ isOpen, onOpenChange, isLoading, analysisResult, htmlSkeleton, error, dnaData, sample, historicalSamples, onCombinedExport }) => {
 
-    const handlePointClick = (sampleId: string, isLatest: boolean) => {
+    const handlePointClick = (sampleId: string) => {
         // Dummy handler, as this is a display-only chart inside the dialog
     };
     
@@ -1003,7 +1003,7 @@ const handleExportSkeleton = () => {
                                 <FileDown className="mr-2 h-4 w-4" />
                                 Grundgerüst als HTML exportieren
                             </Button>
-                            <Button onClick={handleSendToAi} disabled={isGeneratingAnalysis || !htmlSkeleton} variant="secondary">
+                            <Button onClick={() => handleGenerateHtmlSkeleton(handleSendToAi)} disabled={isGeneratingAnalysis} variant="secondary">
                                 {isGeneratingAnalysis ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                                 Analyse an AI senden
                             </Button>
