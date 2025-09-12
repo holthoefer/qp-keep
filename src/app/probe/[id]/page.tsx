@@ -81,7 +81,7 @@ const AnalysisResultDialog: React.FC<AnalysisResultDialogProps> = ({ isOpen, onO
                         </Card>
                     </div>
                     <div className="space-y-4">
-                        {dnaData && (
+                        {dnaData && dnaData.charType !== 'A' && (
                             <>
                                 <Card>
                                   <CardHeader className='p-4'>
@@ -251,7 +251,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
             processStep: ps?.processName || dna.OP,
             characteristic: char?.DesciptionSpec || dna.Char,
             specificationLimits: `LSL: ${dna.LSL ?? 'N/A'}, USL: ${dna.USL ?? 'N/A'}, LCL: ${dna.LCL ?? 'N/A'}, UCL: ${dna.UCL ?? 'N/A'}, sUCL: ${dna.sUSL ?? 'N/A'}`,
-            currentValue: `Individual Values: [${sample.values?.join(', ') ?? ''}], Mean: ${sample.mean.toFixed(4)}, Standard Deviation: ${sample.stddev.toFixed(4)}`,
+            currentValue: `Individual Values: [${sample.values?.join(', ') ?? ''}], Mean: ${sample.mean?.toFixed(4) ?? 'N/A'}, Standard Deviation: ${sample.stddev?.toFixed(4) ?? 'N/A'}`,
             responsiblePersonRoles: ['Quality Engineer', 'Process Engineer', 'Operator'],
         });
         setAnalysisResult(result.suggestedResponsePlan);
@@ -384,6 +384,62 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     }
   }
 
+    const generateBarChartSVG = (
+        allSamples: SampleData[],
+        currentSampleTimestamp: string
+    ): string => {
+        const width = 800;
+        const height = 400;
+        const margin = { top: 20, right: 60, bottom: 30, left: 50 };
+        const plotWidth = width - margin.left - margin.right;
+        const plotHeight = height - margin.top - margin.bottom;
+
+        const maxSampleSize = Math.max(...allSamples.map(s => s.sampleSize || 0), 0);
+
+        const xScale = (index: number) => margin.left + index * (plotWidth / allSamples.length);
+        const yScale = (value: number) => margin.top + plotHeight * (1 - value / (maxSampleSize || 1));
+        const barWidth = (plotWidth / allSamples.length) * 0.8;
+
+        const bars = allSamples.map((s, i) => {
+            const defects = s.defects || 0;
+            const goodParts = (s.sampleSize || 0) - defects;
+
+            const goodY = yScale(goodParts);
+            const goodHeight = yScale(0) - goodY;
+            const defectY = yScale(goodParts + defects);
+            const defectHeight = goodY - defectY;
+
+            const isCurrentSample = s.timestamp === currentSampleTimestamp;
+            const stroke = isCurrentSample ? 'stroke="#005f9c" stroke-width="3"' : '';
+
+            return `
+                <g class="bar-group" transform="translate(${xScale(i)}, 0)" ${stroke}>
+                    <rect y="${goodY}" width="${barWidth}" height="${goodHeight}" fill="#8884d8" />
+                    <rect y="${defectY}" width="${barWidth}" height="${defectHeight}" fill="#d9534f" />
+                </g>
+            `;
+        }).join('');
+        
+         const xTicks = allSamples.map((s, i) => {
+            const xPos = xScale(i) + barWidth / 2;
+            const date = new Date(s.timestamp);
+            const time = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+            return `<text x="${xPos}" y="${height - margin.bottom + 15}" text-anchor="middle" class="x-tick-label">${time}</text>`;
+        }).join('');
+
+
+        return `
+            <svg width="${width}" height="${height}" class="chart-container">
+                <g class="grid">
+                    ${Array.from({ length: 5 }).map((_, i) => `<line x1="${margin.left}" y1="${margin.top + i * plotHeight/4}" x2="${width-margin.right}" y2="${margin.top + i * plotHeight/4}" />`).join('')}
+                </g>
+                <line class="axis-line" x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" />
+                <line class="axis-line" x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${height - margin.bottom}" />
+                ${bars}
+                ${xTicks}
+            </svg>
+        `;
+    };
   
   const generateChartSVG = (
     chartType: 'mean' | 'stddev',
@@ -398,7 +454,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     const plotHeight = height - margin.top - margin.bottom;
   
     const dataKey = chartType === 'mean' ? 'mean' : 'stddev';
-    const data = allSamples.map(s => s[dataKey]);
+    const data = allSamples.map(s => s[dataKey]).filter(v => v !== undefined) as number[];
   
     let yDomainMin = chartType === 'mean' ? Infinity : 0;
     let yDomainMax = chartType === 'mean' ? -Infinity : 0;
@@ -418,7 +474,10 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     const xScale = (index: number) => margin.left + (index / (data.length - 1 || 1)) * plotWidth;
     const yScale = (value: number) => margin.top + plotHeight * (1 - (value - finalYMin) / (finalYMax - finalYMin || 1));
   
-    const linePoints = allSamples.map((s, i) => `${xScale(i)},${yScale(s[dataKey])}`).join(' ');
+    const linePoints = allSamples
+        .map((s, i) => (s[dataKey] !== undefined ? `${xScale(i)},${yScale(s[dataKey]!)}` : ''))
+        .filter(Boolean)
+        .join(' ');
 
     const renderLine = (y: number | undefined | null, label: string, className: string) => {
       if (y === undefined || y === null) return '';
@@ -431,21 +490,23 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     
     const renderPoints = () => {
         return allSamples.map((s, i) => {
+            const val = s[dataKey];
+            if (val === undefined) return '';
+
             let fill = '#005f9c'; // default blue
-            const { mean, stddev, exception } = s;
-            const { LSL, USL, LCL, UCL, sUSL } = dnaData;
+            const { exception } = s;
 
             if (exception) {
               fill = '#f0ad4e'; // orange
             } else {
-              if (chartType === 'mean') {
-                 if ((USL !== undefined && USL !== null && mean > USL) || (LSL !== undefined && LSL !== null && mean < LSL)) {
+              if (chartType === 'mean' && s.mean !== undefined) {
+                 if ((dna.USL !== undefined && dna.USL !== null && s.mean > dna.USL) || (dna.LSL !== undefined && dna.LSL !== null && s.mean < dna.LSL)) {
                     fill = '#d9534f'; // red
-                 } else if ((UCL !== undefined && UCL !== null && mean > UCL) || (LCL !== undefined && LCL !== null && mean < LCL)) {
+                 } else if ((dna.UCL !== undefined && dna.UCL !== null && s.mean > dna.UCL) || (dna.LCL !== undefined && dna.LCL !== null && s.mean < dna.LCL)) {
                     fill = '#f0ad4e'; // orange
                  }
-              } else {
-                 if(sUSL !== undefined && sUSL !== null && stddev > sUSL) {
+              } else if (chartType === 'stddev' && s.stddev !== undefined) {
+                 if(dna.sUSL !== undefined && dna.sUSL !== null && s.stddev > dna.sUSL) {
                     fill = '#f0ad4e'; // orange
                  }
               }
@@ -453,10 +514,10 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
             
             const isCurrentSample = s.timestamp === currentSampleTimestamp;
             
-            let pointCircle = `<circle class="point" cx="${xScale(i)}" cy="${yScale(s[dataKey])}" r="4" fill="${fill}" />`;
+            let pointCircle = `<circle class="point" cx="${xScale(i)}" cy="${yScale(val)}" r="4" fill="${fill}" />`;
             
             if (isCurrentSample) {
-                 pointCircle = `<circle class="current-point" cx="${xScale(i)}" cy="${yScale(s[dataKey])}" r="8" fill="none" stroke="${fill}" stroke-width="2" />`;
+                 pointCircle = `<circle class="current-point" cx="${xScale(i)}" cy="${yScale(val)}" r="8" fill="none" stroke="${fill}" stroke-width="2" />`;
             }
 
             return pointCircle;
@@ -513,21 +574,60 @@ const generateHtmlWithCurrentData = (): string | null => {
     if (!sample || !dna) return null;
     const allSamples = [...historicalSamples, { ...sample, imageUrl, note }].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
-    const xBarChartSVG = generateChartSVG('mean', allSamples, dna, sample.timestamp);
-    const sChartSVG = generateChartSVG('stddev', allSamples, dna, sample.timestamp);
+    let chartSection = '';
+    let historicalDataString = '';
+    let currentSampleRow = '';
 
+    if (dna.charType === 'A') {
+        const barChartSVG = generateBarChartSVG(allSamples, sample.timestamp);
+        chartSection = `
+            <h2>Balkendiagramm (Fehlerhafte Teile)</h2>
+            ${barChartSVG}
+        `;
+        historicalDataString = allSamples.map(s => `
+            <tr>
+                <td>${new Date(s.timestamp).toLocaleString()}</td>
+                <td>${s.defects ?? 'N/A'}</td>
+                <td>${(s.sampleSize ?? 0) - (s.defects ?? 0)}</td>
+                <td>${s.sampleSize ?? 'N/A'}</td>
+                <td>${s.note || ''}</td>
+                <td>${s.exception ? 'Ja' : 'Nein'}</td>
+            </tr>
+        `).join('');
+
+        currentSampleRow = `
+            ${sample.defects !== undefined ? `<tr><th>Defects</th><td>${sample.defects}</td></tr>` : ''}
+            ${sample.sampleSize !== undefined ? `<tr><th>Sample Size</th><td>${sample.sampleSize}</td></tr>` : ''}
+        `;
+    } else {
+        const xBarChartSVG = generateChartSVG('mean', allSamples, dna, sample.timestamp);
+        const sChartSVG = generateChartSVG('stddev', allSamples, dna, sample.timestamp);
+        chartSection = `
+            <h2>Regelkarten</h2>
+            <h3>x̄-Chart</h3>
+            ${xBarChartSVG}
+            <h3>s-Chart</h3>
+            ${sChartSVG}
+        `;
+        historicalDataString = allSamples.map(s => `
+            <tr>
+                <td>${new Date(s.timestamp).toLocaleString()}</td>
+                <td>${s.mean?.toFixed(4) ?? 'N/A'}</td>
+                <td>${s.stddev?.toFixed(4) ?? 'N/A'}</td>
+                <td>${s.values?.join(', ') ?? ''}</td>
+                <td>${s.note || ''}</td>
+                <td>${s.exception ? 'Ja' : 'Nein'}</td>
+            </tr>
+        `).join('');
+
+        currentSampleRow = `
+            ${sample.mean !== undefined ? `<tr><th>Mittelwert</th><td>${sample.mean.toFixed(4)}</td></tr>` : ''}
+            ${sample.stddev !== undefined ? `<tr><th>StdAbw</th><td>${sample.stddev.toFixed(4)}</td></tr>` : ''}
+            ${sample.values && sample.values.length > 0 ? `<tr><th>Werte</th><td>${sample.values.join(', ')}</td></tr>` : ''}
+        `;
+    }
+    
     const currentSampleWithLatestChanges = { ...sample, imageUrl, note };
-
-    const historicalDataString = historicalSamples.length > 0 
-        ? historicalSamples.map(s => `<tr>
-            <td>${new Date(s.timestamp).toLocaleString()}</td>
-            <td>${s.mean !== undefined ? s.mean.toFixed(4) : (s.defects ?? 'N/A')}</td>
-            <td>${s.stddev !== undefined ? s.stddev.toFixed(4) : (s.sampleSize ?? 'N/A')}</td>
-            <td>${s.values?.join(', ') ?? ''}</td>
-            <td>${s.note || ''}</td>
-            <td>${s.exception ? 'Ja' : 'Nein'}</td>
-          </tr>`).join('') 
-        : '<tr><td colspan="6">Keine historischen Daten</td></tr>';
 
     const skeleton = `<!DOCTYPE html>
 <html lang="de">
@@ -586,10 +686,7 @@ const generateHtmlWithCurrentData = (): string | null => {
                     <table class="data-table">
                         <tbody>
                             <tr><th>Zeitstempel</th><td>${new Date(currentSampleWithLatestChanges.timestamp).toLocaleString()}</td></tr>
-                            ${currentSampleWithLatestChanges.mean !== undefined ? `<tr><th>Mittelwert</th><td>${currentSampleWithLatestChanges.mean.toFixed(4)}</td></tr>` : ''}
-                            ${currentSampleWithLatestChanges.stddev !== undefined ? `<tr><th>StdAbw</th><td>${currentSampleWithLatestChanges.stddev.toFixed(4)}</td></tr>` : ''}
-                            ${currentSampleWithLatestChanges.values && currentSampleWithLatestChanges.values.length > 0 ? `<tr><th>Werte</th><td>${currentSampleWithLatestChanges.values.join(', ')}</td></tr>` : ''}
-                            ${currentSampleWithLatestChanges.defects !== undefined ? `<tr><th>Fehler</th><td>${currentSampleWithLatestChanges.defects}</td></tr>` : ''}
+                            ${currentSampleRow}
                             <tr><th>Ausnahme</th><td>${currentSampleWithLatestChanges.exception ? 'Ja' : 'Nein'}</td></tr>
                             <tr><th>Notiz</th><td>${currentSampleWithLatestChanges.note || ''}</td></tr>
                         </tbody>
@@ -601,17 +698,20 @@ const generateHtmlWithCurrentData = (): string | null => {
         <div class="section">
             <h2>Historische Stichproben (letzte 20)</h2>
             <table class="data-table">
-                <thead><tr><th>Zeitstempel</th><th>Wert 1</th><th>Wert 2</th><th>Werte/Details</th><th>Notiz</th><th>Ausnahme</th></tr></thead>
+                 <thead>
+                    <tr>
+                        <th>Zeitstempel</th>
+                        ${dna.charType === 'A' ? '<th>Defects</th><th>i.O.-Parts</th><th>Size</th>' : '<th>Mittelwert</th><th>StdAbw</th><th>Werte</th>'}
+                        <th>Notiz</th>
+                        <th>Ausnahme</th>
+                    </tr>
+                </thead>
                 <tbody>${historicalDataString}</tbody>
             </table>
         </div>
 
         <div class="section">
-            <h2>Regelkarten</h2>
-            <h3>x̄-Chart</h3>
-            ${xBarChartSVG}
-            <h3>s-Chart</h3>
-            ${sChartSVG}
+            ${chartSection}
         </div>
 
         <div class="section">
@@ -669,7 +769,7 @@ const handleExportSkeleton = () => {
 
     // For attribute charts, the rule is simpler
     if (dna.charType === 'A') {
-        return sample.defects && sample.defects > 0 ? "bg-destructive/10" : "bg-blue-500/5";
+        return sample.defects !== undefined && sample.defects > 0 ? "bg-destructive/10" : "bg-blue-500/5";
     }
 
     // For variable charts
