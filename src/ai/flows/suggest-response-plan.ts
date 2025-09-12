@@ -44,25 +44,25 @@ const prompt = ai.definePrompt({
   Analysiere die bereitgestellten historischen Daten zu fehlerhaften Teilen. Bewerte die Prozessstabilität basierend auf dem Trend und der Häufigkeit von Fehlern. Erstelle eine kurze und prägnante Zusammenfassung als HTML.
 
   So erstellst du den Plan:
-  1.  **Diagnose:** Fasse die Situation kurz zusammen. Erwähne, ob und wann Fehler aufgetreten sind.
-  2.  **Empfehlung:** Gib klare und kurze Handlungsempfehlungen als Aufzählungspunkte (<ul> und <li>).
+  1.  **Diagnose:** Fasse die Situation kurz zusammen. Erwähne in Aufzählungspunkten (&lt;ul&gt; und &lt;li&gt;), wann welche Fehler aufgetreten sind.
+  2.  **Empfehlung:** Gib klare und kurze Handlungsempfehlungen als Aufzählungspunkte (&lt;ul&gt; und &lt;li&gt;).
   3.  **Verantwortlichkeit:** Schlage eine verantwortliche Rolle vor.
 
-  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Empfehlung) unter Verwendung von <h3>-Tags. Die Antwort soll kurz und leicht verständlich sein.
+  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Empfehlung) unter Verwendung von &lt;h3&gt;-Tags. Die Antwort soll kurz und leicht verständlich sein.
 
   Beispielstruktur:
-  <h3>Diagnose</h3>
-  <p>Die Analyse der Daten für Prozessschritt {{{processStep}}} zeigt eine potenzielle Beeinträchtigung der Prozessstabilität. Innerhalb der letzten Stunden traten mehrfach fehlerhafte Teile auf:</p>
-  <ul>
-    <li>Stichprobe um [Zeit]: [Anzahl] Defekte.</li>
-    <li>Stichprobe um [Zeit]: [Anzahl] Defekte.</li>
-  </ul>
+  &lt;h3&gt;Diagnose&lt;/h3&gt;
+  &lt;p&gt;Die Analyse der Daten für Prozessschritt {{{processStep}}} zeigt eine potenzielle Beeinträchtigung der Prozessstabilität. Innerhalb der letzten Stunden traten mehrfach fehlerhafte Teile auf:&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Stichprobe um [Zeit]: [Anzahl] Defekte.&lt;/li&gt;
+    &lt;li&gt;Stichprobe um [Zeit]: [Anzahl] Defekte.&lt;/li&gt;
+  &lt;/ul&gt;
   
-  <h3>Empfehlung</h3>
-  <ul>
-    <li>Obwohl die meisten Proben fehlerfrei sind, deuten wiederkehrende Defekte auf eine systematische Ursache hin.</li>
-    <li>Eine tiefere Ursachenanalyse wird empfohlen, um die Prozessqualität nachhaltig zu sichern und Ausschuss zu minimieren.</li>
-  </ul>
+  &lt;h3&gt;Empfehlung&lt;/h3&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Obwohl die meisten Proben fehlerfrei sind, deuten wiederkehrende Defekte auf eine systematische Ursache hin.&lt;/li&gt;
+    &lt;li&gt;Eine tiefere Ursachenanalyse wird empfohlen, um die Prozessqualität nachhaltig zu sichern und Ausschuss zu minimieren.&lt;/li&gt;
+  &lt;/ul&gt;
 
   Historische Daten zu Fehlern:
   {{{currentValue}}}
@@ -85,21 +85,21 @@ const prompt = ai.definePrompt({
   4.  Empfehle vorbeugende Maßnahmen, um ein erneutes Auftreten des Problems zu vermeiden.
   5.  Bestimme aus der Liste der möglichen verantwortlichen Rollen die geeignete Person, die für die Ausführung des Maßnahmenplans verantwortlich sein soll.
 
-  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Sofortmaßnahmen, Korrekturmaßnahmen, Vorbeugende Maßnahmen) unter Verwendung von <h3>-Tags. Verwende Aufzählungspunkte (<ul> und <li>) für Aktionslisten.
+  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Sofortmaßnahmen, Korrekturmaßnahmen, Vorbeugende Maßnahmen) unter Verwendung von &lt;h3&gt;-Tags. Verwende Aufzählungspunkte (&lt;ul&gt; und &lt;li&gt;) für Aktionslisten.
   
   KRITISCHE STILREGEL:
-  - Wenn du eine Verletzung einer SPEZIFIKATIONSGRENZE (LSL oder USL) erwähnst, MUSST du diesen Satz oder diese Phrase in ein <span class="spec-violation"> Tag einschließen.
-  - Wenn du eine Verletzung einer KONTROLLGRENZE (LCL, UCL oder sUCL) erwähnst, MUSST du diesen Satz oder diese Phrase in ein <span class="control-violation"> Tag einschließen.
+  - Wenn du eine Verletzung einer SPEZIFIKATIONSGRENZE (LSL oder USL) erwähnst, MUSST du diesen Satz oder diese Phrase in ein &lt;span class="spec-violation"&gt; Tag einschließen.
+  - Wenn du eine Verletzung einer KONTROLLGRENZE (LCL, UCL oder sUCL) erwähnst, MUSST du diesen Satz oder diese Phrase in ein &lt;span class="control-violation"&gt; Tag einschließen.
 
   Beispielstruktur:
-  <h3>Diagnose</h3>
-  <p>Eine kurze Analyse der potenziellen Grundursache. <span class="spec-violation">Der Mittelwert liegt über der USL.</span></p>
+  &lt;h3&gt;Diagnose&lt;/h3&gt;
+  &lt;p&gt;Eine kurze Analyse der potenziellen Grundursache. &lt;span class="spec-violation"&gt;Der Mittelwert liegt über der USL.&lt;/span&gt;&lt;/p&gt;
   
-  <h3>Sofortmaßnahmen</h3>
-  <ul>
-    <li>Prozess sofort stoppen.</li>
-    <li>Alle Produkte seit der letzten Gut-Prüfung isolieren.</li>
-  </ul>
+  &lt;h3&gt;Sofortmaßnahmen&lt;/h3&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Prozess sofort stoppen.&lt;/li&gt;
+    &lt;li&gt;Alle Produkte seit der letzten Gut-Prüfung isolieren.&lt;/li&gt;
+  &lt;/ul&gt;
   {{/if}}
 `,
 });
