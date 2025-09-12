@@ -367,7 +367,7 @@ function InputAttrPage() {
     router.push(url);
   };
 
-  const fetchDna = React.useCallback(async (ws: Workstation, auftragData: Auftrag, ps: ProcessStep, char: Characteristic) => {
+  const fetchDna = React.useCallback(async (ws: Workstation, auftragData: Auftrag, ps: Characteristic, char: Characteristic) => {
       const dna = await getOrCreateDnaData(ws, auftragData, ps, char);
       setDnaData(dna);
   }, []);
@@ -450,6 +450,9 @@ function InputAttrPage() {
         const exceptionText = `${format(new Date(), 'dd.MM.yy HH:mm', { locale: de })} Defects: ${defectiveCount}`;
         const separator = finalNote ? '\n' : '';
         finalNote = `${exceptionText}${separator}${finalNote}`;
+    } else {
+        // If there are no defects, the memo should just be the user-entered note.
+        // The DNA memo will be cleared below.
     }
 
     const sampleData: Omit<SampleData, 'id' | 'userEmail' | 'mean' | 'stddev' | 'values'> & {values?: number[]} = {
@@ -484,7 +487,16 @@ function InputAttrPage() {
             ),
         });
         
-        if (savedSample.dnaId && processStep && characteristic && auftrag) {
+        if (processStep && characteristic && auftrag) {
+             const dnaUpdate: Partial<DNA> = {};
+             // Update the memo in the DNA data
+            if (hasException) {
+                dnaUpdate.Memo = finalNote;
+            } else {
+                dnaUpdate.Memo = ''; // Clear memo if no defects
+            }
+            await saveDnaData({ idDNA: dnaData.idDNA, ...dnaUpdate });
+
             const updatedDna = await getOrCreateDnaData(workstation, auftrag, processStep, characteristic);
             setDnaData(updatedDna);
         }
@@ -764,3 +776,5 @@ export default function InputAttrPageWrapper() {
         </React.Suspense>
     );
 }
+
+    
