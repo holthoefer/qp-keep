@@ -543,6 +543,11 @@ function MerkmaleCardsPage() {
                                    {dnaForChar && <DnaTimeTracker lastTimestamp={dnaForChar.lastCheckTimestamp} frequency={dnaForChar.Frequency} prefix={`M# ${dnaForChar.Char}`} />}
                                    {dnaForChar?.checkStatus && <Badge variant="outline" className={cn(getStatusColorClass(dnaForChar.checkStatus))}>{dnaForChar.checkStatus}</Badge>}
                                 </div>
+                                {dnaForChar?.Memo && (
+                                    <div className="p-2 bg-muted/50 rounded-md">
+                                        <p className="text-muted-foreground line-clamp-3">{dnaForChar.Memo}</p>
+                                    </div>
+                                )}
                                 <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
                                     {dnaForChar ? (
                                         isAttributeChart ? (
@@ -591,3 +596,4 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
