@@ -659,6 +659,12 @@ const handleExportSkeleton = () => {
     if (isNewSample) return "bg-card";
     if (!sample || !dna) return "bg-card";
 
+    // For attribute charts, the rule is simpler
+    if (dna.charType === 'A') {
+        return sample.defects && sample.defects > 0 ? "bg-destructive/10" : "bg-blue-500/5";
+    }
+
+    // For variable charts
     const { mean, stddev } = sample;
     const { LSL, USL, LCL, UCL, sUSL } = dna;
 

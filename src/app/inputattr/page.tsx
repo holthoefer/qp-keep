@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -109,12 +110,6 @@ function DnaCard({ dnaData, onSave }: { dnaData: DNA, onSave: (data: Partial<DNA
         setIsSaving(true);
         const dataToSave: Partial<DNA> = {
             idDNA: formData.idDNA,
-            LSL: formData.LSL,
-            LCL: formData.LCL,
-            CL: formData.CL,
-            UCL: formData.UCL,
-            USL: formData.USL,
-            sUSL: formData.sUSL,
             SampleSize: formData.SampleSize,
             Frequency: formData.Frequency,
             checkStatus: formData.checkStatus,
@@ -160,30 +155,6 @@ function DnaCard({ dnaData, onSave }: { dnaData: DNA, onSave: (data: Partial<DNA
                         <AccordionContent>
                              <CardContent className="pt-0 space-y-4">
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="LSL">LSL</Label>
-                                        <Input id="LSL" name="LSL" type="number" step="any" value={formData.LSL ?? ''} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="LCL">LCL</Label>
-                                        <Input id="LCL" name="LCL" type="number" step="any" value={formData.LCL ?? ''} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="CL">CL (Mittelwert)</Label>
-                                        <Input id="CL" name="CL" type="number" step="any" value={formData.CL ?? ''} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="UCL">UCL</Label>
-                                        <Input id="UCL" name="UCL" type="number" step="any" value={formData.UCL ?? ''} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="USL">USL</Label>
-                                        <Input id="USL" name="USL" type="number" step="any" value={formData.USL ?? ''} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="sUSL">sUSL</Label>
-                                        <Input id="sUSL" name="sUSL" type="number" step="any" value={formData.sUSL ?? ''} onChange={handleInputChange} />
-                                    </div>
                                      <div className="space-y-2">
                                         <Label htmlFor="SampleSize">Sample Size</Label>
                                         <Input id="SampleSize" name="SampleSize" type="number" value={formData.SampleSize ?? ''} onChange={handleInputChange} />
