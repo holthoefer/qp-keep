@@ -49,23 +49,23 @@ const CustomizedLabel = (props: any) => {
 };
 
 const CustomXAxisTick = (props: any) => {
-    const { x, y, payload, chartData } = props;
-    if (!payload || !chartData) return null;
+    const { x, y, payload } = props;
+    if (!payload || !payload.value) return null;
+
+    const dataPoint = props.chartData?.find((d: any) => d.name === payload.value);
     
-    const tickValue = payload.value;
-    
-    const dataPoint = chartData.find((d: any) => d.name === tickValue);
-    const hasImage = !!dataPoint?.imageUrl;
+    const isBlue = !!dataPoint?.imageUrl;
 
     const style = {
-        fontSize: hasImage ? '12px' : '10px',
-        fontWeight: hasImage ? 'bold' : 'normal',
+        fontSize: isBlue ? '12px' : '10px',
+        fontWeight: isBlue ? 'bold' : 'normal',
+        fill: isBlue ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
     };
 
     return (
         <g transform={`translate(${x},${y})`}>
-            <text x={0} y={0} dy={16} textAnchor="end" fill={hasImage ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'} style={style} transform="rotate(-35)">
-                {tickValue}
+            <text x={0} y={0} dy={16} textAnchor="end" style={style} transform="rotate(-35)">
+                {payload.value}
             </text>
         </g>
     );
@@ -99,10 +99,9 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
 
     const formattedData = React.useMemo(() => 
         data.map(sample => {
-            const defectiveCount = sample.values.reduce((sum, val) => sum + (val === 1 ? 1 : 0), 0);
             return {
                 ...sample, 
-                value: defectiveCount,
+                value: sample.defects ?? 0,
                 name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
             };
         }).slice(-50),
@@ -121,7 +120,7 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formattedData} margin={{ top: 40, right: 30, left: 20, bottom: 20 }} onClick={handleChartClick}>
+            <BarChart data={formattedData} margin={{ top: 40, right: 30, left: 0, bottom: 20 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" tick={<CustomXAxisTick chartData={formattedData} />} interval="preserveStartEnd" />
                 <YAxis style={{ fontSize: '12px' }} width={30} allowDecimals={false} />

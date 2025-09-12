@@ -515,7 +515,19 @@ export const saveSampleData = async (sampleData: Omit<SampleData, 'id' | 'userEm
     const sampleRef = doc(db, 'samples', id);
     const user = auth.currentUser;
     
-    await setDoc(sampleRef, {...sampleData, userId: user?.uid, userEmail: user?.email || 'unknown'}, { merge: !isNew });
+    const dataToSave: any = {
+      ...sampleData, 
+      userId: user?.uid, 
+      userEmail: user?.email || 'unknown'
+    };
+
+    // Make sure we don't save an empty values array if we have defects
+    if (dataToSave.defects !== undefined && (!dataToSave.values || dataToSave.values.length === 0)) {
+        delete dataToSave.values;
+    }
+
+
+    await setDoc(sampleRef, dataToSave, { merge: !isNew });
 
     // Update DNA with last check info
     const dnaRef = doc(db, 'dna', sampleData.dnaId);

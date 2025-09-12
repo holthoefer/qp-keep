@@ -103,6 +103,7 @@ export interface SampleData {
   stddev: number;
   timestamp: string;
   values: number[];
+  defects?: number;
   dnaId: string;
   note?: string;
   imageUrl?: string;

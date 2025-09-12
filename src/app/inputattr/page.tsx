@@ -470,13 +470,8 @@ function InputAttrPage() {
     
     setIsSaving(true);
 
-    const values = Array(requiredSampleSize).fill(0);
-    for (let i = 0; i < defectiveCount; i++) {
-        values[i] = 1;
-    }
-
-    const mean = defectiveCount / requiredSampleSize; // For attribute charts, this is often the proportion p
-    const stddev = Math.sqrt(mean * (1 - mean)); // StdDev for binomial distribution (p-chart)
+    const mean = defectiveCount / requiredSampleSize;
+    const stddev = Math.sqrt(mean * (1 - mean));
     const hasException = defectiveCount > 0;
     
     let finalNote = sampleNote.trim();
@@ -486,7 +481,7 @@ function InputAttrPage() {
         finalNote = `${finalNote}${separator}${exceptionText}`;
     }
 
-    const sampleData: Omit<SampleData, 'id' | 'userEmail'> = {
+    const sampleData: Omit<SampleData, 'id' | 'userEmail' | 'values'> & {values?: number[]} = {
         workstationId: workstation.AP,
         characteristicId: characteristic.id,
         po: po,
@@ -494,10 +489,11 @@ function InputAttrPage() {
         mean,
         stddev,
         timestamp: new Date().toISOString(),
-        values: values,
+        defects: defectiveCount,
         dnaId: dnaData.idDNA,
         note: finalNote,
         exception: hasException,
+        values: [], // Keep it for type safety, but it's not the primary data for attribute charts
     };
 
     try {
