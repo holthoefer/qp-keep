@@ -232,7 +232,7 @@ function MerkmaleCardsPage() {
   }
   
   const getErfassungUrl = (char: Characteristic) => {
-    if (!decodedApId || !processStep || !auftrag) return '#';
+    if (!decodedApId || !processStep || !auftrag || !char.id) return '#';
     const baseUrl = char.charType === 'A' ? '/inputattr' : '/erfassung';
     return `${baseUrl}?ap=${encodeURIComponent(decodedApId)}&ps=${processStep.id}&char=${char.id}&po=${auftrag.PO}&op=${processStep.processNumber}&charNum=${char.itemNumber}`;
 }
@@ -345,7 +345,7 @@ function MerkmaleCardsPage() {
                     <Wrench className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
-                    <Siren className="mr-2 h-4 w-4" />
+                    <Siren className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
                    <Target className="h-4 w-4" />
@@ -596,4 +596,5 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
 
