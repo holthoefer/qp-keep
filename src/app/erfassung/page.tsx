@@ -732,10 +732,11 @@ function ErfassungPage() {
                         </>
                     }
                 </div>
-                <div className="text-sm text-muted-foreground pt-0.5">
+                <div className="text-sm text-muted-foreground pt-0.5 flex items-center gap-2">
                   {dnaData ? (
                      <>
                        <b>{requiredSampleSize > 0 ? `${requiredSampleSize}er` : 'N/A'}</b> Stichprobe
+                       <Badge variant="outline">Typ: {dnaData.charType}</Badge>
                      </>
                   ) : (
                     <div className="pt-0.5">

@@ -445,7 +445,6 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         let needsUpdate = false;
         const updates: Partial<DNA> = {};
         
-        const isNumeric = (val: any): val is number => typeof val === 'number' && !isNaN(val);
         const isDefined = (val: any) => val !== undefined && val !== null;
 
         const checkAndUpdate = (dnaKey: keyof DNA, charKey: keyof Characteristic) => {
@@ -455,7 +454,7 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
                 needsUpdate = true;
             }
         };
-
+        
         checkAndUpdate('SampleSize', 'sampleSize');
         checkAndUpdate('Frequency', 'frequency');
         
@@ -471,7 +470,7 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         
         return existingDna;
     } else {
-        const isNumeric = (val: any): boolean => val !== null && val !== undefined && val !== '' && !isNaN(Number(val));
+        const isNumeric = (val: any): val is number => val !== null && val !== undefined && val !== '' && !isNaN(Number(val));
         
         const newDna: DNA = {
             idDNA,
