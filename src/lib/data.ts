@@ -449,6 +449,7 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
 
         const checkAndUpdate = (dnaKey: keyof DNA, charKey: keyof Characteristic) => {
             const charValue = characteristic[charKey];
+             // Only update if charValue is a valid number and it differs from the existing DNA value
             if (isNumeric(charValue) && existingDna[dnaKey] !== charValue) {
                 updates[dnaKey] = charValue as any;
                 needsUpdate = true;
@@ -470,7 +471,7 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         
         return existingDna;
     } else {
-        const isNumeric = (val: any): val is number => val !== null && val !== undefined && !isNaN(Number(val));
+        const isNumeric = (val: any): val is number => val !== null && val !== undefined && val !== '' && !isNaN(Number(val));
         
         const newDna: DNA = {
             idDNA,
@@ -487,8 +488,8 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
             UCL: characteristic.ucl,
             USL: characteristic.usl,
             sUSL: characteristic.sUSL,
-            SampleSize: isNumeric(characteristic.sampleSize) ? characteristic.sampleSize : undefined,
-            Frequency: isNumeric(characteristic.frequency) ? characteristic.frequency : undefined,
+            SampleSize: isNumeric(characteristic.sampleSize) ? Number(characteristic.sampleSize) : undefined,
+            Frequency: isNumeric(characteristic.frequency) ? Number(characteristic.frequency) : undefined,
             charType: characteristic.charType,
             imageUrl: characteristic.imageUrl,
         };
@@ -702,6 +703,3 @@ export const deleteEvent = async (id: string) => {
     }
     await deleteDoc(doc(db, 'events', id));
 };
-
-
-
