@@ -459,8 +459,13 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         
         return existingDna;
     } else {
-        const isNumeric = (val: any): val is number => typeof val === 'number' && !isNaN(val);
-        
+        // Helper to safely get a numeric value from the characteristic
+        const getNumericValue = (value: any): number | undefined => {
+            if (value === null || value === undefined || value === '') return undefined;
+            const num = Number(value);
+            return isNaN(num) ? undefined : num;
+        };
+
         const newDna: DNA = {
             idDNA,
             idPs: processStep.id,
@@ -470,18 +475,23 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
             Char: characteristic.itemNumber,
             WP: workstation.AP,
             PO: auftrag.PO,
-            LSL: characteristic.lsl,
-            LCL: characteristic.lcl,
-            CL: characteristic.cl,
-            UCL: characteristic.ucl,
-            USL: characteristic.usl,
-            sUSL: characteristic.sUSL,
-            SampleSize: isNumeric(characteristic.sampleSize) ? characteristic.sampleSize : undefined,
-            Frequency: isNumeric(characteristic.frequency) ? characteristic.frequency : undefined,
+            LSL: getNumericValue(characteristic.lsl),
+            LCL: getNumericValue(characteristic.lcl),
+            CL: getNumericValue(characteristic.cl),
+            UCL: getNumericValue(characteristic.ucl),
+            USL: getNumericValue(characteristic.usl),
+            sUSL: getNumericValue(characteristic.sUSL),
+            SampleSize: getNumericValue(characteristic.sampleSize),
+            Frequency: getNumericValue(characteristic.frequency),
             charType: characteristic.charType,
             imageUrl: characteristic.imageUrl,
         };
-        await setDoc(docRef, newDna);
+        
+        const cleanedNewDna = Object.fromEntries(
+            Object.entries(newDna).filter(([, v]) => v !== undefined)
+        );
+
+        await setDoc(docRef, cleanedNewDna);
         return newDna;
     }
 }
