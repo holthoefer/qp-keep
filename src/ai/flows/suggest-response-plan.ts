@@ -45,10 +45,10 @@ const prompt = ai.definePrompt({
 
   So erstellst du den Plan:
   1.  **Diagnose:** Fasse die Situation kurz zusammen. Erwähne, ob und wann Fehler aufgetreten sind.
-  2.  **Empfehlung:** Gib eine klare und kurze Handlungsempfehlung.
+  2.  **Empfehlung:** Gib klare und kurze Handlungsempfehlungen als Aufzählungspunkte (<ul> und <li>).
   3.  **Verantwortlichkeit:** Schlage eine verantwortliche Rolle vor.
 
-  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Empfehlung) unter Verwendung von <h3>-Tags. Verwende Aufzählungspunkte (<ul> und <li>) für Aktionslisten, falls zutreffend. Die Antwort soll kurz und leicht verständlich sein.
+  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Empfehlung) unter Verwendung von <h3>-Tags. Die Antwort soll kurz und leicht verständlich sein.
 
   Beispielstruktur:
   <h3>Diagnose</h3>
@@ -59,7 +59,10 @@ const prompt = ai.definePrompt({
   </ul>
   
   <h3>Empfehlung</h3>
-  <p>Obwohl die meisten Proben fehlerfrei sind, deuten wiederkehrende Defekte auf eine systematische Ursache hin. Eine tiefere Ursachenanalyse wird empfohlen, um die Prozessqualität nachhaltig zu sichern und Ausschuss zu minimieren.</p>
+  <ul>
+    <li>Obwohl die meisten Proben fehlerfrei sind, deuten wiederkehrende Defekte auf eine systematische Ursache hin.</li>
+    <li>Eine tiefere Ursachenanalyse wird empfohlen, um die Prozessqualität nachhaltig zu sichern und Ausschuss zu minimieren.</li>
+  </ul>
 
   Historische Daten zu Fehlern:
   {{{currentValue}}}
