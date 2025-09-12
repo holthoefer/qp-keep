@@ -446,22 +446,17 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         const updates: Partial<DNA> = {};
         
         const isDefined = (val: any) => val !== undefined && val !== null;
-
-        const checkAndUpdate = (dnaKey: keyof DNA, charKey: keyof Characteristic) => {
-            const charValue = characteristic[charKey];
+        
+        const checkAndUpdate = (dnaKey: keyof DNA, charValue: any) => {
             if (isDefined(charValue) && existingDna[dnaKey] !== charValue) {
-                updates[dnaKey] = charValue as any;
+                updates[dnaKey] = charValue;
                 needsUpdate = true;
             }
         };
-        
-        checkAndUpdate('SampleSize', 'sampleSize');
-        checkAndUpdate('Frequency', 'frequency');
-        
-        if (characteristic.charType && existingDna.charType !== characteristic.charType) {
-            updates.charType = characteristic.charType;
-            needsUpdate = true;
-        }
+
+        checkAndUpdate('SampleSize', characteristic.sampleSize);
+        checkAndUpdate('Frequency', characteristic.frequency);
+        checkAndUpdate('charType', characteristic.charType);
 
         if (needsUpdate) {
             await updateDoc(docRef, updates);

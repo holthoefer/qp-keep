@@ -698,7 +698,7 @@ function ErfassungPage() {
             onClick={() => router.back()}
             size="icon"
         >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
         </Button>
         <div className="flex items-center gap-1">
             {dnaData && (
