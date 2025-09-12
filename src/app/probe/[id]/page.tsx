@@ -251,7 +251,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
             processStep: ps?.processName || dna.OP,
             characteristic: char?.DesciptionSpec || dna.Char,
             specificationLimits: `LSL: ${dna.LSL ?? 'N/A'}, USL: ${dna.USL ?? 'N/A'}, LCL: ${dna.LCL ?? 'N/A'}, UCL: ${dna.UCL ?? 'N/A'}, sUCL: ${dna.sUSL ?? 'N/A'}`,
-            currentValue: `Individual Values: [${sample.values.join(', ')}], Mean: ${sample.mean.toFixed(4)}, Standard Deviation: ${sample.stddev.toFixed(4)}`,
+            currentValue: `Individual Values: [${sample.values?.join(', ') ?? ''}], Mean: ${sample.mean.toFixed(4)}, Standard Deviation: ${sample.stddev.toFixed(4)}`,
             responsiblePersonRoles: ['Quality Engineer', 'Process Engineer', 'Operator'],
         });
         setAnalysisResult(result.suggestedResponsePlan);
@@ -519,7 +519,7 @@ const generateHtmlWithCurrentData = (): string | null => {
     const currentSampleWithLatestChanges = { ...sample, imageUrl, note };
 
     const historicalDataString = historicalSamples.length > 0 
-        ? historicalSamples.map(s => `<tr><td>${new Date(s.timestamp).toLocaleString()}</td><td>${s.mean.toFixed(4)}</td><td>${s.stddev.toFixed(4)}</td><td>${s.values.join(', ')}</td><td>${s.note || ''}</td><td>${s.exception ? 'Ja' : 'Nein'}</td></tr>`).join('') 
+        ? historicalSamples.map(s => `<tr><td>${new Date(s.timestamp).toLocaleString()}</td><td>${s.mean.toFixed(4)}</td><td>${s.stddev.toFixed(4)}</td><td>${s.values?.join(', ') ?? ''}</td><td>${s.note || ''}</td><td>${s.exception ? 'Ja' : 'Nein'}</td></tr>`).join('') 
         : '<tr><td colspan="6">Keine historischen Daten</td></tr>';
 
     const skeleton = `<!DOCTYPE html>
@@ -581,7 +581,7 @@ const generateHtmlWithCurrentData = (): string | null => {
                             <tr><th>Zeitstempel</th><td>${new Date(currentSampleWithLatestChanges.timestamp).toLocaleString()}</td></tr>
                             <tr><th>Mittelwert</th><td>${currentSampleWithLatestChanges.mean.toFixed(4)}</td></tr>
                             <tr><th>StdAbw</th><td>${currentSampleWithLatestChanges.stddev.toFixed(4)}</td></tr>
-                            <tr><th>Werte</th><td>${currentSampleWithLatestChanges.values.join(', ')}</td></tr>
+                            <tr><th>Werte</th><td>${currentSampleWithLatestChanges.values?.join(', ') ?? ''}</td></tr>
                             <tr><th>Ausnahme</th><td>${currentSampleWithLatestChanges.exception ? 'Ja' : 'Nein'}</td></tr>
                             <tr><th>Notiz</th><td>${currentSampleWithLatestChanges.note || ''}</td></tr>
                         </tbody>
@@ -846,7 +846,12 @@ const handleExportSkeleton = () => {
                         <div className="text-xs text-muted-foreground">
                             <p>Mittelwert: {sample.mean.toFixed(4)}</p>
                             <p>StdAbw: {sample.stddev.toFixed(4)}</p>
-                            <p>Werte: {sample.values.join('; ')}</p>
+                            {sample.values && sample.values.length > 0 && (
+                                <p>Werte: {sample.values.join('; ')}</p>
+                            )}
+                            {sample.defects !== undefined && (
+                                <p>Fehlerhafte Teile: {sample.defects}</p>
+                            )}
                         </div>
                     </CardFooter>
                 </Card>
