@@ -493,7 +493,6 @@ function InputAttrPage() {
         dnaId: dnaData.idDNA,
         note: finalNote,
         exception: hasException,
-        values: [], // Keep it for type safety, but it's not the primary data for attribute charts
     };
 
     try {
@@ -794,4 +793,3 @@ export default function InputAttrPageWrapper() {
         </React.Suspense>
     );
 }
-
