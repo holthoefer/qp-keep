@@ -41,10 +41,25 @@ const prompt = ai.definePrompt({
 
   {{#if isAttributeData}}
   ### Anweisung für attributive Daten (Fehleranzahl)
-  Analysiere die bereitgestellten historischen Daten zu fehlerhaften Teilen. Bewerte die Prozessstabilität basierend auf dem Trend und der Häufigkeit von Fehlern. Gib eine prägnante Zusammenfassung im Fließtext aus, die die Situation beschreibt und eine Empfehlung für das weitere Vorgehen gibt. Gib keine Schritt-für-Schritt-Aktionspläne oder HTML-Tags aus. Formuliere die Antwort professionell und direkt.
+  Analysiere die bereitgestellten historischen Daten zu fehlerhaften Teilen. Bewerte die Prozessstabilität basierend auf dem Trend und der Häufigkeit von Fehlern. Erstelle eine kurze und prägnante Zusammenfassung als HTML.
 
-  Beispiel-Output:
-  "Die vorliegende Analyse der Qualitätskontrolldaten für Prozessschritt {{{processStep}}}, Merkmal {{{characteristic}}}, zeigt, dass die Prozessstabilität potenziell beeinträchtigt ist. Innerhalb der letzten Stunden traten mehrfach fehlerhafte Teile auf. Die Stichprobe von [Zeit] wies [Anzahl] Defekte auf, was eine Ausnahme darstellt. Während der Großteil der Proben fehlerfrei ist, deuten die wiederkehrenden Vorkommnisse von Defekten darauf hin, dass die Ursache für die Fehlerquelle untersucht werden sollte. Es wird empfohlen, eine tiefere Ursachenanalyse durchzuführen, um die Prozessqualität nachhaltig zu sichern und Ausschuss zu minimieren."
+  So erstellst du den Plan:
+  1.  **Diagnose:** Fasse die Situation kurz zusammen. Erwähne, ob und wann Fehler aufgetreten sind.
+  2.  **Empfehlung:** Gib eine klare und kurze Handlungsempfehlung.
+  3.  **Verantwortlichkeit:** Schlage eine verantwortliche Rolle vor.
+
+  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Empfehlung) unter Verwendung von <h3>-Tags. Verwende Aufzählungspunkte (<ul> und <li>) für Aktionslisten, falls zutreffend. Die Antwort soll kurz und leicht verständlich sein.
+
+  Beispielstruktur:
+  <h3>Diagnose</h3>
+  <p>Die Analyse der Daten für Prozessschritt {{{processStep}}} zeigt eine potenzielle Beeinträchtigung der Prozessstabilität. Innerhalb der letzten Stunden traten mehrfach fehlerhafte Teile auf:</p>
+  <ul>
+    <li>Stichprobe um [Zeit]: [Anzahl] Defekte.</li>
+    <li>Stichprobe um [Zeit]: [Anzahl] Defekte.</li>
+  </ul>
+  
+  <h3>Empfehlung</h3>
+  <p>Obwohl die meisten Proben fehlerfrei sind, deuten wiederkehrende Defekte auf eine systematische Ursache hin. Eine tiefere Ursachenanalyse wird empfohlen, um die Prozessqualität nachhaltig zu sichern und Ausschuss zu minimieren.</p>
 
   Historische Daten zu Fehlern:
   {{{currentValue}}}
