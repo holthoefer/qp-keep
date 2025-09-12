@@ -665,6 +665,8 @@ const handleExportSkeleton = () => {
     }
 
     // For variable charts
+    if (sample.mean === undefined || sample.stddev === undefined) return "bg-blue-500/5";
+    
     const { mean, stddev } = sample;
     const { LSL, USL, LCL, UCL, sUSL } = dna;
 
@@ -850,8 +852,8 @@ const handleExportSkeleton = () => {
                     </CardContent>
                     <CardFooter className="flex justify-between items-center">
                         <div className="text-xs text-muted-foreground">
-                            <p>Mittelwert: {sample.mean.toFixed(4)}</p>
-                            <p>StdAbw: {sample.stddev.toFixed(4)}</p>
+                            {sample.mean !== undefined && <p>Mittelwert: {sample.mean.toFixed(4)}</p>}
+                            {sample.stddev !== undefined && <p>StdAbw: {sample.stddev.toFixed(4)}</p>}
                             {sample.values && sample.values.length > 0 && (
                                 <p>Werte: {sample.values.join('; ')}</p>
                             )}
