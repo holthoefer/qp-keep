@@ -442,16 +442,31 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
 
     if (docSnap.exists()) {
         const existingDna = docSnap.data() as DNA;
-        // Ensure charType is up-to-date
-        if (existingDna.charType !== characteristic.charType || existingDna.SampleSize !== characteristic.sampleSize || existingDna.Frequency !== characteristic.frequency) {
-            const updates: Partial<DNA> = { 
-                charType: characteristic.charType,
-                SampleSize: characteristic.sampleSize,
-                Frequency: characteristic.frequency
-            };
+        let needsUpdate = false;
+        const updates: Partial<DNA> = {};
+        
+        if (existingDna.charType !== characteristic.charType) {
+            updates.charType = characteristic.charType;
+            needsUpdate = true;
+        }
+
+        const charSampleSize = characteristic.sampleSize;
+        if (charSampleSize !== undefined && charSampleSize !== null && typeof charSampleSize === 'number' && existingDna.SampleSize !== charSampleSize) {
+            updates.SampleSize = charSampleSize;
+            needsUpdate = true;
+        }
+
+        const charFrequency = characteristic.frequency;
+        if (charFrequency !== undefined && charFrequency !== null && typeof charFrequency === 'number' && existingDna.Frequency !== charFrequency) {
+            updates.Frequency = charFrequency;
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
             await updateDoc(docRef, updates);
             return { ...existingDna, ...updates };
         }
+        
         return existingDna;
     } else {
         const newDna: DNA = {
@@ -684,4 +699,5 @@ export const deleteEvent = async (id: string) => {
     }
     await deleteDoc(doc(db, 'events', id));
 };
+
 
