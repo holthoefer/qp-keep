@@ -15,12 +15,15 @@ import Image from 'next/image';
 const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
     const data: SampleData = payload[0].payload;
+    const defects = data.defects ?? 0;
+    const goodParts = data.goodParts ?? 0;
     return (
       <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
         <div className="flex justify-between items-center">
-            <p className="font-bold">{`Fehlerhafte Teile: ${payload[0].value}`}</p>
+            <p className="font-bold">{`Fehlerhafte Teile: ${defects}`}</p>
             {data.imageUrl && <ImageIcon className="h-4 w-4 ml-2 text-primary" />}
         </div>
+        <p>{`Gute Teile: ${goodParts}`}</p>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
       </div>
     );
@@ -49,15 +52,15 @@ const CustomizedLabel = (props: any) => {
 };
 
 const CustomXAxisTick = (props: any) => {
-    const { x, y, payload } = props;
+    const { x, y, payload, chartData } = props;
     if (!payload || !payload.value) return null;
 
-    const dataPoint = props.chartData?.find((d: any) => d.name === payload.value);
+    const dataPoint = chartData?.find((d: any) => d.name === payload.value);
     
     const isBlue = !!dataPoint?.imageUrl;
 
     const style = {
-        fontSize: isBlue ? '12px' : '10px',
+        fontSize: '12px',
         fontWeight: isBlue ? 'bold' : 'normal',
         fill: isBlue ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
     };
@@ -97,15 +100,19 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
         fetchData();
     }, [dnaData.idDNA]);
 
-    const formattedData = React.useMemo(() => 
-        data.map(sample => {
+    const formattedData = React.useMemo(() => {
+        const sampleSize = dnaData.SampleSize ?? 0;
+        return data.map(sample => {
+            const defects = sample.defects ?? 0;
+            const goodParts = sampleSize - defects;
             return {
-                ...sample, 
-                value: sample.defects ?? 0,
+                ...sample,
+                defects: defects,
+                goodParts: goodParts > 0 ? goodParts : 0,
                 name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
             };
-        }).slice(-50),
-    [data]);
+        }).slice(-50);
+    }, [data, dnaData.SampleSize]);
 
     if (isLoading) {
         return <Skeleton className="h-full w-full" />;
@@ -117,25 +124,23 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
             onPointClick(sampleId);
         }
     }
+    
+    const sampleSize = dnaData.SampleSize || 0;
 
     return (
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={formattedData} margin={{ top: 40, right: 30, left: 0, bottom: 20 }} onClick={handleChartClick}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" tick={<CustomXAxisTick chartData={formattedData} />} interval="preserveStartEnd" />
-                <YAxis style={{ fontSize: '12px' }} width={30} allowDecimals={false} />
+                <YAxis style={{ fontSize: '12px' }} width={30} allowDecimals={false} domain={[0, sampleSize > 0 ? sampleSize : 'auto']} />
                 <Tooltip 
                     content={<CustomTooltip />}
                     cursor={{fill: 'rgba(206, 212, 218, 0.2)'}}
                 />
-                <Bar dataKey="value">
-                    <LabelList dataKey="value" content={<CustomizedLabel />} />
-                    {
-                        formattedData.map((entry, index) => {
-                             return <Cell key={`cell-${index}`} fill={entry.value > 0 ? 'hsl(var(--destructive))' : '#8884d8'}/>
-                        })
-                    }
+                <Bar dataKey="goodParts" stackId="a" fill="#8884d8">
+                     <LabelList dataKey="defects" content={<CustomizedLabel />} />
                 </Bar>
+                <Bar dataKey="defects" stackId="a" fill="hsl(var(--destructive))" />
             </BarChart>
         </ResponsiveContainer>
     );
