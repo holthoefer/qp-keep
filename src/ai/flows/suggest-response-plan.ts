@@ -17,8 +17,9 @@ const SuggestResponsePlanInputSchema = z.object({
   processStep: z.string().describe('The current step in the process.'),
   characteristic: z.string().describe('The specific characteristic that is out of specification.'),
   specificationLimits: z.string().describe('The upper and lower specification limits for the characteristic.'),
-  currentValue: z.string().describe('The current measured values of the characteristic, including individual values, mean and standard deviation.'),
+  currentValue: z.string().describe('The current measured values of the characteristic, including individual values, mean and standard deviation for variable data, OR a summary of historical defect data for attribute data.'),
   responsiblePersonRoles: z.array(z.string()).describe('List of possible responsible person roles, e.g. Quality Engineer, Process Engineer, Operator.'),
+  isAttributeData: z.boolean().optional().describe('Flag indicating if the data is attributive (defect count) instead of variable (measurements).'),
 });
 export type SuggestResponsePlanInput = z.infer<typeof SuggestResponsePlanInputSchema>;
 
@@ -38,6 +39,19 @@ const prompt = ai.definePrompt({
   output: {schema: SuggestResponsePlanOutputSchema},
   prompt: `Du bist ein KI-Assistent, der Qualitätsingenieure dabei unterstützt, schnell auf Nichtkonformitätsprobleme zu reagieren.
 
+  {{#if isAttributeData}}
+  ### Anweisung für attributive Daten (Fehleranzahl)
+  Analysiere die bereitgestellten historischen Daten zu fehlerhaften Teilen. Bewerte die Prozessstabilität basierend auf dem Trend und der Häufigkeit von Fehlern. Gib eine prägnante Zusammenfassung im Fließtext aus, die die Situation beschreibt und eine Empfehlung für das weitere Vorgehen gibt. Gib keine Schritt-für-Schritt-Aktionspläne oder HTML-Tags aus. Formuliere die Antwort professionell und direkt.
+
+  Beispiel-Output:
+  "Die vorliegende Analyse der Qualitätskontrolldaten für Prozessschritt {{{processStep}}}, Merkmal {{{characteristic}}}, zeigt, dass die Prozessstabilität potenziell beeinträchtigt ist. Innerhalb der letzten Stunden traten mehrfach fehlerhafte Teile auf. Die Stichprobe von [Zeit] wies [Anzahl] Defekte auf, was eine Ausnahme darstellt. Während der Großteil der Proben fehlerfrei ist, deuten die wiederkehrenden Vorkommnisse von Defekten darauf hin, dass die Ursache für die Fehlerquelle untersucht werden sollte. Es wird empfohlen, eine tiefere Ursachenanalyse durchzuführen, um die Prozessqualität nachhaltig zu sichern und Ausschuss zu minimieren."
+
+  Historische Daten zu Fehlern:
+  {{{currentValue}}}
+  Mögliche verantwortliche Rollen: {{#each responsiblePersonRoles}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
+
+  {{else}}
+  ### Anweisung für variable Daten (Messwerte)
   Erstelle basierend auf den folgenden Informationen zu einem Prozess, der außerhalb der Spezifikation liegt, einen Maßnahmenplan und schlage die Rolle der Person vor, die dafür verantwortlich sein sollte. Antwort ausschließlich auf Deutsch.
 
   Prozessschritt: {{{processStep}}}
@@ -62,24 +76,13 @@ const prompt = ai.definePrompt({
   Beispielstruktur:
   <h3>Diagnose</h3>
   <p>Eine kurze Analyse der potenziellen Grundursache. <span class="spec-violation">Der Mittelwert liegt über der USL.</span></p>
-
+  
   <h3>Sofortmaßnahmen</h3>
   <ul>
     <li>Prozess sofort stoppen.</li>
     <li>Alle Produkte seit der letzten Gut-Prüfung isolieren.</li>
   </ul>
-
-  <h3>Korrekturmaßnahmen</h3>
-  <ul>
-    <li>Messgerät neu kalibrieren.</li>
-    <li>Maschinenwerkzeug auf Verschleiß prüfen.</li>
-  </ul>
-
-  <h3>Vorbeugende Maßnahmen</h3>
-  <ul>
-    <li>Frequenz der Messmittelkalibrierung erhöhen.</li>
-    <li>Überprüfung des Werkzeugverschleißes in die tägliche Startprozedur aufnehmen.</li>
-  </ul>
+  {{/if}}
 `,
 });
 

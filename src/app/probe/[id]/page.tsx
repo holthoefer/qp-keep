@@ -33,6 +33,7 @@ import {
 import { suggestResponsePlan } from '@/ai/flows/suggest-response-plan';
 import { SampleChart } from '@/components/SampleChart';
 import { SChart } from '@/components/SChart';
+import { BarChartComponent } from '@/components/BarChart';
 import { generateThumbnailUrl } from '@/lib/image-utils';
 
 
@@ -81,6 +82,16 @@ const AnalysisResultDialog: React.FC<AnalysisResultDialogProps> = ({ isOpen, onO
                         </Card>
                     </div>
                     <div className="space-y-4">
+                        {dnaData && dnaData.charType === 'A' && (
+                             <Card>
+                                  <CardHeader className='p-4'>
+                                    <CardTitle className="text-lg">Fehlerhafte Teile</CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="h-[250px] w-full p-2">
+                                    <BarChartComponent dnaData={dnaData} onPointClick={handlePointClick} />
+                                  </CardContent>
+                             </Card>
+                        )}
                         {dnaData && dnaData.charType !== 'A' && (
                             <>
                                 <Card>
@@ -246,13 +257,24 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     try {
         const ps = controlPlan?.processSteps.find(p => p.processNumber === dna.OP);
         const char = ps?.characteristics.find(c => c.itemNumber === dna.Char);
+        
+        const allSamples = [...historicalSamples, sample];
+        let currentValueString = '';
+        if (dna.charType === 'A') {
+             currentValueString = allSamples.map(s => 
+                `Zeit: ${new Date(s.timestamp).toLocaleTimeString()}, Fehlerhafte Teile: ${s.defects ?? 0}`
+            ).join('; ');
+        } else {
+             currentValueString = `Individual Values: [${sample.values?.join(', ') ?? ''}], Mean: ${sample.mean?.toFixed(4) ?? 'N/A'}, Standard Deviation: ${sample.stddev?.toFixed(4) ?? 'N/A'}`;
+        }
 
         const result = await suggestResponsePlan({
             processStep: ps?.processName || dna.OP,
             characteristic: char?.DesciptionSpec || dna.Char,
             specificationLimits: `LSL: ${dna.LSL ?? 'N/A'}, USL: ${dna.USL ?? 'N/A'}, LCL: ${dna.LCL ?? 'N/A'}, UCL: ${dna.UCL ?? 'N/A'}, sUCL: ${dna.sUSL ?? 'N/A'}`,
-            currentValue: `Individual Values: [${sample.values?.join(', ') ?? ''}], Mean: ${sample.mean?.toFixed(4) ?? 'N/A'}, Standard Deviation: ${sample.stddev?.toFixed(4) ?? 'N/A'}`,
+            currentValue: currentValueString,
             responsiblePersonRoles: ['Quality Engineer', 'Process Engineer', 'Operator'],
+            isAttributeData: dna.charType === 'A',
         });
         setAnalysisResult(result.suggestedResponsePlan);
     } catch (e: any) {
