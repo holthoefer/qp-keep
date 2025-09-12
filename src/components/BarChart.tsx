@@ -22,10 +22,10 @@ const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) =
     return (
       <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
         <div className="flex justify-between items-center">
-            <p className="font-bold">{`Fehlerhafte Teile: ${defects}`}</p>
+            <p className="font-bold">{`Defects: ${defects}`}</p>
             {data.imageUrl && <ImageIcon className="h-4 w-4 ml-2 text-primary" />}
         </div>
-        <p>{`Gute Teile: ${goodParts}`}</p>
+        <p>{`Good Parts: ${goodParts}`}</p>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
         {note && <p className="font-bold mt-1 whitespace-pre-wrap">{note}</p>}
       </div>
@@ -105,7 +105,7 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
 
     const formattedData = React.useMemo(() => {
         return data.map(sample => {
-            const sampleSize = sample.sampleSize ?? dnaData.SampleSize ?? 0;
+            const sampleSize = sample.sampleSize ?? 0;
             const defects = sample.defects ?? 0;
             const goodParts = sampleSize - defects;
             return {
@@ -115,7 +115,7 @@ export function BarChartComponent({ dnaData, onPointClick }: BarChartComponentPr
                 name: `${new Date(sample.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
             };
         }).slice(-50);
-    }, [data, dnaData.SampleSize]);
+    }, [data]);
 
     if (isLoading) {
         return <Skeleton className="h-full w-full" />;
