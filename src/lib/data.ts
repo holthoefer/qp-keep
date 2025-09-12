@@ -445,11 +445,8 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         let needsUpdate = false;
         const updates: Partial<DNA> = {};
         
-        if (existingDna.charType !== characteristic.charType) {
-            updates.charType = characteristic.charType;
-            needsUpdate = true;
-        }
-
+        // This block ensures that if the characteristic in the control plan changes,
+        // the DNA record is updated to match.
         const charSampleSize = characteristic.sampleSize;
         if (charSampleSize !== undefined && charSampleSize !== null && typeof charSampleSize === 'number' && existingDna.SampleSize !== charSampleSize) {
             updates.SampleSize = charSampleSize;
@@ -461,6 +458,11 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
             updates.Frequency = charFrequency;
             needsUpdate = true;
         }
+        
+        if(characteristic.charType && existingDna.charType !== characteristic.charType) {
+            updates.charType = characteristic.charType;
+            needsUpdate = true;
+        }
 
         if (needsUpdate) {
             await updateDoc(docRef, updates);
@@ -469,6 +471,7 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         
         return existingDna;
     } else {
+        // Create a new DNA record if it doesn't exist
         const newDna: DNA = {
             idDNA,
             idPs: processStep.id,
