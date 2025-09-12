@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -46,6 +47,7 @@ import { ImageModal } from '@/components/cp/ImageModal';
 import { ToastAction } from '@/components/ui/toast';
 import { DashboardClient } from '@/components/cp/DashboardClient';
 import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { generateThumbnailUrl } from '@/lib/image-utils';
@@ -445,9 +447,9 @@ function InputAttrPage() {
     
     let finalNote = sampleNote.trim();
     if (hasException) {
-        const exceptionText = `Anzahl fehlerhafter Teile: ${defectiveCount}`;
+        const exceptionText = `${format(new Date(), 'dd.MM.yy HH:mm', { locale: de })} Defects: ${defectiveCount}`;
         const separator = finalNote ? '\n' : '';
-        finalNote = `${finalNote}${separator}${exceptionText}`;
+        finalNote = `${exceptionText}${separator}${finalNote}`;
     }
 
     const sampleData: Omit<SampleData, 'id' | 'userEmail' | 'mean' | 'stddev' | 'values'> & {values?: number[]} = {
