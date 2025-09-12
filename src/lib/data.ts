@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { db, auth, getAppStorage as getFirebaseStorage } from './firebase';
@@ -169,11 +168,6 @@ export const addControlPlanItem = async (item: Omit<ControlPlanItem, 'id' | 'cre
     };
     
     await setDoc(docRef, newItem);
-};
-
-export const updateControlPlanItem = async (id: string, data: Partial<Omit<ControlPlanItem, 'id' | 'createdAt' | 'planNumber'>>) => {
-    // The document ID is the planNumber and should not be changed.
-    await updateDoc(doc(db, 'controlplan', id), data);
 };
 
 export const deleteControlPlanItem = async (id: string) => {
@@ -465,7 +459,7 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         
         return existingDna;
     } else {
-        const isNumeric = (val: any): val is number => val !== null && val !== undefined && val !== '' && !isNaN(Number(val));
+        const isNumeric = (val: any): val is number => typeof val === 'number' && !isNaN(val);
         
         const newDna: DNA = {
             idDNA,
@@ -482,8 +476,8 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
             UCL: characteristic.ucl,
             USL: characteristic.usl,
             sUSL: characteristic.sUSL,
-            SampleSize: isNumeric(characteristic.sampleSize) ? Number(characteristic.sampleSize) : undefined,
-            Frequency: isNumeric(characteristic.frequency) ? Number(characteristic.frequency) : undefined,
+            SampleSize: isNumeric(characteristic.sampleSize) ? characteristic.sampleSize : undefined,
+            Frequency: isNumeric(characteristic.frequency) ? characteristic.frequency : undefined,
             charType: characteristic.charType,
             imageUrl: characteristic.imageUrl,
         };
