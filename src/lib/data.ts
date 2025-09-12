@@ -446,11 +446,11 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         const updates: Partial<DNA> = {};
         
         const isNumeric = (val: any): val is number => typeof val === 'number' && !isNaN(val);
+        const isDefined = (val: any) => val !== undefined && val !== null;
 
         const checkAndUpdate = (dnaKey: keyof DNA, charKey: keyof Characteristic) => {
             const charValue = characteristic[charKey];
-             // Only update if charValue is a valid number and it differs from the existing DNA value
-            if (isNumeric(charValue) && existingDna[dnaKey] !== charValue) {
+            if (isDefined(charValue) && existingDna[dnaKey] !== charValue) {
                 updates[dnaKey] = charValue as any;
                 needsUpdate = true;
             }
@@ -471,7 +471,7 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         
         return existingDna;
     } else {
-        const isNumeric = (val: any): val is number => val !== null && val !== undefined && val !== '' && !isNaN(Number(val));
+        const isNumeric = (val: any): boolean => val !== null && val !== undefined && val !== '' && !isNaN(Number(val));
         
         const newDna: DNA = {
             idDNA,
