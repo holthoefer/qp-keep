@@ -342,7 +342,7 @@ function MerkmaleCardsPage() {
                     <StickyNote className="mr-2 h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
-                    <Wrench className="mr-2 h-4 w-4" />
+                    <Wrench className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
                     <Siren className="mr-2 h-4 w-4" />
@@ -421,7 +421,7 @@ function MerkmaleCardsPage() {
                                   width={40}
                                   height={40}
                                   className="rounded-md object-cover aspect-square border"
-                              />
+                                />
                           </button>
                       )}
                       <div className='flex-grow'>
@@ -451,7 +451,7 @@ function MerkmaleCardsPage() {
                                   )}
                                   {processStep.remark && (
                                      <CardDescription className="flex flex-wrap items-center gap-2 mt-1">
-                                        <span className="text-blue-600">{processStep.remark}</span>
+                                        <span className="text-foreground text-base">{processStep.remark}</span>
                                     </CardDescription>
                                   )}
                               </>
