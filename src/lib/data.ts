@@ -443,40 +443,36 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
     if (docSnap.exists()) {
         const existingDna = docSnap.data() as DNA;
         // Ensure charType is up-to-date
-        if (existingDna.charType !== characteristic.charType) {
-            await updateDoc(docRef, { charType: characteristic.charType });
-            return { ...existingDna, charType: characteristic.charType };
+        if (existingDna.charType !== characteristic.charType || existingDna.SampleSize !== characteristic.sampleSize || existingDna.Frequency !== characteristic.frequency) {
+            const updates: Partial<DNA> = { 
+                charType: characteristic.charType,
+                SampleSize: characteristic.sampleSize,
+                Frequency: characteristic.frequency
+            };
+            await updateDoc(docRef, updates);
+            return { ...existingDna, ...updates };
         }
         return existingDna;
     } else {
-        const cp = await getControlPlan(auftrag.CP);
-        if (!cp) throw new Error(`Control Plan ${auftrag.CP} not found.`);
-
-        const ps = cp.processSteps.find(p => p.processNumber === processStep.processNumber);
-        if (!ps) throw new Error(`Process Step ${processStep.processNumber} not found in Control Plan.`);
-
-        const char = ps.characteristics.find(c => c.itemNumber === characteristic.itemNumber);
-        if (!char) throw new Error(`Characteristic ${characteristic.itemNumber} not found in Process Step.`);
-
         const newDna: DNA = {
             idDNA,
-            idPs: ps.id,
-            idChar: char.id,
+            idPs: processStep.id,
+            idChar: characteristic.id,
             CP: auftrag.CP,
-            OP: ps.processNumber,
-            Char: char.itemNumber,
+            OP: processStep.processNumber,
+            Char: characteristic.itemNumber,
             WP: workstation.AP,
             PO: auftrag.PO,
-            LSL: char.lsl,
-            LCL: char.lcl,
-            CL: char.cl,
-            UCL: char.ucl,
-            USL: char.usl,
-            sUSL: char.sUSL,
-            SampleSize: char.sampleSize,
-            Frequency: char.frequency,
-            charType: char.charType,
-            imageUrl: char.imageUrl,
+            LSL: characteristic.lsl,
+            LCL: characteristic.lcl,
+            CL: characteristic.cl,
+            UCL: characteristic.ucl,
+            USL: characteristic.usl,
+            sUSL: characteristic.sUSL,
+            SampleSize: characteristic.sampleSize,
+            Frequency: characteristic.frequency,
+            charType: characteristic.charType,
+            imageUrl: characteristic.imageUrl,
         };
         await setDoc(docRef, newDna);
         return newDna;
@@ -688,3 +684,4 @@ export const deleteEvent = async (id: string) => {
     }
     await deleteDoc(doc(db, 'events', id));
 };
+

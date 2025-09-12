@@ -367,7 +367,7 @@ function InputAttrPage() {
     router.push(url);
   };
 
-  const fetchDna = React.useCallback(async (ws: Workstation, auftragData: Auftrag, ps: Characteristic, char: Characteristic) => {
+  const fetchDna = React.useCallback(async (ws: Workstation, auftragData: Auftrag, ps: ProcessStep, char: Characteristic) => {
       const dna = await getOrCreateDnaData(ws, auftragData, ps, char);
       setDnaData(dna);
   }, []);
