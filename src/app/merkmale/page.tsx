@@ -208,11 +208,14 @@ function MerkmaleCardsPage() {
   }, [decodedApId]);
   
   const formatSpec = (char: Characteristic) => {
+    if (char.charType === 'A') {
+      return "visual";
+    }
     let spec = '';
     if (char.nominal !== undefined && char.lsl !== undefined && char.usl !== undefined) {
         spec = `${char.nominal} (${char.lsl} - ${char.usl})`;
     } else if (char.nominal !== undefined && (char.lsl !== undefined || char.usl !== undefined)) {
-        spec = `${char.nominal} (${char.lsl ? `> ${lsl}` : ''}${char.usl ? `< ${usl}` : ''})`;
+        spec = `${char.nominal} (${char.lsl ? `> ${char.lsl}` : ''}${char.usl ? `< ${usl}` : ''})`;
     } else if (char.lsl !== undefined && char.usl !== undefined) {
         spec = `${char.lsl} - ${char.usl}`;
     } else if (char.nominal !== undefined) {
@@ -596,5 +599,6 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
 
 
