@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { db, auth, getAppStorage as getFirebaseStorage } from './firebase';
@@ -451,6 +452,13 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         checkAndUpdate('SampleSize', characteristic.sampleSize);
         checkAndUpdate('Frequency', characteristic.frequency);
         checkAndUpdate('charType', characteristic.charType);
+        checkAndUpdate('LSL', characteristic.lsl);
+        checkAndUpdate('USL', characteristic.usl);
+        checkAndUpdate('LCL', characteristic.lcl);
+        checkAndUpdate('UCL', characteristic.ucl);
+        checkAndUpdate('CL', characteristic.cl);
+        checkAndUpdate('sUSL', characteristic.sUSL);
+        
 
         if (needsUpdate) {
             await updateDoc(docRef, updates);
@@ -459,7 +467,6 @@ export async function getOrCreateDnaData(workstation: Workstation, auftrag: Auft
         
         return existingDna;
     } else {
-        // Helper to safely get a numeric value from the characteristic
         const getNumericValue = (value: any): number | undefined => {
             if (value === null || value === undefined || value === '') return undefined;
             const num = Number(value);
@@ -547,12 +554,18 @@ export const saveSampleData = async (sampleData: Omit<SampleData, 'id' | 'userEm
 
     // Update DNA with last check info
     const dnaRef = doc(db, 'dna', sampleData.dnaId);
-    await updateDoc(dnaRef, {
+    
+    const dnaUpdate: Partial<DNA> = {
         checkStatus: sampleData.exception ? 'Out of Spec' : 'OK',
         lastCheckTimestamp: sampleData.timestamp,
-        ...(sampleData.imageUrl && { imageUrlLatestSample: sampleData.imageUrl }),
-        ...(sampleData.note && { Memo: sampleData.note }),
-    });
+        Memo: sampleData.note || '', // Clear memo if note is empty
+    };
+
+    if (sampleData.imageUrl) {
+        dnaUpdate.imageUrlLatestSample = sampleData.imageUrl;
+    }
+
+    await updateDoc(dnaRef, dnaUpdate);
 
     return { ...sampleData, id };
 };
