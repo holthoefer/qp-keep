@@ -44,25 +44,25 @@ const prompt = ai.definePrompt({
   Analysiere die bereitgestellten historischen Daten zu fehlerhaften Teilen. Bewerte die Prozessstabilität basierend auf dem Trend und der Häufigkeit von Fehlern. Erstelle eine kurze und prägnante Zusammenfassung als HTML.
 
   So erstellst du den Plan:
-  1.  **Diagnose:** Fasse die Situation kurz zusammen. Erwähne in Aufzählungspunkten (&lt;ul&gt; und &lt;li&gt;), wann welche Fehler aufgetreten sind.
-  2.  **Empfehlung:** Gib klare und kurze Handlungsempfehlungen als Aufzählungspunkte (&lt;ul&gt; und &lt;li&gt;).
+  1.  **Diagnose:** Fasse die Situation kurz zusammen. Erwähne in Aufzählungspunkten (<ul> und <li>), wann welche Fehler aufgetreten sind.
+  2.  **Empfehlung:** Gib klare und kurze Handlungsempfehlungen als Aufzählungspunkte (<ul> und <li>).
   3.  **Verantwortlichkeit:** Schlage eine verantwortliche Rolle vor.
 
-  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Empfehlung) unter Verwendung von &lt;h3&gt;-Tags. Die Antwort soll kurz und leicht verständlich sein.
+  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Empfehlung) unter Verwendung von <h3>-Tags. Die Antwort soll kurz und leicht verständlich sein.
 
   Beispielstruktur:
-  &lt;h3&gt;Diagnose&lt;/h3&gt;
-  &lt;p&gt;Die Analyse der Daten für Prozessschritt {{{processStep}}} zeigt eine potenzielle Beeinträchtigung der Prozessstabilität. Innerhalb der letzten Stunden traten mehrfach fehlerhafte Teile auf:&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;li&gt;Stichprobe um [Zeit]: [Anzahl] Defekte.&lt;/li&gt;
-    &lt;li&gt;Stichprobe um [Zeit]: [Anzahl] Defekte.&lt;/li&gt;
-  &lt;/ul&gt;
+  <h3>Diagnose</h3>
+  <p>Die Analyse der Daten für Prozessschritt {{{processStep}}} zeigt eine potenzielle Beeinträchtigung der Prozessstabilität. Innerhalb der letzten Stunden traten mehrfach fehlerhafte Teile auf:</p>
+  <ul>
+    <li>Stichprobe um [Zeit]: [Anzahl] Defekte.</li>
+    <li>Stichprobe um [Zeit]: [Anzahl] Defekte.</li>
+  </ul>
   
-  &lt;h3&gt;Empfehlung&lt;/h3&gt;
-  &lt;ul&gt;
-    &lt;li&gt;Obwohl die meisten Proben fehlerfrei sind, deuten wiederkehrende Defekte auf eine systematische Ursache hin.&lt;/li&gt;
-    &lt;li&gt;Eine tiefere Ursachenanalyse wird empfohlen, um die Prozessqualität nachhaltig zu sichern und Ausschuss zu minimieren.&lt;/li&gt;
-  &lt;/ul&gt;
+  <h3>Empfehlung</h3>
+  <ul>
+    <li>Obwohl die meisten Proben fehlerfrei sind, deuten wiederkehrende Defekte auf eine systematische Ursache hin.</li>
+    <li>Eine tiefere Ursachenanalyse wird empfohlen, um die Prozessqualität nachhaltig zu sichern und Ausschuss zu minimieren.</li>
+  </ul>
 
   Historische Daten zu Fehlern:
   {{{currentValue}}}
@@ -70,7 +70,7 @@ const prompt = ai.definePrompt({
 
   {{else}}
   ### Anweisung für variable Daten (Messwerte)
-  Erstelle basierend auf den folgenden Informationen zu einem Prozess, der außerhalb der Spezifikation liegt, einen Maßnahmenplan und schlage die Rolle der Person vor, die dafür verantwortlich sein sollte. Antwort ausschließlich auf Deutsch.
+  Erstelle basierend auf den folgenden Informationen einen kurzen, prägnanten und gut lesbaren Maßnahmenplan als HTML. Schlage auch die Rolle der verantwortlichen Person vor. Antwort ausschließlich auf Deutsch.
 
   Prozessschritt: {{{processStep}}}
   Merkmal: {{{characteristic}}}
@@ -79,27 +79,35 @@ const prompt = ai.definePrompt({
   Mögliche verantwortliche Rollen: {{#each responsiblePersonRoles}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 
   So erstellst du den Maßnahmenplan:
-  1.  Diagnostiziere die möglichen Ursachen des Problems anhand des Prozessschritts, des Merkmals, der Spezifikationsgrenzen und der bereitgestellten Untersuchungswerte.
-  2.  Definiere Sofortmaßnahmen, um die Nichtkonformität einzudämmen.
-  3.  Schlage Korrekturmaßnahmen vor, um den Prozess wieder in die Spezifikation zu bringen.
-  4.  Empfehle vorbeugende Maßnahmen, um ein erneutes Auftreten des Problems zu vermeiden.
-  5.  Bestimme aus der Liste der möglichen verantwortlichen Rollen die geeignete Person, die für die Ausführung des Maßnahmenplans verantwortlich sein soll.
+  1.  **Diagnose:** Fasse die Situation kurz und prägnant zusammen.
+  2.  **Sofortmaßnahmen:** Liste die wichtigsten, sofortigen Schritte auf.
+  3.  **Korrekturmaßnahmen:** Schlage Maßnahmen zur Behebung des Problems vor.
+  4.  **Verantwortlichkeit:** Bestimme aus der Liste der möglichen Rollen die geeignete Person.
 
-  WICHTIG: Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften für jeden Abschnitt (Diagnose, Sofortmaßnahmen, Korrekturmaßnahmen, Vorbeugende Maßnahmen) unter Verwendung von &lt;h3&gt;-Tags. Verwende Aufzählungspunkte (&lt;ul&gt; und &lt;li&gt;) für Aktionslisten.
-  
+  WICHTIG:
+  - Strukturiere deine "suggestedResponsePlan"-Ausgabe mit klaren Überschriften (<h3>) für "Diagnose", "Sofortmaßnahmen" und "Korrekturmaßnahmen".
+  - Verwende Aufzählungspunkte (<ul> und <li>) für alle Aktionslisten.
+  - Halte die Sätze kurz und verständlich.
+
   KRITISCHE STILREGEL:
-  - Wenn du eine Verletzung einer SPEZIFIKATIONSGRENZE (LSL oder USL) erwähnst, MUSST du diesen Satz oder diese Phrase in ein &lt;span class="spec-violation"&gt; Tag einschließen.
-  - Wenn du eine Verletzung einer KONTROLLGRENZE (LCL, UCL oder sUCL) erwähnst, MUSST du diesen Satz oder diese Phrase in ein &lt;span class="control-violation"&gt; Tag einschließen.
+  - Wenn du eine Verletzung einer SPEZIFIKATIONSGRENZE (LSL oder USL) erwähnst, MUSST du diesen Satz oder diese Phrase in ein <span class="spec-violation"> Tag einschließen.
+  - Wenn du eine Verletzung einer KONTROLLGRENZE (LCL, UCL oder sUCL) erwähnst, MUSST du diesen Satz oder diese Phrase in ein <span class="control-violation"> Tag einschließen.
 
   Beispielstruktur:
-  &lt;h3&gt;Diagnose&lt;/h3&gt;
-  &lt;p&gt;Eine kurze Analyse der potenziellen Grundursache. &lt;span class="spec-violation"&gt;Der Mittelwert liegt über der USL.&lt;/span&gt;&lt;/p&gt;
+  <h3>Diagnose</h3>
+  <p>Kurze Analyse der Ursache. <span class="spec-violation">Der Mittelwert liegt über der USL.</span></p>
   
-  &lt;h3&gt;Sofortmaßnahmen&lt;/h3&gt;
-  &lt;ul&gt;
-    &lt;li&gt;Prozess sofort stoppen.&lt;/li&gt;
-    &lt;li&gt;Alle Produkte seit der letzten Gut-Prüfung isolieren.&lt;/li&gt;
-  &lt;/ul&gt;
+  <h3>Sofortmaßnahmen</h3>
+  <ul>
+    <li>Prozess stoppen.</li>
+    <li>Produkte seit letzter Gut-Prüfung isolieren.</li>
+  </ul>
+  
+  <h3>Korrekturmaßnahmen</h3>
+  <ul>
+    <li>Werkzeugeinstellung prüfen.</li>
+    <li>Prozess neu justieren.</li>
+  </ul>
   {{/if}}
 `,
 });

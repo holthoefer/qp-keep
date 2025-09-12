@@ -451,7 +451,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
 
 
         return `
-            <svg width="${width}" height="${height}" class="chart-container">
+            <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: auto;" class="chart-container">
                 <g class="grid">
                     ${Array.from({ length: 5 }).map((_, i) => `<line x1="${margin.left}" y1="${margin.top + i * plotHeight/4}" x2="${width-margin.right}" y2="${margin.top + i * plotHeight/4}" />`).join('')}
                 </g>
@@ -548,7 +548,7 @@ export default function SampleDetailPage({ params }: SampleDetailPageProps) {
     };
   
     return `
-      <svg width="${width}" height="${height}" class="chart-container">
+      <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: auto;" class="chart-container">
         <defs>
             <style>
                 @keyframes blink { 
@@ -597,8 +597,10 @@ const generateHtmlWithCurrentData = (): string | null => {
     const allSamples = [...historicalSamples, { ...sample, imageUrl, note }].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     
     let chartSection = '';
-    let historicalDataString = '';
+    let historicalDataRows = '';
     let currentSampleRow = '';
+    let historicalDataHeaders = '';
+
 
     if (dna.charType === 'A') {
         const barChartSVG = generateBarChartSVG(allSamples, sample.timestamp);
@@ -606,7 +608,8 @@ const generateHtmlWithCurrentData = (): string | null => {
             <h2>Balkendiagramm (Fehlerhafte Teile)</h2>
             ${barChartSVG}
         `;
-        historicalDataString = allSamples.map(s => `
+         historicalDataHeaders = '<th>Defects</th><th>i.O.-Parts</th><th>Size</th>';
+        historicalDataRows = allSamples.map(s => `
             <tr>
                 <td>${new Date(s.timestamp).toLocaleString()}</td>
                 <td>${s.defects ?? 'N/A'}</td>
@@ -631,7 +634,8 @@ const generateHtmlWithCurrentData = (): string | null => {
             <h3>s-Chart</h3>
             ${sChartSVG}
         `;
-        historicalDataString = allSamples.map(s => `
+        historicalDataHeaders = '<th>Mittelwert</th><th>StdAbw</th><th>Werte</th>';
+        historicalDataRows = allSamples.map(s => `
             <tr>
                 <td>${new Date(s.timestamp).toLocaleString()}</td>
                 <td>${s.mean?.toFixed(4) ?? 'N/A'}</td>
@@ -671,11 +675,11 @@ const generateHtmlWithCurrentData = (): string | null => {
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .data-table th, .data-table td { border: 1px solid #ccc; padding: 12px; text-align: left; vertical-align: top; }
         .data-table th { background-color: #eef; font-weight: bold; color: #004085; }
-        .image-note-section { display: flex; gap: 20px; align-items-flex-start; }
-        .image-container { flex-shrink: 0; width: 40%; text-align: center; }
-        .note-container { flex-grow: 1; }
+        .image-note-section { display: flex; flex-wrap: wrap; gap: 20px; align-items-flex-start; }
+        .image-container { flex-shrink: 0; width: 100%; max-width: 300px; text-align: center; }
+        .note-container { flex-grow: 1; min-width: 250px; }
         .sample-image { max-width: 100%; height: auto; display: block; border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); }
-        .chart-container { width: 100%; height: auto; border: 1px solid #ccc; background-color: #fcfcfc; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .chart-container { width: 100%; max-width: 800px; height: auto; border: 1px solid #ccc; background-color: #fcfcfc; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
         .chart-container .grid line { stroke: #e0e0e0; stroke-width: 1; }
         .chart-container .axis-line { stroke: #333; stroke-width: 2; }
         .chart-container .line { fill: none; stroke: #005f9c; stroke-width: 2; }
@@ -687,7 +691,7 @@ const generateHtmlWithCurrentData = (): string | null => {
         .chart-container .center-line line { stroke: #5cb85c; stroke-width: 2; }
         .chart-container .label { font-size: 14px; font-weight: bold; fill: #555; }
         @media print { 
-            body { background-color: #fff; } 
+            body { background-color: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
             .container { box-shadow: none; border-radius: 0; padding: 0; border: none; max-width: 100%;}
             .print-button-container { display: none; }
         }
@@ -702,7 +706,7 @@ const generateHtmlWithCurrentData = (): string | null => {
             <h2>Aktuelle Stichprobe</h2>
             <div class="image-note-section">
                  <div class="image-container">
-                    ${currentSampleWithLatestChanges.imageUrl ? `<img src="${generateThumbnailUrl(currentSampleWithLatestChanges.imageUrl)}" alt="Stichprobenbild" class="sample-image" style="width: 300px;"/>` : ''}
+                    ${currentSampleWithLatestChanges.imageUrl ? `<img src="${generateThumbnailUrl(currentSampleWithLatestChanges.imageUrl)}" alt="Stichprobenbild" class="sample-image"/>` : ''}
                  </div>
                  <div class="note-container">
                     <table class="data-table">
@@ -719,17 +723,19 @@ const generateHtmlWithCurrentData = (): string | null => {
 
         <div class="section">
             <h2>Historische Stichproben (letzte 20)</h2>
-            <table class="data-table">
-                 <thead>
-                    <tr>
-                        <th>Zeitstempel</th>
-                        ${dna.charType === 'A' ? '<th>Defects</th><th>i.O.-Parts</th><th>Size</th>' : '<th>Mittelwert</th><th>StdAbw</th><th>Werte</th>'}
-                        <th>Notiz</th>
-                        <th>Ausnahme</th>
-                    </tr>
-                </thead>
-                <tbody>${historicalDataString}</tbody>
-            </table>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                   <thead>
+                      <tr>
+                          <th>Zeitstempel</th>
+                          ${historicalDataHeaders}
+                          <th>Notiz</th>
+                          <th>Ausnahme</th>
+                      </tr>
+                  </thead>
+                  <tbody>${historicalDataRows}</tbody>
+              </table>
+            </div>
         </div>
 
         <div class="section">
