@@ -17,6 +17,8 @@ const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) =
     const data: SampleData = payload[0].payload;
     const defects = data.defects ?? 0;
     const goodParts = data.goodParts ?? 0;
+    const note = data.note || '';
+
     return (
       <div className="bg-background/80 backdrop-blur-sm border border-border p-2 rounded-md shadow-lg text-xs">
         <div className="flex justify-between items-center">
@@ -25,6 +27,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) =
         </div>
         <p>{`Gute Teile: ${goodParts}`}</p>
         <p className="text-muted-foreground">{format(new Date(data.timestamp), 'dd.MM.yyyy HH:mm:ss')}</p>
+        {note && <p className="font-bold mt-1 whitespace-pre-wrap">{note}</p>}
       </div>
     );
   }
