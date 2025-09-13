@@ -87,7 +87,7 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: () => void }) => 
     }
   }
 
-  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}m!` : `${remainingMinutes}m`;
+  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)} min!` : `${remainingMinutes} min`;
 
   return (
       <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>

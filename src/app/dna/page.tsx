@@ -81,7 +81,7 @@ export const DnaTimeTracker = ({ lastTimestamp, frequency, prefix }: { lastTimes
   const isWarning = !isOverdue && percentageElapsed >= 0.8;
   
   const badgeVariant = isOverdue ? "destructive" : isWarning ? "secondary" : "default";
-  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}m!` : `${remainingMinutes}m`;
+  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)} min!` : `${remainingMinutes} min`;
   
   return (
     <TooltipProvider>

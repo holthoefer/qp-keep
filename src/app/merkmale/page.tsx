@@ -86,10 +86,22 @@ function DnaTimeTracker({ lastTimestamp, frequency, prefix }: { lastTimestamp?: 
     }
     
     const isOverdue = timeLeft < 0;
-    const timeText = isOverdue ? `-${Math.abs(timeLeft)}m!` : `${timeLeft}m`;
+    const timeText = isOverdue ? `-${Math.abs(timeLeft)} min!` : `${timeLeft} min`;
+
+    let badgeVariant: "destructive" | "secondary" | "default" = "default";
+  
+    if (isOverdue) {
+      badgeVariant = "destructive";
+    } else if (frequency && lastTimestamp) {
+      const totalInterval = frequency;
+      const timeElapsed = (new Date().getTime() - new Date(lastTimestamp).getTime()) / (1000 * 60);
+      if ((totalInterval - timeElapsed) / totalInterval < 0.2) {
+          badgeVariant = "secondary"; // Yellow-ish for last 20% of time
+      }
+    }
 
     return (
-        <Badge variant={isOverdue ? "destructive" : "default"}>
+        <Badge variant={badgeVariant} className={cn(badgeVariant === 'secondary' && 'bg-amber-400/80 text-black hover:bg-amber-400/70')}>
             {prefix ? `${prefix}: ` : ''}{timeText}
         </Badge>
     );
@@ -219,7 +231,7 @@ function MerkmaleCardsPage() {
     if (char.nominal !== undefined && char.lsl !== undefined && char.usl !== undefined) {
         spec = `${char.nominal} (${char.lsl} - ${char.usl})`;
     } else if (char.nominal !== undefined && (char.lsl !== undefined || char.usl !== undefined)) {
-        spec = `${char.nominal} (${char.lsl ? `> ${char.lsl}` : ''}${char.usl ? `< ${usl}` : ''})`;
+        spec = `${char.nominal} (${char.lsl ? `> ${char.lsl}` : ''}${char.usl ? `< ${char.usl}` : ''})`;
     } else if (char.lsl !== undefined && char.usl !== undefined) {
         spec = `${char.lsl} - ${char.usl}`;
     } else if (char.nominal !== undefined) {
@@ -227,7 +239,7 @@ function MerkmaleCardsPage() {
     } else if (char.lsl !== undefined) {
         spec = `> ${lsl}`;
     } else if (char.usl !== undefined) {
-        spec = `< ${usl}`;
+        spec = `< ${char.usl}`;
     } else {
         return 'N/A';
     }
@@ -607,5 +619,6 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
 
 

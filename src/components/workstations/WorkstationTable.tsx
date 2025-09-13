@@ -74,7 +74,7 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEv
     }
   }
   
-  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}m!` : `${remainingMinutes}m`;
+  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)} min!` : `${remainingMinutes} min`;
 
   return (
       <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>
@@ -436,7 +436,7 @@ export function WorkstationTable() {
                 <TableHeader>
                     <TableRow>
                         <TableHead className="w-12"><Zap className="h-4 w-4 mx-auto" /></TableHead>
-                        <TableHead className="w-[80px]">AP#</TableHead>
+                        <TableHead className="w-12">AP#</TableHead>
                         <TableHead className="w-[120px]">Status Zeit</TableHead>
                         <TableHead>Verletzungen</TableHead>
                         <TableHead>PO</TableHead>
