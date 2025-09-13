@@ -164,6 +164,7 @@ export default function ArbeitsplaetzePage() {
                             onClick={() => setView('grid')}
                           >
                             <LayoutGrid className="h-4 w-4" />
+                             <span className="ml-2 hidden lg:inline">Grid</span>
                           </Button>
                       )}
                     </div>
