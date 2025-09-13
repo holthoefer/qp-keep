@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -71,7 +72,7 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEv
     }
   }
   
- const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}m!` : `${remainingMinutes}m`;
+  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}m!` : `${remainingMinutes}m`;
 
   return (
       <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>
@@ -400,13 +401,14 @@ export function WorkstationTable() {
                         <TableHead>PO</TableHead>
                         <TableHead>OP</TableHead>
                         <TableHead>LOT</TableHead>
+                        <TableHead>Bemerkung</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {isLoading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                             <TableRow key={i}>
-                                <TableCell colSpan={7}><Skeleton className="h-6 w-full" /></TableCell>
+                                <TableCell colSpan={8}><Skeleton className="h-6 w-full" /></TableCell>
                             </TableRow>
                         ))
                     ) : workstations.length > 0 ? (
@@ -509,12 +511,13 @@ export function WorkstationTable() {
                                 <TableCell>{ws.POcurrent || 'N/A'}</TableCell>
                                 <TableCell>{ws.OPcurrent || 'N/A'}</TableCell>
                                 <TableCell>{ws.LOTcurrent || 'N/A'}</TableCell>
+                                <TableCell className="max-w-[150px] truncate">{ws.Bemerkung || 'N/A'}</TableCell>
                             </TableRow>
                             );
                         })
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                            <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                                 Keine Arbeitsplätze gefunden.
                             </TableCell>
                         </TableRow>

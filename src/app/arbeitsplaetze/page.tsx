@@ -169,20 +169,10 @@ export default function ArbeitsplaetzePage() {
                       )}
                     </div>
                      {isAdmin && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreVertical className="h-4 w-4" />
-                                    <span className="sr-only">Aktionen</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openDialogForNew(); }}>
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    Neuer Arbeitsplatz
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button variant="ghost" size="icon" onClick={openDialogForNew} className="h-8 w-8">
+                            <PlusCircle className="h-4 w-4" />
+                            <span className="sr-only">Neuer Arbeitsplatz</span>
+                        </Button>
                      )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
