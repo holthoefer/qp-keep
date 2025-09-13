@@ -39,6 +39,8 @@ import Image from 'next/image';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { useToast } from '@/hooks/use-toast';
 import { findThumbnailUrl } from '@/lib/image-utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -80,16 +82,18 @@ function DnaTimeTracker({ lastTimestamp, frequency, prefix }: { lastTimestamp?: 
 
 
 function MiniXBarChart({ dnaData, onClick }: { dnaData: DNA | undefined, onClick: (e: React.MouseEvent) => void }) {
+  const isMobile = useIsMobile();
+  
   if (!dnaData) {
     return (
-      <div className="h-full flex items-center justify-center text-xs text-muted-foreground" onClick={onClick}>
+      <div className="h-full flex items-center justify-center text-xs text-muted-foreground" onClick={isMobile ? undefined : onClick}>
         Keine Chart-Daten
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full mt-2 p-4 flex items-center justify-center text-xs text-muted-foreground bg-gray-50 rounded-md" onClick={onClick}>
+    <div className="h-full w-full mt-2 p-4 flex items-center justify-center text-xs text-muted-foreground bg-gray-50 rounded-md" onClick={isMobile ? undefined : onClick}>
         Chart-Platzhalter
     </div>
   );
@@ -251,7 +255,7 @@ function MerkmaleCardsPage() {
           <span>Lade Erfassungsmaske...</span>
         </div>
       ),
-      duration: 5000,
+      duration: 1000,
     });
 
     router.push(url);
@@ -399,3 +403,4 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+

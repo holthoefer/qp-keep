@@ -9,6 +9,7 @@ import {
   getAuftraege,
   getControlPlans,
   getDnaData,
+  listStorageFiles,
 } from '@/lib/data';
 import type {
   Workstation,
@@ -17,6 +18,7 @@ import type {
   Characteristic,
   ProcessStep,
   DNA,
+  StorageFile,
 } from '@/types';
 import {
   Card,
@@ -51,6 +53,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import logo from '../Logo.png';
 import { BarChartComponent } from '@/components/BarChart';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 export const dynamic = 'force-dynamic';
@@ -254,7 +257,7 @@ function MerkmaleCardsPage() {
           <span>Lade Erfassungsmaske...</span>
         </div>
       ),
-      duration: 5000,
+      duration: 1000,
     });
 
     router.push(url);
@@ -348,7 +351,7 @@ function MerkmaleCardsPage() {
                     <Wrench className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
-                    <Siren className="h-4 w-4" />
+                    <Siren className="mr-2 h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
                    <Target className="h-4 w-4" />
@@ -599,3 +602,4 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
