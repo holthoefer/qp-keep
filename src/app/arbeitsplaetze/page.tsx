@@ -177,9 +177,6 @@ export default function ArbeitsplaetzePage() {
                 </div>
             </header>
             <main className="flex-1 p-4 md:p-6">
-                <div className="flex items-center gap-2 mb-4">
-                    <h2 className="font-headline text-xl font-semibold">WPs</h2>
-                </div>
                 {view === 'grid' ? <WorkstationGrid /> : <WorkstationTable />}
             </main>
         </div>
