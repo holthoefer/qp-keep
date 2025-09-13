@@ -297,7 +297,7 @@ export function WorkstationGrid() {
           <span>Lade Merkmale...</span>
         </div>
       ),
-      duration: 5000, 
+      duration: 1000, 
     });
     
     router.push(`/merkmale?ap=${encodeURIComponent(ap)}`);

@@ -49,12 +49,6 @@ export default function ArbeitsplaetzePage() {
     };
     
     const openDialogForNew = () => {
-        // This functionality is now handled by the WorkstationTable/Grid components,
-        // which contain the dialog logic. We can't open it from here directly
-        // without significant state lifting.
-        // A better approach would be to have a shared state or context.
-        // For now, let's just indicate that this is where the new dialog would be triggered.
-        // The actual implementation is inside WorkstationGrid/Table for now.
         const currentParams = new URLSearchParams(window.location.search);
         currentParams.set('new', 'true');
         router.push(`/arbeitsplaetze?${currentParams.toString()}`);
