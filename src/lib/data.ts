@@ -731,3 +731,20 @@ export const addQPCheck = async (data: Omit<QPCheck, 'id' | 'timestamp' | 'userI
 
   await setDoc(docRef, dataToSave, { merge: true });
 };
+
+export async function getQPChecks(ap: string, po: string, op: string): Promise<QPCheck[]> {
+  const q = query(
+    collection(db, 'qpCheck'),
+    where('ap', '==', ap),
+    where('po', '==', po),
+    where('op', '==', op),
+    orderBy('timestamp', 'desc')
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as QPCheck));
+}
+
+export async function deleteQPCheck(id: string): Promise<void> {
+  const docRef = doc(db, 'qpCheck', id);
+  await deleteDoc(docRef);
+}

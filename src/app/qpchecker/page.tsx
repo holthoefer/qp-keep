@@ -2,10 +2,10 @@
 'use client';
 
 import * as React from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth-context';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, Save, CheckSquare, Star } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, CheckSquare, Star, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -89,6 +89,12 @@ export default function QPCheckerPage() {
     }
   };
   
+  const handleShowHistory = () => {
+    if (!ap || !po || !op) return;
+    const query = `?ap=${ap}&po=${po}&op=${op}`;
+    router.push(`/qpcheck/history${query}`);
+  }
+  
   if (authLoading) {
      return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -121,6 +127,12 @@ export default function QPCheckerPage() {
           <h1 className="font-headline text-2xl font-bold tracking-tighter text-foreground">
             qpCheck
           </h1>
+        </div>
+        <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleShowHistory}>
+                <History className="mr-2 h-4 w-4" />
+                Verlauf
+            </Button>
         </div>
       </header>
        <main className="flex-1 p-4 md:p-6">

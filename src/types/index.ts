@@ -232,7 +232,7 @@ export interface Event {
 }
 
 export interface QPCheck {
-  id: string; // ap_po_op_lot
+  id: string; // ap_po_op_lot_timestamp
   ap: string;
   po: string;
   op: string;
