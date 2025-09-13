@@ -24,7 +24,7 @@ import {
 import { ref, listAll, getDownloadURL, type StorageReference } from "firebase/storage";
 import { suggestTags } from '@/ai/flows/suggest-tags';
 import type { User } from 'firebase/auth';
-import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA, SampleData, ProcessStep, Characteristic, Incident, Event } from '@/types';
+import type { ControlPlan, ControlPlanItem, Note, UserProfile, StorageFile, Workstation, Auftrag, DNA, SampleData, ProcessStep, Characteristic, Incident, Event, QPCheck } from '@/types';
 
 
 export const getAppStorage = getFirebaseStorage;
@@ -713,4 +713,22 @@ export const deleteEvent = async (id: string) => {
         throw new Error("Nur Administratoren dürfen Events löschen.");
     }
     await deleteDoc(doc(db, 'events', id));
+};
+
+// QPCheck Management
+export const addQPCheck = async (data: Omit<QPCheck, 'id' | 'timestamp' | 'userId' | 'userEmail'>) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Nicht authentifiziert.");
+
+  const id = `${data.ap}_${data.po}_${data.op}_${data.lot}`;
+  const docRef = doc(db, 'qpCheck', id);
+
+  const dataToSave: Omit<QPCheck, 'id'> = {
+    ...data,
+    timestamp: serverTimestamp() as Timestamp,
+    userId: user.uid,
+    userEmail: user.email!,
+  };
+
+  await setDoc(docRef, dataToSave, { merge: true });
 };

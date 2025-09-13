@@ -74,7 +74,7 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEv
     }
   }
   
-  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}min!` : `${remainingMinutes} min`;
+  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)} min!` : `${remainingMinutes} min`;
 
   return (
       <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>
@@ -131,7 +131,7 @@ export function WorkstationTable({ workstations, allDna, onEdit }: WorkstationTa
   }
 
   const handleRowClick = (ap: string) => {
-    const { id } = toast({
+    toast({
       title: (
         <div className="flex items-center">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -160,6 +160,21 @@ export function WorkstationTable({ workstations, allDna, onEdit }: WorkstationTa
     e.stopPropagation();
     router.push(`/event/new?ap=${encodeURIComponent(ap)}`);
   }
+  
+  const handleQPCheckClick = (e: React.MouseEvent, ws: Workstation) => {
+    e.stopPropagation();
+    if (!ws.AP || !ws.POcurrent || !ws.OPcurrent || !ws.LOTcurrent) {
+      toast({
+        variant: 'destructive',
+        title: 'Unvollständige Daten',
+        description: 'AP, PO, OP und LOT müssen am Arbeitsplatz gesetzt sein, um einen qpCheck durchzuführen.'
+      });
+      return;
+    }
+    const query = `?ap=${ws.AP}&po=${ws.POcurrent}&op=${ws.OPcurrent}&lot=${ws.LOTcurrent}`;
+    router.push(`/qpchecker${query}`);
+  }
+
 
   return (
     <>
@@ -225,6 +240,9 @@ export function WorkstationTable({ workstations, allDna, onEdit }: WorkstationTa
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onSelect={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
                                             <Siren className="mr-2 h-4 w-4" /> Incident melden
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={(e) => handleQPCheckClick(e, ws)}>
+                                            <Zap className="mr-2 h-4 w-4" /> qpCheck durchführen
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>

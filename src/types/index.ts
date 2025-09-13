@@ -230,3 +230,15 @@ export interface Event {
     lot?: string;
     attachmentUrl?: string;
 }
+
+export interface QPCheck {
+  id: string; // ap_po_op_lot
+  ap: string;
+  po: string;
+  op: string;
+  lot: string;
+  timestamp: Timestamp;
+  note?: string;
+  userEmail: string;
+  userId: string;
+}
