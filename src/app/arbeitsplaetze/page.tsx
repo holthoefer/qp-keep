@@ -56,7 +56,6 @@ export default function ArbeitsplaetzePage() {
         // For now, let's just indicate that this is where the new dialog would be triggered.
         // The actual implementation is inside WorkstationGrid/Table for now.
         // To make this work, we need a way to trigger the dialog that lives in the child component.
-        // A simple way is to add a query param and have the child listen to it.
         const currentParams = new URLSearchParams(window.location.search);
         currentParams.set('new', 'true');
         router.push(`/arbeitsplaetze?${currentParams.toString()}`);
@@ -100,12 +99,6 @@ export default function ArbeitsplaetzePage() {
                             <Book className="mr-2 h-4 w-4" />
                             LP
                         </Button>
-                        {isAdmin && (
-                            <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
-                                <Shield className="mr-2 h-4 w-4" />
-                                Admin
-                            </Button>
-                        )}
                     </div>
                      {/* Mobile View: Icons and Dropdown */}
                     <div className="md:hidden flex items-center gap-1">
@@ -118,12 +111,6 @@ export default function ArbeitsplaetzePage() {
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
                             <StickyNote className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
-                            <Wrench className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
-                            <Siren className="h-4 w-4" />
-                        </Button>
                         <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
                            <Target className="h-4 w-4" />
                         </Button>
@@ -134,6 +121,14 @@ export default function ArbeitsplaetzePage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push('/events')}>
+                                <Wrench className="mr-2 h-4 w-4" />
+                                <span>Events</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push('/incidents')}>
+                                <Siren className="mr-2 h-4 w-4" />
+                                <span>Incidents</span>
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
                                 <Book className="mr-2 h-4 w-4" />
                                 <span>LP</span>
@@ -193,6 +188,12 @@ export default function ArbeitsplaetzePage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        {isAdmin && (
+                            <DropdownMenuItem onClick={() => router.push('/admin/users')}>
+                                <Shield className="mr-2 h-4 w-4" />
+                                <span>Admin</span>
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={handleLogout}>
                             <LogOut className="mr-2 h-4 w-4" />
                             <span>Ausloggen</span>

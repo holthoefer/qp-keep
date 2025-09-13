@@ -43,6 +43,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { generateThumbnailUrl } from '@/lib/image-utils';
+import { useAuth } from '@/hooks/use-auth-context';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: () => void }) => {
   const [remainingMinutes, setRemainingMinutes] = React.useState<number | null>(null);
@@ -113,6 +115,7 @@ export function WorkstationGrid() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAdmin } = useAuth();
   
   const formRef = React.useRef<HTMLFormElement>(null);
   const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
@@ -169,8 +172,13 @@ export function WorkstationGrid() {
     setIsImageModalOpen(true);
   };
   
-  const handleWorkstationImageClick = (ap: string) => {
-    router.push(`/arbeitsplatz/${ap}`);
+  const handleWorkstationImageClick = (e: React.MouseEvent, workstation: Workstation) => {
+    e.stopPropagation();
+    if (isAdmin) {
+      router.push(`/arbeitsplatz/${workstation.AP}`);
+    } else if (workstation.imageUrl) {
+      handleImageClick(e, workstation.imageUrl, `Vollbildansicht für ${workstation.AP}`);
+    }
   }
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -485,9 +493,8 @@ export function WorkstationGrid() {
                               <CardDescription>{ws.Beschreibung}</CardDescription>
                           </div>
                            <button
-                                onClick={(e) => ws.imageUrl && handleImageClick(e, ws.imageUrl, `Vollbildansicht für ${ws.AP}`)}
-                                disabled={!ws.imageUrl}
-                                className="disabled:cursor-not-allowed flex-shrink-0 h-12 w-12"
+                                onClick={(e) => handleWorkstationImageClick(e, ws)}
+                                className="flex-shrink-0 h-12 w-12"
                             >
                               {ws.imageUrl ? (
                                   <Image
@@ -550,26 +557,19 @@ export function WorkstationGrid() {
                                    <Siren className="h-4 w-4" />
                                </Button>
                            </div>
-                           <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className='ml-auto' onClick={(e) => e.stopPropagation()}>
-                                      <MoreHorizontal className="h-4 w-4" />
-                                      <span className="sr-only">Aktionen</span>
-                                  </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                  <DropdownMenuLabel>Aktionen für {ws.AP}</DropdownMenuLabel>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => openDialogForEdit(ws)}>
-                                      <Pencil className="mr-2 h-4 w-4" />
-                                      Stammdaten bearbeiten
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleWorkstationImageClick(ws.AP)}>
-                                    <ImageIcon className="mr-2 h-4 w-4" />
-                                    Foto verwalten
-                                  </DropdownMenuItem>
-                              </DropdownMenuContent>
-                          </DropdownMenu>
+                           <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="sm" onClick={(e) => handleEditFieldClick(e, ws)} className='ml-auto'>
+                                        <Pencil className="h-4 w-4" />
+                                        <span className="sr-only">Stammdaten bearbeiten</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Stammdaten bearbeiten</p>
+                                </TooltipContent>
+                            </Tooltip>
+                           </TooltipProvider>
                       </CardFooter>
                   </Card>
               )})}
