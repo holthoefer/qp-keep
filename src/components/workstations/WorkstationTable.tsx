@@ -73,7 +73,7 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEv
         <Badge variant={badgeVariant} className={cn("cursor-pointer", badgeVariant === 'secondary' && 'bg-amber-400/80 text-black hover:bg-amber-400/70')}>
           <Clock className="mr-1.5 h-3.5 w-3.5" />
           <span>
-              M#{dna.Char}: {isOverdue ? `${Math.abs(remainingMinutes)}m überfällig` : `${remainingMinutes}m übrig`}
+              M#{dna.Char}: {isOverdue ? `${Math.abs(remainingMinutes)}m` : `${remainingMinutes}m übrig`}
           </span>
         </Badge>
       </Button>
@@ -390,7 +390,7 @@ export function WorkstationTable() {
                     <TableRow>
                         <TableHead className="w-24">Aktionen</TableHead>
                         <TableHead className="w-24">AP#</TableHead>
-                        <TableHead>Verbleibende Zeit</TableHead>
+                        <TableHead>Status Zeit</TableHead>
                         <TableHead>Verletzungen</TableHead>
                         <TableHead>PO</TableHead>
                         <TableHead>OP</TableHead>
