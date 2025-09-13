@@ -962,10 +962,6 @@ export default function ControlPlansPage() {
                     <Siren className="mr-2 h-4 w-4" />
                     Incidents
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                    <Book className="mr-2 h-4 w-4" />
-                    LP
-                </Button>
                 {isAdmin && (
                     <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                         <Shield className="mr-2 h-4 w-4" />

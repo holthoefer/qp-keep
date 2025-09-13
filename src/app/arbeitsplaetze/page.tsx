@@ -30,7 +30,7 @@ export default function ArbeitsplaetzePage() {
     const searchParams = useSearchParams();
     const { user, logout, isAdmin } = useAuth();
     const { toast } = useToast();
-    const [view, setView] = React.useState<'grid' | 'list'>('grid');
+    const [view, setView] = React.useState<'grid' | 'list'>('list');
     
     React.useEffect(() => {
         const message = searchParams.get('message');
@@ -55,7 +55,6 @@ export default function ArbeitsplaetzePage() {
         // A better approach would be to have a shared state or context.
         // For now, let's just indicate that this is where the new dialog would be triggered.
         // The actual implementation is inside WorkstationGrid/Table for now.
-        // To make this work, we need a way to trigger the dialog that lives in the child component.
         const currentParams = new URLSearchParams(window.location.search);
         currentParams.set('new', 'true');
         router.push(`/arbeitsplaetze?${currentParams.toString()}`);
@@ -94,10 +93,6 @@ export default function ArbeitsplaetzePage() {
                         <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                             <Target className="mr-2 h-4 w-4" />
                             CP
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                            <Book className="mr-2 h-4 w-4" />
-                            LP
                         </Button>
                     </div>
                      {/* Mobile View: Icons and Dropdown */}

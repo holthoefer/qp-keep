@@ -171,10 +171,6 @@ export default function EventsPage() {
                     <Target className="mr-2 h-4 w-4" />
                     CP
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                    <Book className="mr-2 h-4 w-4" />
-                    LP
-                </Button>
                 {isAdmin && (
                     <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                         <Shield className="mr-2 h-4 w-4" />
@@ -195,9 +191,6 @@ export default function EventsPage() {
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/notes')}>
                     <StickyNote className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
-                    <Siren className="h-4 w-4" />
-                </Button>
                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/cp')}>
                     <Target className="h-4 w-4" />
                 </Button>
@@ -208,6 +201,14 @@ export default function EventsPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => router.push('/events')}>
+                        <Wrench className="mr-2 h-4 w-4" />
+                        <span>Events</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/incidents')}>
+                        <Siren className="mr-2 h-4 w-4" />
+                        <span>Incidents</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => router.push('/lenkungsplan')}>
                         <Book className="mr-2 h-4 w-4" />
                         <span>LP</span>

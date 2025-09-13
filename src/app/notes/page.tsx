@@ -245,10 +245,6 @@ export default function NotesPage() {
                       <Target className="mr-2 h-4 w-4" />
                       CP
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
-                      <Book className="mr-2 h-4 w-4" />
-                      LP
-                  </Button>
                   {isAdmin && (
                       <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>
                           <Shield className="mr-2 h-4 w-4" />
@@ -267,7 +263,7 @@ export default function NotesPage() {
                       <FolderKanban className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/events')}>
-                      <Wrench className="mr-2 h-4 w-4" />
+                      <Wrench className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.push('/incidents')}>
                       <Siren className="h-4 w-4" />
