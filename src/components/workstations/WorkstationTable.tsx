@@ -19,13 +19,16 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA } from '@/types';
 import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData } from '@/lib/data';
-import { Pencil, PlusCircle, RefreshCw, Clock, AlertTriangle, Loader2, Wrench, Siren } from 'lucide-react';
+import { Pencil, PlusCircle, RefreshCw, Clock, AlertTriangle, Loader2, Wrench, Siren, Zap, MoreVertical, ImageIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { generateThumbnailUrl } from '@/lib/image-utils';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '../ui/dropdown-menu';
+
 
 const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEvent) => void }) => {
   const [remainingMinutes, setRemainingMinutes] = React.useState<number | null>(null);
@@ -388,9 +391,9 @@ export function WorkstationTable() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-24">Aktionen</TableHead>
-                        <TableHead className="w-24">AP#</TableHead>
-                        <TableHead>Status Zeit</TableHead>
+                        <TableHead className="w-12"><Zap className="h-4 w-4 mx-auto" /></TableHead>
+                        <TableHead className="w-28">AP#</TableHead>
+                        <TableHead className="w-36">Status Zeit</TableHead>
                         <TableHead>Verletzungen</TableHead>
                         <TableHead>PO</TableHead>
                         <TableHead>OP</TableHead>
@@ -426,20 +429,53 @@ export function WorkstationTable() {
 
                             return (
                             <TableRow key={ws.AP} onClick={() => handleRowClick(ws.AP)} className="cursor-pointer">
-                                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex items-center">
-                                        <Button variant="ghost" size="icon" onClick={() => openDialogForEdit(ws)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={(e) => handleEventClick(e, ws.AP)}>
-                                            <Wrench className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
-                                            <Siren className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                                 <TableCell className="px-2" onClick={(e) => e.stopPropagation()}>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="icon" className='h-8 w-8'>
+                                              <MoreVertical className="h-4 w-4" />
+                                          </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Aktionen für {ws.AP}</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onSelect={() => openDialogForEdit(ws)}>
+                                            <Pencil className="mr-2 h-4 w-4" /> Stammdaten bearbeiten
+                                        </DropdownMenuItem>
+                                         <DropdownMenuItem onSelect={() => router.push(`/arbeitsplatz/${ws.AP}`)}>
+                                            <ImageIcon className="mr-2 h-4 w-4" /> Foto verwalten
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onSelect={(e) => handleEventClick(e, ws.AP)}>
+                                            <Wrench className="mr-2 h-4 w-4" /> Event erfassen
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
+                                            <Siren className="mr-2 h-4 w-4" /> Incident melden
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </TableCell>
-                                <TableCell className="font-medium">{ws.AP}</TableCell>
+                                <TableCell className="font-medium">
+                                     <button
+                                        onClick={(e) => { e.stopPropagation(); router.push(`/arbeitsplatz/${ws.AP}`); }}
+                                        className="flex items-center gap-2 group"
+                                     >
+                                         {ws.imageUrl ? (
+                                            <Image
+                                                src={generateThumbnailUrl(ws.imageUrl)}
+                                                alt={`Bild für ${ws.AP}`}
+                                                width={32}
+                                                height={32}
+                                                className="rounded object-cover aspect-square border group-hover:ring-2 group-hover:ring-primary"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 flex items-center justify-center bg-muted rounded border group-hover:ring-2 group-hover:ring-primary">
+                                                <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                        )}
+                                         <span>{ws.AP}</span>
+                                     </button>
+                                </TableCell>
                                 <TableCell>
                                     {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={(e) => handleBadgeClick(e, nextDueDna!)} />}
                                 </TableCell>

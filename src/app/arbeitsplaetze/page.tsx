@@ -22,6 +22,7 @@ import Image from 'next/image';
 import logo from '../Logo.png';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 
 export default function ArbeitsplaetzePage() {
@@ -135,6 +136,26 @@ export default function ArbeitsplaetzePage() {
                 </div>
 
                 <div className="flex items-center gap-1 md:gap-2">
+                    <div className="flex items-center gap-1 rounded-md bg-muted p-1">
+                      <Button
+                        variant={view === 'grid' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setView('grid')}
+                      >
+                        <LayoutGrid className={cn("h-4 w-4", view === 'list' && "text-muted-foreground")} />
+                        <span className={cn("ml-2", view === 'grid' && "hidden")}>Grid</span>
+                      </Button>
+                      <Button
+                        variant={view === 'list' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setView('list')}
+                      >
+                        <TableIcon className={cn("h-4 w-4", view === 'grid' && "text-muted-foreground")} />
+                         <span className={cn("ml-2", view === 'list' && "hidden")}>Liste</span>
+                      </Button>
+                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="secondary" size="icon" className="rounded-full h-8 w-8">
@@ -157,24 +178,6 @@ export default function ArbeitsplaetzePage() {
             </header>
             <main className="flex-1 p-4 md:p-6">
                 <div className="flex items-center gap-2 mb-4">
-                    <div className="flex items-center gap-1 rounded-md bg-muted p-1">
-                      <Button
-                        variant={view === 'grid' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => setView('grid')}
-                      >
-                        <LayoutGrid className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={view === 'list' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => setView('list')}
-                      >
-                        <TableIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
                     <h2 className="font-headline text-xl font-semibold">WPs</h2>
                 </div>
                 {view === 'grid' ? <WorkstationGrid /> : <WorkstationTable />}
