@@ -34,8 +34,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Workstation, Auftrag, ControlPlan, ProcessStep } from '@/types';
-import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans } from '@/lib/data';
+import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA } from '@/types';
+import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData } from '@/lib/data';
 
 
 export default function ArbeitsplaetzePage() {
@@ -48,6 +48,7 @@ export default function ArbeitsplaetzePage() {
     const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
     const [auftraege, setAuftraege] = React.useState<Auftrag[]>([]);
     const [controlPlans, setControlPlans] = React.useState<ControlPlan[]>([]);
+    const [allDna, setAllDna] = React.useState<DNA[]>([]);
     const [editingWorkstation, setEditingWorkstation] = React.useState<Workstation | null>(null);
     const [isDialogOpen, setIsDialogOpen] = React.useState(false);
     const [selectedPO, setSelectedPO] = React.useState<string | undefined>(undefined);
@@ -57,14 +58,16 @@ export default function ArbeitsplaetzePage() {
 
     const fetchData = React.useCallback(async () => {
         try {
-          const [workstationsData, auftraegeData, controlPlansData] = await Promise.all([
+          const [workstationsData, auftraegeData, controlPlansData, dnaData] = await Promise.all([
             getWorkstations(),
             getAuftraege(),
             getControlPlans(),
+            getDnaData(),
           ]);
           setWorkstations(workstationsData);
           setAuftraege(auftraegeData);
           setControlPlans(controlPlansData);
+          setAllDna(dnaData);
         } catch (error) {
           console.error('Error fetching data:', error);
           toast({
