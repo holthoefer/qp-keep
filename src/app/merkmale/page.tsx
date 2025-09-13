@@ -86,10 +86,11 @@ function DnaTimeTracker({ lastTimestamp, frequency, prefix }: { lastTimestamp?: 
     }
     
     const isOverdue = timeLeft < 0;
+    const timeText = isOverdue ? `-${Math.abs(timeLeft)}m!` : `${timeLeft}m`;
 
     return (
         <Badge variant={isOverdue ? "destructive" : "default"}>
-            {prefix ? `${prefix}: ` : ''}{isOverdue ? `Overdue by ${Math.abs(timeLeft)} min` : `${timeLeft} min left`}
+            {prefix ? `${prefix}: ` : ''}{timeText}
         </Badge>
     );
 }
@@ -512,9 +513,12 @@ function MerkmaleCardsPage() {
                       const erfassungUrl = getErfassungUrl(char);
                       const isAttributeChart = char.charType === 'A';
                        return (
-                         <Card 
+                         <div 
                             key={`${processStep.id}-${char.id}`}
                             onClick={(e) => handleNavigateToErfassung(e, erfassungUrl)} 
+                            className="h-full flex flex-col hover:border-primary transition-colors cursor-pointer"
+                         >
+                         <Card 
                             className="h-full flex flex-col hover:border-primary transition-colors cursor-pointer"
                          >
                             <CardHeader>
@@ -554,7 +558,7 @@ function MerkmaleCardsPage() {
                                         <p className="text-blue-800 line-clamp-3">{dnaForChar.Memo}</p>
                                     </div>
                                 )}
-                                <div className="h-[200px] w-full" onClick={(e) => e.stopPropagation()}>
+                                <div className="h-[200px] w-full" onClick={(e) => { if(useIsMobile()) return; e.stopPropagation();}}>
                                     {dnaForChar ? (
                                         isAttributeChart ? (
                                             <BarChartComponent dnaData={dnaForChar} onPointClick={(sampleId) => handlePointClick(sampleId)} />
@@ -579,6 +583,7 @@ function MerkmaleCardsPage() {
                                 <span>{char.gauge || 'N/A'}</span>
                             </CardFooter>
                          </Card>
+                         </div>
                        )
                     })}
                 </div>
@@ -602,4 +607,5 @@ export default function MerkmalePageWrapper() {
         </React.Suspense>
     );
 }
+
 
