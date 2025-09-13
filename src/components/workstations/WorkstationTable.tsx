@@ -388,13 +388,13 @@ export function WorkstationTable() {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Arbeitsplatz</TableHead>
+                        <TableHead className="w-24">Aktionen</TableHead>
+                        <TableHead className="w-24">AP#</TableHead>
                         <TableHead>Verbleibende Zeit</TableHead>
                         <TableHead>Verletzungen</TableHead>
                         <TableHead>PO</TableHead>
                         <TableHead>OP</TableHead>
                         <TableHead>LOT</TableHead>
-                        <TableHead className="text-right">Aktionen</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -426,6 +426,19 @@ export function WorkstationTable() {
 
                             return (
                             <TableRow key={ws.AP} onClick={() => handleRowClick(ws.AP)} className="cursor-pointer">
+                                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex items-center">
+                                        <Button variant="ghost" size="icon" onClick={() => openDialogForEdit(ws)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={(e) => handleEventClick(e, ws.AP)}>
+                                            <Wrench className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
+                                            <Siren className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
                                 <TableCell className="font-medium">{ws.AP}</TableCell>
                                 <TableCell>
                                     {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={(e) => handleBadgeClick(e, nextDueDna!)} />}
@@ -453,17 +466,6 @@ export function WorkstationTable() {
                                 <TableCell>{ws.POcurrent || 'N/A'}</TableCell>
                                 <TableCell>{ws.OPcurrent || 'N/A'}</TableCell>
                                 <TableCell>{ws.LOTcurrent || 'N/A'}</TableCell>
-                                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                                    <Button variant="ghost" size="icon" onClick={() => openDialogForEdit(ws)}>
-                                        <Pencil className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" onClick={(e) => handleEventClick(e, ws.AP)}>
-                                        <Wrench className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" onClick={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
-                                        <Siren className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
                             </TableRow>
                             );
                         })

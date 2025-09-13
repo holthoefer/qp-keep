@@ -135,24 +135,6 @@ export default function ArbeitsplaetzePage() {
                 </div>
 
                 <div className="flex items-center gap-1 md:gap-2">
-                    <div className="flex items-center gap-1 rounded-md bg-muted p-1">
-                      <Button
-                        variant={view === 'grid' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => setView('grid')}
-                      >
-                        <LayoutGrid className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={view === 'list' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className="h-7 px-2"
-                        onClick={() => setView('list')}
-                      >
-                        <TableIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="secondary" size="icon" className="rounded-full h-8 w-8">
@@ -174,7 +156,27 @@ export default function ArbeitsplaetzePage() {
                 </div>
             </header>
             <main className="flex-1 p-4 md:p-6">
-                <h2 className="font-headline text-xl font-semibold mb-4">WPs</h2>
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center gap-1 rounded-md bg-muted p-1">
+                      <Button
+                        variant={view === 'grid' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setView('grid')}
+                      >
+                        <LayoutGrid className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={view === 'list' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setView('list')}
+                      >
+                        <TableIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <h2 className="font-headline text-xl font-semibold">WPs</h2>
+                </div>
                 {view === 'grid' ? <WorkstationGrid /> : <WorkstationTable />}
             </main>
         </div>
