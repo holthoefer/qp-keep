@@ -4,10 +4,11 @@
 
 import * as React from 'react';
 import { WorkstationGrid } from "@/components/workstations/WorkstationGrid";
+import { WorkstationTable } from "@/components/workstations/WorkstationTable";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
-import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, Network, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote } from "lucide-react";
+import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, Network, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote, Table } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ export default function ArbeitsplaetzePage() {
     const searchParams = useSearchParams();
     const { user, logout, isAdmin } = useAuth();
     const { toast } = useToast();
+    const [view, setView] = React.useState<'grid' | 'list'>('grid');
     
     React.useEffect(() => {
         const message = searchParams.get('message');
@@ -133,6 +135,24 @@ export default function ArbeitsplaetzePage() {
                 </div>
 
                 <div className="flex items-center gap-1 md:gap-2">
+                    <div className="hidden md:flex items-center gap-1 rounded-md bg-muted p-1">
+                      <Button
+                        variant={view === 'grid' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-7"
+                        onClick={() => setView('grid')}
+                      >
+                        <LayoutGrid className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={view === 'list' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className="h-7"
+                        onClick={() => setView('list')}
+                      >
+                        <Table className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="secondary" size="icon" className="rounded-full h-8 w-8">
@@ -154,7 +174,7 @@ export default function ArbeitsplaetzePage() {
                 </div>
             </header>
             <main className="flex-1 p-4 md:p-6">
-                <WorkstationGrid />
+                {view === 'grid' ? <WorkstationGrid /> : <WorkstationTable />}
             </main>
         </div>
     );
