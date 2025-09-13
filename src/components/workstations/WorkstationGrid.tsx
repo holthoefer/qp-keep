@@ -13,33 +13,16 @@ import {
   CardTitle,
   CardFooter,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA } from '@/types';
-import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData } from '@/lib/data';
-import { Pencil, PlusCircle, RefreshCw, ListChecks, MoreHorizontal, Image as ImageIcon, MoreVertical, FolderKanban, Clock, AlertTriangle, Loader2, ArrowLeft, Wrench, Siren } from 'lucide-react';
+
+import { Pencil, Image as ImageIcon, Wrench, Siren, Loader2, AlertTriangle, Clock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Badge } from '@/components/ui/badge';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { generateThumbnailUrl } from '@/lib/image-utils';
@@ -87,7 +70,7 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: () => void }) => 
     }
   }
 
-  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)} min!` : `${remainingMinutes} min`;
+  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}min!` : `${remainingMinutes} min`;
 
   return (
       <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>
@@ -101,75 +84,21 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: () => void }) => 
   );
 };
 
+interface WorkstationGridProps {
+    workstations: Workstation[];
+    allDna: DNA[];
+    onEdit: (workstation: Workstation) => void;
+}
 
-export function WorkstationGrid() {
-  const [workstations, setWorkstations] = React.useState<Workstation[]>([]);
-  const [auftraege, setAuftraege] = React.useState<Auftrag[]>([]);
-  const [controlPlans, setControlPlans] = React.useState<ControlPlan[]>([]);
-  const [allDna, setAllDna] = React.useState<DNA[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [editingWorkstation, setEditingWorkstation] =
-    React.useState<Workstation | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [selectedPO, setSelectedPO] = React.useState<string | undefined>(undefined);
+
+export function WorkstationGrid({ workstations, allDna, onEdit }: WorkstationGridProps) {
   const { toast } = useToast();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { isAdmin } = useAuth();
   
-  const formRef = React.useRef<HTMLFormElement>(null);
   const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
   const [modalImageUrl, setModalImageUrl] = React.useState('');
   const [modalImageAlt, setModalImageAlt] = React.useState('');
-  
-  const [isWorkstationModalOpen, setIsWorkstationModalOpen] = React.useState(false);
-  const [selectedWorkstationAp, setSelectedWorkstationAp] = React.useState<string | null>(null);
-
-  const openDialogForNew = React.useCallback(() => {
-    setEditingWorkstation(null);
-    setSelectedPO(undefined);
-    setIsDialogOpen(true);
-  }, []);
-
-  React.useEffect(() => {
-    if (searchParams.get('new') === 'true') {
-        openDialogForNew();
-        // Clean up the URL
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('new');
-        router.replace(newUrl.toString(), { scroll: false });
-    }
-  }, [searchParams, router, openDialogForNew]);
-
-
-  const fetchData = React.useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [workstationsData, auftraegeData, controlPlansData, dnaData] = await Promise.all([
-        getWorkstations(),
-        getAuftraege(),
-        getControlPlans(),
-        getDnaData(),
-      ]);
-      setWorkstations(workstationsData);
-      setAuftraege(auftraegeData);
-      setControlPlans(controlPlansData);
-      setAllDna(dnaData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not fetch data from the database.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  React.useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   const handleImageClick = (e: React.MouseEvent, url: string, alt: string) => {
     e.stopPropagation();
@@ -186,96 +115,6 @@ export function WorkstationGrid() {
       handleImageClick(e, workstation.imageUrl, `Vollbildansicht für ${workstation.AP}`);
     }
   }
-
-  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const ap = formData.get('AP') as string;
-    let poCurrent = formData.get('POcurrent') as string;
-    let opCurrent = formData.get('OPcurrent') as string;
-
-    if (poCurrent === 'none') poCurrent = '';
-    if (opCurrent === 'none') opCurrent = '';
-
-
-    if (!ap) {
-      toast({
-        title: 'Validation Error',
-        description: 'AP field is required.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const isNew = !editingWorkstation;
-
-    const workstationData: Workstation = {
-      AP: ap,
-      Beschreibung: formData.get('Beschreibung') as string,
-      POcurrent: poCurrent,
-      CPcurrent: formData.get('CPcurrent') as string,
-      OPcurrent: opCurrent,
-      Bemerkung: formData.get('Bemerkung') as string,
-      LOTcurrent: formData.get('LOTcurrent') as string,
-      imageUrl: editingWorkstation?.imageUrl || ''
-    };
-
-    try {
-      await saveWorkstation(workstationData, isNew);
-      toast({
-        title: 'Success',
-        description: `Workstation ${workstationData.AP} saved.`,
-        duration: 1000,
-      });
-      setIsDialogOpen(false);
-      setEditingWorkstation(null);
-      fetchData(); // Refetch data after saving
-    } catch (error: any) {
-      console.error('Error saving workstation:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to save workstation.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const openDialogForEdit = async (workstation: Workstation) => {
-    await fetchData(); 
-    setEditingWorkstation(workstation);
-    setSelectedPO(workstation.POcurrent);
-    setIsDialogOpen(true);
-  };
-  
-  const selectedAuftrag = auftraege.find(a => a.PO === selectedPO);
-  const selectedControlPlan = controlPlans.find(cp => cp.planNumber === selectedAuftrag?.CP);
-  const availableProcessSteps: ProcessStep[] = selectedControlPlan?.processSteps || [];
-
-  const handlePoChange = (value: string) => {
-    const newPo = value === 'none' ? undefined : value;
-    setSelectedPO(newPo);
-
-    if (formRef.current) {
-      const opCurrentSelect = formRef.current.elements.namedItem('OPcurrent') as HTMLSelectElement | null;
-      if (opCurrentSelect) {
-         const trigger = opCurrentSelect.closest('[role="combobox"]');
-         const valueDisplay = trigger?.querySelector('span');
-         if(valueDisplay) valueDisplay.textContent = "Prozessschritt auswählen";
-      }
-
-      const cpCurrentInput = formRef.current.elements.namedItem('CPcurrent') as HTMLInputElement;
-      const auftrag = auftraege.find(a => a.PO === newPo);
-      const cp = controlPlans.find(c => c.planNumber === auftrag?.CP);
-      cpCurrentInput.value = cp?.planNumber || '';
-
-      if (!newPo) {
-          const lotCurrentInput = formRef.current.elements.namedItem('LOTcurrent') as HTMLInputElement;
-          const bemerkungInput = formRef.current.elements.namedItem('Bemerkung') as HTMLInputElement;
-          lotCurrentInput.value = '';
-          bemerkungInput.value = '';
-      }
-    }
-  };
 
   const getErfassungUrl = (dna: DNA) => {
       if (!dna.WP || !dna.PO || !dna.OP || !dna.Char) {
@@ -305,7 +144,7 @@ export function WorkstationGrid() {
 
   const handleEditFieldClick = (e: React.MouseEvent, workstation: Workstation) => {
     e.stopPropagation();
-    openDialogForEdit(workstation);
+    onEdit(workstation);
   };
   
   const handleIncidentClick = (e: React.MouseEvent, ap: string, po?: string) => {
@@ -326,142 +165,8 @@ export function WorkstationGrid() {
         imageUrl={modalImageUrl}
         imageAlt={modalImageAlt}
       />
-      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-          if(!isOpen) {
-              setEditingWorkstation(null);
-              setSelectedPO(undefined);
-          }
-          setIsDialogOpen(isOpen);
-      }}>
-        <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle>
-                {editingWorkstation ? 'Arbeitsplatz bearbeiten' : 'Neuen Arbeitsplatz anlegen'}
-                </DialogTitle>
-                <DialogDescription>
-                {editingWorkstation ? `Änderungen für ${editingWorkstation.AP} vornehmen.` : 'Füllen Sie die Details aus.'}
-                </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSave} ref={formRef}>
-            <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="AP" className="text-right">
-                    AP (Key)
-                </Label>
-                  <Input
-                    id="AP"
-                    name="AP"
-                    defaultValue={editingWorkstation?.AP}
-                    className={cn(
-                        'col-span-3',
-                        !editingWorkstation && 'bg-green-100 dark:bg-green-900/50 font-bold'
-                    )}
-                    readOnly={!!editingWorkstation}
-                />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="Beschreibung" className="text-right">
-                    Beschreibung
-                </Label>
-                <Input
-                    id="Beschreibung"
-                    name="Beschreibung"
-                    defaultValue={editingWorkstation?.Beschreibung}
-                    className="col-span-3"
-                />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="POcurrent" className="text-right">
-                        PO
-                    </Label>
-                    <Select name="POcurrent" defaultValue={editingWorkstation?.POcurrent || 'none'} onValueChange={handlePoChange}>
-                        <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="Auftrag auswählen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">Kein Auftrag</SelectItem>
-                            {auftraege.map(auftrag => (
-                            <SelectItem key={auftrag.PO} value={auftrag.PO}>
-                                {auftrag.PO}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="CPcurrent" className="text-right">
-                        CP
-                    </Label>
-                    <Input
-                        id="CPcurrent"
-                        name="CPcurrent"
-                        value={selectedControlPlan?.planNumber || ''}
-                        className="col-span-3"
-                        readOnly
-                    />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="OPcurrent" className="text-right">
-                        OP
-                    </Label>
-                    <Select name="OPcurrent" defaultValue={editingWorkstation?.OPcurrent || 'none'} key={selectedControlPlan?.id || 'none'}>
-                        <SelectTrigger className="col-span-3">
-                            <SelectValue placeholder="Prozessschritt auswählen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">Kein Prozessschritt</SelectItem>
-                            {availableProcessSteps.map(step => (
-                            <SelectItem key={step.id} value={step.processNumber}>
-                                {step.processNumber} - {step.processName}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="LOTcurrent" className="text-right">
-                    LOT
-                </Label>
-                <Input
-                    id="LOTcurrent"
-                    name="LOTcurrent"
-                    defaultValue={editingWorkstation?.LOTcurrent}
-                    className="col-span-3"
-                />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="Bemerkung" className="text-right">
-                    Bemerkung
-                </Label>
-                <Input
-                    id="Bemerkung"
-                    name="Bemerkung"
-                    defaultValue={editingWorkstation?.Bemerkung}
-                    className="col-span-3"
-                />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button type="submit">Speichern</Button>
-            </DialogFooter>
-            </form>
-        </DialogContent>
-      </Dialog>
       <div className="bg-muted/30 p-2 rounded-lg">
-          {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                      <Card key={i}>
-                          <CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader>
-                          <CardContent className="space-y-2">
-                              <Skeleton className="h-4 w-full" />
-                              <Skeleton className="h-4 w-3/4" />
-                              <Skeleton className="h-4 w-1/2" />
-                          </CardContent>
-                      </Card>
-                  ))}
-              </div>
-          ) : workstations.length > 0 ? (
+          {workstations.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {workstations.map((ws) => {
                   const dnaForWorkstation = allDna.filter(d => d.WP === ws.AP && d.PO === ws.POcurrent && d.OP === ws.OPcurrent);
@@ -516,15 +221,15 @@ export function WorkstationGrid() {
                           <div className="space-y-2 text-sm">
                               {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={() => router.push(getErfassungUrl(nextDueDna!))} />}
                               <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">PO</Badge>
+                                  <Badge variant="secondary">PO</Badge>
                                   <span className="text-left">{ws.POcurrent || ''}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">OP</Badge>
+                                  <Badge variant="secondary">OP</Badge>
                                   <span className="text-left">{ws.OPcurrent || ''}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">LOT</Badge>
+                                  <Badge variant="secondary">LOT</Badge>
                                   <span className="text-left">{ws.LOTcurrent || ''}</span>
                               </div>
                                {ws.Bemerkung && <p className="text-xs text-muted-foreground pt-1">{ws.Bemerkung}</p>}
