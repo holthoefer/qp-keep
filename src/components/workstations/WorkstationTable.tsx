@@ -385,16 +385,16 @@ export function WorkstationTable() {
         </DialogContent>
       </Dialog>
       <Card>
-        <CardHeader>
+        <CardHeader className="py-2 px-0">
            <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Workstations (Table View)</CardTitle>
+                <h2 className="font-headline text-xl font-semibold">WPs</h2>
                 <Button size="icon" variant="outline" onClick={fetchData} className="h-8 w-8">
                     <RefreshCw className="h-4 w-4" />
                     <span className="sr-only">Refresh</span>
                 </Button>
            </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
              <div className="rounded-lg border">
                 <Table>
                     <TableHeader>

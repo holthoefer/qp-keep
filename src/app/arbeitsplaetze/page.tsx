@@ -8,7 +8,7 @@ import { WorkstationTable } from "@/components/workstations/WorkstationTable";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
-import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, Network, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote, Table } from "lucide-react";
+import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, Network, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote, Table as TableIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -150,7 +150,7 @@ export default function ArbeitsplaetzePage() {
                         className="h-7"
                         onClick={() => setView('list')}
                       >
-                        <Table className="h-4 w-4" />
+                        <TableIcon className="h-4 w-4" />
                       </Button>
                     </div>
                     <DropdownMenu>

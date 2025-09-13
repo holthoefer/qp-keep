@@ -426,13 +426,10 @@ export function WorkstationGrid() {
         </DialogContent>
       </Dialog>
       <Card className="bg-transparent border-none shadow-none">
-        <CardHeader className="py-2">
+        <CardHeader className="py-2 px-0">
           <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                   <Button variant="outline" size="icon" onClick={() => router.push('/notes')} className="h-8 w-8">
-                    <ArrowLeft className="h-4 w-4" />
-                </Button>
-                  <CardTitle className="text-lg">Workstations</CardTitle>
+                  <h2 className="font-headline text-xl font-semibold">WPs</h2>
               </div>
                <div className="flex items-center gap-2">
                   <Button size="icon" variant="outline" onClick={fetchData} className="h-8 w-8">
@@ -456,7 +453,7 @@ export function WorkstationGrid() {
               </div>
           </div>
         </CardHeader>
-        <CardContent className="bg-muted/30 p-2 rounded-lg">
+        <CardContent className="bg-muted/30 p-2 rounded-lg -mx-2">
           {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {Array.from({ length: 3 }).map((_, i) => (
