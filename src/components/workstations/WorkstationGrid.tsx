@@ -39,7 +39,7 @@ import { Pencil, PlusCircle, RefreshCw, ListChecks, MoreHorizontal, Image as Ima
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { generateThumbnailUrl } from '@/lib/image-utils';
@@ -85,9 +85,7 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: () => void }) => 
     }
   }
 
-  const timeText = isOverdue
-    ? `-${Math.abs(remainingMinutes)}m!`
-    : `${remainingMinutes}m`;
+  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}m!` : `${remainingMinutes}m`;
 
   return (
       <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>
@@ -114,6 +112,7 @@ export function WorkstationGrid() {
   const [selectedPO, setSelectedPO] = React.useState<string | undefined>(undefined);
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const formRef = React.useRef<HTMLFormElement>(null);
   const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
@@ -122,6 +121,16 @@ export function WorkstationGrid() {
   
   const [isWorkstationModalOpen, setIsWorkstationModalOpen] = React.useState(false);
   const [selectedWorkstationAp, setSelectedWorkstationAp] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+        openDialogForNew();
+        // Clean up the URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('new');
+        router.replace(newUrl.toString(), { scroll: false });
+    }
+  }, [searchParams, router]);
 
 
   const fetchData = React.useCallback(async () => {
@@ -430,8 +439,7 @@ export function WorkstationGrid() {
             </form>
         </DialogContent>
       </Dialog>
-      <Card className="bg-transparent border-none shadow-none">
-        <CardContent className="bg-muted/30 p-2 rounded-lg -mx-2">
+      <div className="bg-muted/30 p-2 rounded-lg -mx-2">
           {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -560,12 +568,6 @@ export function WorkstationGrid() {
                                     <ImageIcon className="mr-2 h-4 w-4" />
                                     Foto verwalten
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem asChild>
-                                      <Link href={`/auftraege`}>
-                                        <FolderKanban className="mr-2 h-4 w-4" />
-                                        Aufträge anzeigen
-                                      </Link>
-                                  </DropdownMenuItem>
                               </DropdownMenuContent>
                           </DropdownMenu>
                       </CardFooter>
@@ -577,8 +579,7 @@ export function WorkstationGrid() {
                   <p>Keine Arbeitsplätze gefunden.</p>
               </div>
           )}
-        </CardContent>
-      </Card>
+      </div>
     </>
   );
 }

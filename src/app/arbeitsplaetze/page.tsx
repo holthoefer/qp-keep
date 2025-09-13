@@ -49,10 +49,17 @@ export default function ArbeitsplaetzePage() {
     };
     
     const openDialogForNew = () => {
-        // This function would typically open a dialog.
-        // For now, we can just log it or prepare for a dialog implementation.
-        console.log("Opening new workstation dialog...");
-        // You would set some state here to open a Dialog component
+        // This functionality is now handled by the WorkstationTable/Grid components,
+        // which contain the dialog logic. We can't open it from here directly
+        // without significant state lifting.
+        // A better approach would be to have a shared state or context.
+        // For now, let's just indicate that this is where the new dialog would be triggered.
+        // The actual implementation is inside WorkstationGrid/Table for now.
+        // To make this work, we need a way to trigger the dialog that lives in the child component.
+        // A simple way is to add a query param and have the child listen to it.
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.set('new', 'true');
+        router.push(`/arbeitsplaetze?${currentParams.toString()}`);
     };
 
 

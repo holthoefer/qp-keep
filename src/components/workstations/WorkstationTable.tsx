@@ -23,7 +23,7 @@ import { Pencil, PlusCircle, RefreshCw, Clock, AlertTriangle, Loader2, Wrench, S
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { generateThumbnailUrl } from '@/lib/image-utils';
@@ -99,8 +99,19 @@ export function WorkstationTable() {
   const [selectedPO, setSelectedPO] = React.useState<string | undefined>(undefined);
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const formRef = React.useRef<HTMLFormElement>(null);
+
+  React.useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+        openDialogForNew();
+        // Clean up the URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('new');
+        router.replace(newUrl.toString(), { scroll: false });
+    }
+  }, [searchParams, router]);
 
 
   const fetchData = React.useCallback(async () => {
@@ -395,7 +406,6 @@ export function WorkstationTable() {
                 <TableHeader>
                     <TableRow>
                         <TableHead className="w-12"><Zap className="h-4 w-4 mx-auto" /></TableHead>
-                        <TableHead className="w-16">AP#</TableHead>
                         <TableHead className="w-28">Status Zeit</TableHead>
                         <TableHead>Verletzungen</TableHead>
                         <TableHead>PO</TableHead>
@@ -454,36 +464,6 @@ export function WorkstationTable() {
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
-                                </TableCell>
-                                <TableCell>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); router.push(`/arbeitsplatz/${ws.AP}`); }}
-                                                    className="flex items-center gap-2 group"
-                                                 >
-                                                     {ws.imageUrl ? (
-                                                        <Image
-                                                            src={generateThumbnailUrl(ws.imageUrl)}
-                                                            alt={`Bild für ${ws.AP}`}
-                                                            width={32}
-                                                            height={32}
-                                                            className="rounded object-cover aspect-square border group-hover:ring-2 group-hover:ring-primary"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-8 h-8 flex items-center justify-center bg-muted rounded border group-hover:ring-2 group-hover:ring-primary">
-                                                            <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                                                        </div>
-                                                    )}
-                                                 </button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p className="font-bold">{ws.AP}</p>
-                                                <p>{ws.Beschreibung}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
                                 </TableCell>
                                 <TableCell>
                                     {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={(e) => handleBadgeClick(e, nextDueDna!)} />}
