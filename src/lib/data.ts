@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { db, auth, getAppStorage as getFirebaseStorage } from './firebase';
@@ -720,7 +719,7 @@ export const addQPCheck = async (data: Omit<QPCheck, 'id' | 'timestamp' | 'userI
   const user = auth.currentUser;
   if (!user) throw new Error("Nicht authentifiziert.");
 
-  const id = `${data.ap}_${data.po}_${data.op}_${data.lot}`;
+  const id = `${data.ap}_${data.po}_${data.op}_${data.lot}_${Date.now()}`;
   const docRef = doc(db, 'qpCheck', id);
 
   const dataToSave: Omit<QPCheck, 'id'> = {

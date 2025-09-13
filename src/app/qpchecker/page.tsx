@@ -28,7 +28,7 @@ export default function QPCheckerPage() {
   const lot = searchParams.get('lot');
 
   const [note, setNote] = React.useState('');
-  const [rating, setRating] = React.useState(5);
+  const [rating, setRating] = React.useState(0);
   const [isSaving, setIsSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -43,6 +43,15 @@ export default function QPCheckerPage() {
       return;
     }
     
+    if (rating === 0) {
+        toast({
+            variant: 'destructive',
+            title: 'Bewertung erforderlich',
+            description: 'Bitte geben Sie eine Bewertung ab.',
+        });
+        return;
+    }
+
     if (rating < 5 && !note.trim()) {
         toast({
             variant: 'destructive',
@@ -99,7 +108,7 @@ export default function QPCheckerPage() {
       );
   }
 
-  const isSaveDisabled = isSaving || (rating < 5 && !note.trim());
+  const isSaveDisabled = isSaving || rating === 0 || (rating < 5 && !note.trim());
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -154,7 +163,7 @@ export default function QPCheckerPage() {
                 </div>
                 <div className="space-y-2">
                     <label htmlFor="note" className="text-sm font-medium">
-                        Bemerkung {rating < 5 && <span className="text-destructive">*</span>}
+                        Bemerkung {rating > 0 && rating < 5 && <span className="text-destructive">*</span>}
                     </label>
                     <Textarea
                         id="note"
@@ -163,7 +172,7 @@ export default function QPCheckerPage() {
                         onChange={(e) => setNote(e.target.value)}
                         rows={5}
                         disabled={isSaving}
-                        required={rating < 5}
+                        required={rating < 5 && rating > 0}
                     />
                 </div>
             </CardContent>
