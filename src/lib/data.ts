@@ -737,11 +737,15 @@ export async function getQPChecks(ap: string, po: string, op: string): Promise<Q
     collection(db, 'qpCheck'),
     where('ap', '==', ap),
     where('po', '==', po),
-    where('op', '==', op),
-    orderBy('timestamp', 'desc')
+    where('op', '==', op)
   );
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as QPCheck));
+  const checks = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as QPCheck));
+  
+  // Client-side sorting
+  checks.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+  
+  return checks;
 }
 
 export async function deleteQPCheck(id: string): Promise<void> {
