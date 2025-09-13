@@ -1,79 +1,48 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Helper function to check if the user is an admin
+    // Helper function to check if a user is an admin
     function isAdmin() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Rules for user profiles
+    // Helper function to check if a user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Users collection:
+    // - Users can read their own profile.
+    // - Admins can read and write any user profile.
     match /users/{userId} {
-      allow read, create: if request.auth.uid == userId;
-      allow update: if request.auth.uid == userId || isAdmin();
-      
-      // Admins can read/write any user profile
-      allow list, delete, write: if isAdmin();
+      allow get: if request.auth.uid == userId || isAdmin();
+      allow list: if isAdmin();
+      allow update: if isAdmin();
+      // allow create: is handled by backend logic (getProfile)
     }
-    
-    // Rules for notes
+
+    // Notes collection:
+    // - Users can create notes for themselves.
+    // - Users can read and delete their own notes.
+    // - Admins can read all notes but cannot delete notes of other users.
     match /notes/{noteId} {
-      // Any authenticated user with an 'active' profile can create notes.
-      allow create: if request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
-      
-      // Users can read/update/delete their own notes.
-      allow read, update, delete: if request.auth.uid == resource.data.userId;
-      
-      // Admins can read/delete any note.
-      allow read, delete: if isAdmin();
+      allow create: if request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth.uid == resource.data.userId || isAdmin();
+      allow delete: if request.auth.uid == resource.data.userId;
     }
 
-    // Public collections (read-only for all authenticated users)
-    match /controlplan/{planId} {
-       allow read: if request.auth != null;
-       allow write: if isAdmin();
-    }
-
-    match /lenkungsplan/{planId} {
-       allow read, write: if request.auth != null;
-    }
-    
-    match /workstations/{wsId} {
-       allow read: if request.auth != null;
-       allow write: if request.auth != null;
-    }
-    
-    match /auftraege/{auftragId} {
-       allow read: if request.auth != null;
-       allow write: if isAdmin();
-    }
-    
-     match /dna/{dnaId} {
-       allow read, write: if request.auth != null;
-    }
-    
-    match /samples/{sampleId} {
-        allow read, write: if request.auth != null;
-        allow delete: if isAdmin();
-    }
-
-    match /incidents/{incidentId} {
-        allow read, write: if request.auth != null;
-        allow delete: if isAdmin();
-    }
-    
-    match /events/{eventId} {
-       allow read, write: if request.auth != null;
-       allow delete: if isAdmin();
-    }
-    
-    // Advanced Control Plans
-    match /control-plans/{planId} {
-        allow read: if request.auth != null;
-        // Only admins can write/delete
-        allow write, delete: if isAdmin();
+    // Workstations collection:
+    // - All authenticated users can read workstations.
+    // - Only admins can create and update workstations.
+    match /workstations/{workstationId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin();
     }
   }
 }
