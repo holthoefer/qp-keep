@@ -29,6 +29,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { generateThumbnailUrl } from '@/lib/image-utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '../ui/dropdown-menu';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { useAuth } from '@/hooks/use-auth-context';
+import { ImageModal } from '@/components/cp/ImageModal';
 
 
 const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEvent) => void }) => {
@@ -100,8 +102,19 @@ export function WorkstationTable() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAdmin } = useAuth();
   
   const formRef = React.useRef<HTMLFormElement>(null);
+  
+  const [isImageModalOpen, setIsImageModalOpen] = React.useState(false);
+  const [modalImageUrl, setModalImageUrl] = React.useState('');
+  const [modalImageAlt, setModalImageAlt] = React.useState('');
+
+  const openDialogForNew = React.useCallback(() => {
+    setEditingWorkstation(null);
+    setSelectedPO(undefined);
+    setIsDialogOpen(true);
+  }, []);
 
   React.useEffect(() => {
     if (searchParams.get('new') === 'true') {
@@ -111,7 +124,7 @@ export function WorkstationTable() {
         newUrl.searchParams.delete('new');
         router.replace(newUrl.toString(), { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, openDialogForNew]);
 
 
   const fetchData = React.useCallback(async () => {
@@ -142,6 +155,23 @@ export function WorkstationTable() {
   React.useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleImageClick = (e: React.MouseEvent, url: string, alt: string) => {
+    e.stopPropagation();
+    setModalImageUrl(url);
+    setModalImageAlt(alt);
+    setIsImageModalOpen(true);
+  };
+  
+  const handleWorkstationImageClick = (e: React.MouseEvent, workstation: Workstation) => {
+    e.stopPropagation();
+    if (isAdmin) {
+      router.push(`/arbeitsplatz/${workstation.AP}`);
+    } else if (workstation.imageUrl) {
+      handleImageClick(e, workstation.imageUrl, `Vollbildansicht für ${workstation.AP}`);
+    }
+  }
+
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -200,12 +230,6 @@ export function WorkstationTable() {
     await fetchData(); 
     setEditingWorkstation(workstation);
     setSelectedPO(workstation.POcurrent);
-    setIsDialogOpen(true);
-  };
-
-  const openDialogForNew = () => {
-    setEditingWorkstation(null);
-    setSelectedPO(undefined);
     setIsDialogOpen(true);
   };
   
@@ -280,6 +304,12 @@ export function WorkstationTable() {
 
   return (
     <>
+      <ImageModal
+        isOpen={isImageModalOpen}
+        onOpenChange={setIsImageModalOpen}
+        imageUrl={modalImageUrl}
+        imageAlt={modalImageAlt}
+      />
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
           if(!isOpen) {
               setEditingWorkstation(null);
@@ -406,7 +436,8 @@ export function WorkstationTable() {
                 <TableHeader>
                     <TableRow>
                         <TableHead className="w-12"><Zap className="h-4 w-4 mx-auto" /></TableHead>
-                        <TableHead className="w-28">Status Zeit</TableHead>
+                        <TableHead className="w-[80px]">AP#</TableHead>
+                        <TableHead className="w-[120px]">Status Zeit</TableHead>
                         <TableHead>Verletzungen</TableHead>
                         <TableHead>PO</TableHead>
                         <TableHead>OP</TableHead>
@@ -466,6 +497,24 @@ export function WorkstationTable() {
                                     </DropdownMenu>
                                 </TableCell>
                                 <TableCell>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <button onClick={(e) => handleWorkstationImageClick(e, ws)} className="flex-shrink-0 h-10 w-10">
+                                                    {ws.imageUrl ? (
+                                                        <Image src={generateThumbnailUrl(ws.imageUrl)} alt={`Foto für ${ws.AP}`} width={40} height={40} className="rounded-md object-cover aspect-square border" />
+                                                    ) : (
+                                                        <div className="w-10 h-10 flex items-center justify-center bg-muted rounded-md border"><ImageIcon className="h-5 w-5 text-muted-foreground" /></div>
+                                                    )}
+                                                </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{ws.AP} - {ws.Beschreibung}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </TableCell>
+                                <TableCell>
                                     {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={(e) => handleBadgeClick(e, nextDueDna!)} />}
                                 </TableCell>
                                 <TableCell>
@@ -488,10 +537,10 @@ export function WorkstationTable() {
                                         </div>
                                     )}
                                 </TableCell>
-                                <TableCell>{ws.POcurrent || 'N/A'}</TableCell>
-                                <TableCell>{ws.OPcurrent || 'N/A'}</TableCell>
-                                <TableCell>{ws.LOTcurrent || 'N/A'}</TableCell>
-                                <TableCell className="max-w-[150px] truncate">{ws.Bemerkung || 'N/A'}</TableCell>
+                                <TableCell>{ws.POcurrent || ''}</TableCell>
+                                <TableCell>{ws.OPcurrent || ''}</TableCell>
+                                <TableCell>{ws.LOTcurrent || ''}</TableCell>
+                                <TableCell className="max-w-[150px] truncate">{ws.Bemerkung || ''}</TableCell>
                             </TableRow>
                             );
                         })

@@ -125,6 +125,12 @@ export function WorkstationGrid() {
   const [isWorkstationModalOpen, setIsWorkstationModalOpen] = React.useState(false);
   const [selectedWorkstationAp, setSelectedWorkstationAp] = React.useState<string | null>(null);
 
+  const openDialogForNew = React.useCallback(() => {
+    setEditingWorkstation(null);
+    setSelectedPO(undefined);
+    setIsDialogOpen(true);
+  }, []);
+
   React.useEffect(() => {
     if (searchParams.get('new') === 'true') {
         openDialogForNew();
@@ -133,7 +139,7 @@ export function WorkstationGrid() {
         newUrl.searchParams.delete('new');
         router.replace(newUrl.toString(), { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, openDialogForNew]);
 
 
   const fetchData = React.useCallback(async () => {
@@ -238,12 +244,6 @@ export function WorkstationGrid() {
     await fetchData(); 
     setEditingWorkstation(workstation);
     setSelectedPO(workstation.POcurrent);
-    setIsDialogOpen(true);
-  };
-
-  const openDialogForNew = () => {
-    setEditingWorkstation(null);
-    setSelectedPO(undefined);
     setIsDialogOpen(true);
   };
   
@@ -447,7 +447,7 @@ export function WorkstationGrid() {
             </form>
         </DialogContent>
       </Dialog>
-      <div className="bg-muted/30 p-2 rounded-lg -mx-2">
+      <div className="bg-muted/30 p-2 rounded-lg">
           {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -517,15 +517,15 @@ export function WorkstationGrid() {
                               {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={() => router.push(getErfassungUrl(nextDueDna!))} />}
                               <div className="flex items-center gap-2">
                                   <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">PO</Badge>
-                                  <span className="text-left">{ws.POcurrent || 'N/A'}</span>
+                                  <span className="text-left">{ws.POcurrent || ''}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                   <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">OP</Badge>
-                                  <span className="text-left">{ws.OPcurrent || 'N/A'}</span>
+                                  <span className="text-left">{ws.OPcurrent || ''}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                   <Badge variant="secondary" onClick={(e) => handleEditFieldClick(e, ws)} className="cursor-pointer hover:bg-secondary/80">LOT</Badge>
-                                  <span className="text-left">{ws.LOTcurrent || 'N/A'}</span>
+                                  <span className="text-left">{ws.LOTcurrent || ''}</span>
                               </div>
                                {ws.Bemerkung && <p className="text-xs text-muted-foreground pt-1">{ws.Bemerkung}</p>}
                                {exceptionDnas.length > 0 && (
