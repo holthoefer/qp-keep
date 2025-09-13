@@ -238,6 +238,7 @@ export interface QPCheck {
   op: string;
   lot: string;
   timestamp: Timestamp;
+  rating: number;
   note?: string;
   userEmail: string;
   userId: string;

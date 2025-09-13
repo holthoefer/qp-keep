@@ -1,12 +1,11 @@
 
-
 'use client';
 
 import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth-context';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, Save, CheckSquare } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, CheckSquare, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -29,6 +28,7 @@ export default function QPCheckerPage() {
   const lot = searchParams.get('lot');
 
   const [note, setNote] = React.useState('');
+  const [rating, setRating] = React.useState(5);
   const [isSaving, setIsSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -42,6 +42,15 @@ export default function QPCheckerPage() {
     if (isSaving || !ap || !po || !op || !lot || !user) {
       return;
     }
+    
+    if (rating < 5 && !note.trim()) {
+        toast({
+            variant: 'destructive',
+            title: 'Bemerkung erforderlich',
+            description: 'Bitte geben Sie eine Bemerkung an, wenn die Bewertung unter 5 Sternen liegt.',
+        });
+        return;
+    }
 
     setIsSaving(true);
     try {
@@ -50,6 +59,7 @@ export default function QPCheckerPage() {
         po,
         op,
         lot,
+        rating,
         note,
       });
 
@@ -89,6 +99,7 @@ export default function QPCheckerPage() {
       );
   }
 
+  const isSaveDisabled = isSaving || (rating < 5 && !note.trim());
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -102,11 +113,6 @@ export default function QPCheckerPage() {
             qpCheck
           </h1>
         </div>
-        <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            <Save className="mr-2 h-4 w-4" />
-            Speichern & Bestätigen
-        </Button>
       </header>
        <main className="flex-1 p-4 md:p-6">
         <Card className="max-w-2xl mx-auto">
@@ -122,15 +128,34 @@ export default function QPCheckerPage() {
                     <span><Badge variant="outline">LOT</Badge> {lot}</span>
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
                 <Alert variant="info">
                     <AlertTitle>Wichtiger Hinweis</AlertTitle>
                     <AlertDescription>
                         Prüfe alle Merkmale nach Zeichnung und Richtlinien. Mit dem Speichern wird bestätigt, dass der Prozess stabil läuft und Abweichungen hier notiert sind.
                     </AlertDescription>
                 </Alert>
-                <div className="mt-6 space-y-2">
-                    <label htmlFor="note" className="text-sm font-medium">Optionale Bemerkung</label>
+                <div className="space-y-2">
+                    <label htmlFor="rating" className="text-sm font-medium">Bewertung</label>
+                    <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <Button
+                                key={star}
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setRating(star)}
+                                className="text-amber-400 hover:text-amber-500"
+                            >
+                                <Star className={rating >= star ? 'fill-current' : ''} />
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <label htmlFor="note" className="text-sm font-medium">
+                        Bemerkung {rating < 5 && <span className="text-destructive">*</span>}
+                    </label>
                     <Textarea
                         id="note"
                         placeholder="Notieren Sie hier eventuelle Abweichungen oder Beobachtungen..."
@@ -138,17 +163,22 @@ export default function QPCheckerPage() {
                         onChange={(e) => setNote(e.target.value)}
                         rows={5}
                         disabled={isSaving}
+                        required={rating < 5}
                     />
                 </div>
             </CardContent>
-             <CardFooter>
-                 <p className="text-xs text-muted-foreground">
+             <CardFooter className="flex flex-col items-start gap-4">
+                <Button onClick={handleSave} disabled={isSaveDisabled} className="w-full">
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Save className="mr-2 h-4 w-4" />
+                    Speichern & Bestätigen
+                </Button>
+                <p className="text-xs text-muted-foreground">
                     Ihre E-Mail ({user?.email}) und der Zeitstempel werden automatisch erfasst.
-                 </p>
+                </p>
             </CardFooter>
         </Card>
       </main>
     </div>
   );
 }
-
