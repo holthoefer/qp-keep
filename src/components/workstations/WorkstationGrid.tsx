@@ -431,32 +431,6 @@ export function WorkstationGrid() {
         </DialogContent>
       </Dialog>
       <Card className="bg-transparent border-none shadow-none">
-        <CardHeader className="py-2 px-0">
-          <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-              </div>
-               <div className="flex items-center gap-2">
-                  <Button size="icon" variant="outline" onClick={fetchData} className="h-8 w-8">
-                      <RefreshCw className="h-4 w-4" />
-                      <span className="sr-only">Refresh</span>
-                  </Button>
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">Aktionen</span>
-                          </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openDialogForNew(); }}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Neuer Arbeitsplatz
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                  </DropdownMenu>
-              </div>
-          </div>
-        </CardHeader>
         <CardContent className="bg-muted/30 p-2 rounded-lg -mx-2">
           {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

@@ -8,7 +8,7 @@ import { WorkstationTable } from "@/components/workstations/WorkstationTable";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth-context";
-import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, Network, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote, Table as TableIcon } from "lucide-react";
+import { Book, ListChecks, Shield, Target, FolderKanban, LogOut, Network, FileImage, Siren, Wrench, LayoutGrid, MoreVertical, StickyNote, Table as TableIcon, PlusCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +47,14 @@ export default function ArbeitsplaetzePage() {
         await logout();
         router.push('/');
     };
+    
+    const openDialogForNew = () => {
+        // This function would typically open a dialog.
+        // For now, we can just log it or prepare for a dialog implementation.
+        console.log("Opening new workstation dialog...");
+        // You would set some state here to open a Dialog component
+    };
+
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
@@ -136,18 +144,7 @@ export default function ArbeitsplaetzePage() {
                 </div>
 
                 <div className="flex items-center gap-1 md:gap-2">
-                    <div className="flex items-center gap-1 rounded-md bg-muted p-1">
-                      {view === 'list' && (
-                          <Button
-                            variant='secondary'
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => setView('grid')}
-                          >
-                            <LayoutGrid className="h-4 w-4" />
-                            <span className="ml-2 md:hidden">Grid</span>
-                          </Button>
-                      )}
+                     <div className="flex items-center gap-1 rounded-md bg-muted p-1">
                       {view === 'grid' && (
                           <Button
                             variant='secondary'
@@ -156,10 +153,36 @@ export default function ArbeitsplaetzePage() {
                             onClick={() => setView('list')}
                           >
                             <TableIcon className="h-4 w-4" />
-                             <span className="ml-2">Liste</span>
+                             <span className="ml-2 hidden lg:inline">Liste</span>
                           </Button>
                        )}
+                       {view === 'list' && (
+                          <Button
+                            variant='secondary'
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => setView('grid')}
+                          >
+                            <LayoutGrid className="h-4 w-4" />
+                          </Button>
+                      )}
                     </div>
+                     {isAdmin && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="h-4 w-4" />
+                                    <span className="sr-only">Aktionen</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openDialogForNew(); }}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Neuer Arbeitsplatz
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="secondary" size="icon" className="rounded-full h-8 w-8">
@@ -181,8 +204,6 @@ export default function ArbeitsplaetzePage() {
                 </div>
             </header>
             <main className="flex-1 p-4 md:p-6">
-                <div className="flex items-center gap-2 mb-4">
-                </div>
                 {view === 'grid' ? <WorkstationGrid /> : <WorkstationTable />}
             </main>
         </div>
