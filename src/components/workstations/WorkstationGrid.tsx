@@ -85,12 +85,16 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: () => void }) => 
     }
   }
 
+  const timeText = isOverdue
+    ? `-${Math.abs(remainingMinutes)}m!`
+    : `${remainingMinutes}m`;
+
   return (
       <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>
         <Badge variant={badgeVariant} className={cn("cursor-pointer", badgeVariant === 'secondary' && 'bg-amber-400/80 text-black hover:bg-amber-400/70')}>
           <Clock className="mr-1.5 h-3.5 w-3.5" />
           <span>
-              M#{dna.Char}: {isOverdue ? `${Math.abs(remainingMinutes)}m überfällig` : `${remainingMinutes}m übrig`}
+              M#{dna.Char}: {timeText}
           </span>
         </Badge>
       </Button>
@@ -260,7 +264,8 @@ export function WorkstationGrid() {
       if (!dna.WP || !dna.PO || !dna.OP || !dna.Char) {
           return '#';
       }
-      return `/erfassung?ap=${dna.WP}&po=${dna.PO}&op=${dna.OP}&charNum=${dna.Char}`;
+      const baseUrl = dna.charType === 'A' ? '/inputattr' : '/erfassung';
+      return `${baseUrl}?ap=${dna.WP}&po=${dna.PO}&op=${dna.OP}&charNum=${dna.Char}`;
   }
 
   const handleCardClick = (e: React.MouseEvent<HTMLDivElement>, ap: string) => {
@@ -429,7 +434,6 @@ export function WorkstationGrid() {
         <CardHeader className="py-2 px-0">
           <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                  <h2 className="font-headline text-xl font-semibold">WPs</h2>
               </div>
                <div className="flex items-center gap-2">
                   <Button size="icon" variant="outline" onClick={fetchData} className="h-8 w-8">

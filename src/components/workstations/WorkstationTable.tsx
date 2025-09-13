@@ -70,13 +70,17 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEv
         badgeVariant = "secondary"; // Yellow-ish for last 20% of time
     }
   }
+  
+  const timeText = isOverdue
+    ? `-${Math.abs(remainingMinutes)}m!`
+    : `${remainingMinutes}m`;
 
   return (
       <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>
         <Badge variant={badgeVariant} className={cn("cursor-pointer", badgeVariant === 'secondary' && 'bg-amber-400/80 text-black hover:bg-amber-400/70')}>
           <Clock className="mr-1.5 h-3.5 w-3.5" />
           <span>
-              M#{dna.Char}: {isOverdue ? `${Math.abs(remainingMinutes)}m` : `${remainingMinutes}m übrig`}
+              M#{dna.Char}: {timeText}
           </span>
         </Badge>
       </Button>
