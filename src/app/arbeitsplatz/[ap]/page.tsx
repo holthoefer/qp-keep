@@ -21,12 +21,14 @@ import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { generateThumbnailUrl } from '@/lib/image-utils';
+import { useAuth } from '@/hooks/use-auth-context';
 
 export default function WorkstationDetailPage({ params }: { params: Promise<{ ap: string }> }) {
   const router = useRouter();
   const { ap } = React.use(params);
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { isAdmin } = useAuth();
 
   const [workstation, setWorkstation] = React.useState<Workstation | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = React.useState('');
@@ -194,7 +196,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     handleDragEvents(e);
-    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+    if (isAdmin && e.dataTransfer.items && e.dataTransfer.items.length > 0) {
       setIsDragging(true);
     }
   };
@@ -207,7 +209,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     handleDragEvents(e);
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (isAdmin && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleUpload(e.dataTransfer.files[0]);
       e.dataTransfer.clearData();
     }
@@ -221,6 +223,8 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
     router.push('/arbeitsplaetze');
   }
 
+  const canEdit = isAdmin;
+
   return (
     <>
       <ImageModal 
@@ -229,11 +233,13 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
         imageUrl={imageUrl}
         imageAlt={`Vollbildansicht für Arbeitsplatz ${workstation?.AP}`}
       />
-      <StorageBrowser 
-        isOpen={isBrowserOpen}
-        onOpenChange={setIsBrowserOpen}
-        onImageSelect={handleImageSelectFromBrowser}
-      />
+      {canEdit && (
+        <StorageBrowser 
+          isOpen={isBrowserOpen}
+          onOpenChange={setIsBrowserOpen}
+          onImageSelect={handleImageSelectFromBrowser}
+        />
+      )}
       <div className="p-4 md:p-8">
         <Button
             variant="outline"
@@ -264,26 +270,30 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
               <div className="space-y-2">
                   <p><strong>Beschreibung:</strong> {workstation.Beschreibung || 'N/A'}</p>
               </div>
-              <div className="space-y-2">
-                  <Button
-                      onClick={() => fileInputRef.current?.click()}
-                      variant="outline"
-                      className="w-full"
-                      disabled={isUploading || isSaving}
-                      >
-                      <UploadCloud className="mr-2 h-4 w-4" />
-                      {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Bild auswählen & hochladen'}
-                  </Button>
-                  <Input
-                      id="file-upload"
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      accept="image/jpeg,image/png,image/gif"
-                      className="hidden"
-                      disabled={isUploading || isSaving}
-                  />
-              </div>
+              
+              {canEdit && (
+                <div className="space-y-2">
+                    <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        variant="outline"
+                        className="w-full"
+                        disabled={isUploading || isSaving || !canEdit}
+                        >
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        {isUploading ? `Lädt hoch... ${Math.round(uploadProgress)}%` : 'Bild auswählen & hochladen'}
+                    </Button>
+                    <Input
+                        id="file-upload"
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/jpeg,image/png,image/gif"
+                        className="hidden"
+                        disabled={isUploading || isSaving || !canEdit}
+                    />
+                </div>
+              )}
+
               {isUploading && <Progress value={uploadProgress} className="w-full" />}
               {uploadError && (
                   <Alert variant="destructive">
@@ -294,7 +304,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
               )}
               <div className="space-y-4">
                   <Card 
-                    className={cn("transition-colors", isDragging && "border-primary ring-2 ring-primary")}
+                    className={cn("transition-colors", isDragging && canEdit && "border-primary ring-2 ring-primary")}
                     onDragEnter={handleDragEnter}
                     onDragOver={handleDragEvents}
                     onDragLeave={handleDragLeave}
@@ -328,7 +338,7 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
                                   />
                               </button>
                           )}
-                          {isDragging && (
+                          {isDragging && canEdit && (
                             <div className="absolute inset-0 bg-primary/20 flex flex-col items-center justify-center rounded-md border-2 border-dashed border-primary">
                               <UploadCloud className="h-12 w-12 text-primary" />
                               <p className="mt-2 text-lg font-semibold text-primary">Bild hier ablegen</p>
@@ -347,51 +357,55 @@ export default function WorkstationDetailPage({ params }: { params: Promise<{ ap
                       </Alert>
                   )}
               </div>
+              
+              {canEdit && (
+                <Accordion type="single" collapsible>
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger>
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                                <ChevronDown className="h-4 w-4 no-rotate" />
+                                <span className="text-sm">Bildverwaltung</span>
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="imageUrl">Bild-URL (.jpg, .png, .gif)</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className="flex-grow" disabled={isSaving || isUploading || !canEdit}/>
+                                    <Button onClick={handleCopyUrl} variant="outline" size="icon" disabled={isSaving || isUploading || !imageUrl || !canEdit} aria-label="Copy URL">
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                    <Button onClick={handleClearUrl} variant="outline" size="icon" disabled={isSaving || isUploading || !canEdit} aria-label="Clear URL">
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
 
-              <Accordion type="single" collapsible>
-                  <AccordionItem value="item-1">
-                      <AccordionTrigger>
-                          <div className="flex items-center gap-2 text-sm font-medium">
-                              <ChevronDown className="h-4 w-4 no-rotate" />
-                              <span className="text-sm">Bildverwaltung</span>
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="space-y-4 pt-4">
-                          <div className="space-y-2">
-                              <Label htmlFor="imageUrl">Bild-URL (.jpg, .png, .gif)</Label>
-                              <div className="flex items-center gap-2">
-                                  <Input id="imageUrl" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." className="flex-grow" disabled={isSaving || isUploading}/>
-                                  <Button onClick={handleCopyUrl} variant="outline" size="icon" disabled={isSaving || isUploading || !imageUrl} aria-label="Copy URL">
-                                      <Copy className="h-4 w-4" />
-                                  </Button>
-                                  <Button onClick={handleClearUrl} variant="outline" size="icon" disabled={isSaving || isUploading} aria-label="Clear URL">
-                                      <Trash2 className="h-4 w-4" />
-                                  </Button>
-                              </div>
-                          </div>
-
-                          <div className="space-y-2">
-                              <Label>Oder aus Storage auswählen</Label>
-                              <Button
-                                  onClick={() => setIsBrowserOpen(true)}
-                                  variant="outline"
-                                  className="w-full"
-                                  disabled={isUploading || isSaving}
-                              >
-                                  <LibraryBig className="mr-2 h-4 w-4" />
-                                  Storage durchsuchen
-                              </Button>
-                          </div>
-                      </AccordionContent>
-                  </AccordionItem>
-              </Accordion>
+                            <div className="space-y-2">
+                                <Label>Oder aus Storage auswählen</Label>
+                                <Button
+                                    onClick={() => setIsBrowserOpen(true)}
+                                    variant="outline"
+                                    className="w-full"
+                                    disabled={isUploading || isSaving || !canEdit}
+                                >
+                                    <LibraryBig className="mr-2 h-4 w-4" />
+                                    Storage durchsuchen
+                                </Button>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+              )}
             </CardContent>
-            <CardFooter>
-                  <Button onClick={handleSave} className="w-full" disabled={isSaving || isUploading || !isUrlChanged}>
-                      <Save className="mr-2 h-4 w-4" />
-                      {isSaving ? 'Speichern...' : 'Speichern & Schliessen'}
-                  </Button>
-              </CardFooter>
+            {canEdit && (
+                <CardFooter>
+                    <Button onClick={handleSave} className="w-full" disabled={isSaving || isUploading || !isUrlChanged || !canEdit}>
+                        <Save className="mr-2 h-4 w-4" />
+                        {isSaving ? 'Speichern...' : 'Speichern & Schliessen'}
+                    </Button>
+                </CardFooter>
+            )}
           </Card>
         ) : (
           <div className="text-center py-10 text-gray-500">

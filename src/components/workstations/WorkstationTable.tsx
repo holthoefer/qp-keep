@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -19,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA } from '@/types';
 import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData } from '@/lib/data';
-import { Pencil, PlusCircle, RefreshCw, Clock, AlertTriangle, Loader2, Wrench, Siren, Zap, MoreVertical, ImageIcon } from 'lucide-react';
+import { Pencil, PlusCircle, RefreshCw, Clock, AlertTriangle, Loader2, Wrench, Siren, Zap, MoreVertical, ImageIcon, FolderKanban } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +27,7 @@ import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { generateThumbnailUrl } from '@/lib/image-utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel } from '../ui/dropdown-menu';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 
 const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEvent) => void }) => {
@@ -71,9 +71,7 @@ const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEv
     }
   }
   
-  const timeText = isOverdue
-    ? `-${Math.abs(remainingMinutes)}m!`
-    : `${remainingMinutes}m`;
+ const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}m!` : `${remainingMinutes}m`;
 
   return (
       <Button variant="ghost" size="sm" className="h-auto p-0" onClick={onClick}>
@@ -396,8 +394,8 @@ export function WorkstationTable() {
                 <TableHeader>
                     <TableRow>
                         <TableHead className="w-12"><Zap className="h-4 w-4 mx-auto" /></TableHead>
-                        <TableHead className="w-28">AP#</TableHead>
-                        <TableHead className="w-36">Status Zeit</TableHead>
+                        <TableHead className="w-16">AP#</TableHead>
+                        <TableHead className="w-28">Status Zeit</TableHead>
                         <TableHead>Verletzungen</TableHead>
                         <TableHead>PO</TableHead>
                         <TableHead>OP</TableHead>
@@ -446,39 +444,51 @@ export function WorkstationTable() {
                                         <DropdownMenuItem onSelect={() => openDialogForEdit(ws)}>
                                             <Pencil className="mr-2 h-4 w-4" /> Stammdaten bearbeiten
                                         </DropdownMenuItem>
-                                         <DropdownMenuItem onSelect={() => router.push(`/arbeitsplatz/${ws.AP}`)}>
-                                            <ImageIcon className="mr-2 h-4 w-4" /> Foto verwalten
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
                                         <DropdownMenuItem onSelect={(e) => handleEventClick(e, ws.AP)}>
                                             <Wrench className="mr-2 h-4 w-4" /> Event erfassen
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onSelect={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
                                             <Siren className="mr-2 h-4 w-4" /> Incident melden
                                         </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                         <DropdownMenuItem asChild>
+                                            <Link href={`/auftraege`}>
+                                                <FolderKanban className="mr-2 h-4 w-4" />
+                                                Aufträge anzeigen
+                                            </Link>
+                                        </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
-                                <TableCell className="font-medium">
-                                     <button
-                                        onClick={(e) => { e.stopPropagation(); router.push(`/arbeitsplatz/${ws.AP}`); }}
-                                        className="flex items-center gap-2 group"
-                                     >
-                                         {ws.imageUrl ? (
-                                            <Image
-                                                src={generateThumbnailUrl(ws.imageUrl)}
-                                                alt={`Bild für ${ws.AP}`}
-                                                width={32}
-                                                height={32}
-                                                className="rounded object-cover aspect-square border group-hover:ring-2 group-hover:ring-primary"
-                                            />
-                                        ) : (
-                                            <div className="w-8 h-8 flex items-center justify-center bg-muted rounded border group-hover:ring-2 group-hover:ring-primary">
-                                                <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                                            </div>
-                                        )}
-                                         <span>{ws.AP}</span>
-                                     </button>
+                                <TableCell>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                 <button
+                                                    onClick={(e) => { e.stopPropagation(); router.push(`/arbeitsplatz/${ws.AP}`); }}
+                                                    className="flex items-center gap-2 group"
+                                                 >
+                                                     {ws.imageUrl ? (
+                                                        <Image
+                                                            src={generateThumbnailUrl(ws.imageUrl)}
+                                                            alt={`Bild für ${ws.AP}`}
+                                                            width={32}
+                                                            height={32}
+                                                            className="rounded object-cover aspect-square border group-hover:ring-2 group-hover:ring-primary"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-8 h-8 flex items-center justify-center bg-muted rounded border group-hover:ring-2 group-hover:ring-primary">
+                                                            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                                                        </div>
+                                                    )}
+                                                 </button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="font-bold">{ws.AP}</p>
+                                                <p>{ws.Beschreibung}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
                                 </TableCell>
                                 <TableCell>
                                     {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={(e) => handleBadgeClick(e, nextDueDna!)} />}
