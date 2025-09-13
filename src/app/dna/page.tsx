@@ -81,7 +81,7 @@ export const DnaTimeTracker = ({ lastTimestamp, frequency, prefix }: { lastTimes
   const isWarning = !isOverdue && percentageElapsed >= 0.8;
   
   const badgeVariant = isOverdue ? "destructive" : isWarning ? "secondary" : "default";
-  const timeText = isOverdue ? `${Math.abs(remainingMinutes)} min überfällig` : `${remainingMinutes} min verbleibend`;
+  const timeText = isOverdue ? `-${Math.abs(remainingMinutes)}m!` : `${remainingMinutes}m`;
   
   return (
     <TooltipProvider>
@@ -287,6 +287,10 @@ export default function DnaPage() {
                 <Button variant="outline" size="sm" onClick={() => router.push('/cp')}>
                     <Target className="mr-2 h-4 w-4" />
                     CP
+                </Button>
+                 <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                    <Book className="mr-2 h-4 w-4" />
+                    LP
                 </Button>
                 {isAdmin && (
                     <Button variant="outline" size="sm" onClick={() => router.push('/admin/users')}>

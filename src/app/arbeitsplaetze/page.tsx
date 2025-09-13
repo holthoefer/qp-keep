@@ -88,6 +88,10 @@ export default function ArbeitsplaetzePage() {
                             <Target className="mr-2 h-4 w-4" />
                             CP
                         </Button>
+                         <Button variant="outline" size="sm" onClick={() => router.push('/lenkungsplan')}>
+                            <Book className="mr-2 h-4 w-4" />
+                            LP
+                        </Button>
                     </div>
                      {/* Mobile View: Icons and Dropdown */}
                     <div className="md:hidden flex items-center gap-1">
@@ -136,18 +140,16 @@ export default function ArbeitsplaetzePage() {
 
                 <div className="flex items-center gap-1 md:gap-2">
                      <div className="flex items-center gap-1 rounded-md bg-muted p-1">
-                      {view === 'grid' && (
-                          <Button
+                      {view === 'grid' ? (
+                           <Button
                             variant='secondary'
                             size="sm"
                             className="h-7 px-2"
                             onClick={() => setView('list')}
                           >
                             <TableIcon className="h-4 w-4" />
-                             <span className="ml-2 hidden lg:inline">Liste</span>
                           </Button>
-                       )}
-                       {view === 'list' && (
+                       ) : (
                           <Button
                             variant='secondary'
                             size="sm"
@@ -155,7 +157,7 @@ export default function ArbeitsplaetzePage() {
                             onClick={() => setView('grid')}
                           >
                             <LayoutGrid className="h-4 w-4" />
-                             <span className="ml-2 hidden lg:inline">Grid</span>
+                            <span className="ml-2 hidden lg:inline">Grid</span>
                           </Button>
                       )}
                     </div>
