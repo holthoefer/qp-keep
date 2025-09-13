@@ -6,14 +6,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -21,31 +13,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA } from '@/types';
 import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData } from '@/lib/data';
-import { Pencil, PlusCircle, RefreshCw, ListChecks, MoreHorizontal, Image as ImageIcon, MoreVertical, FolderKanban, Clock, AlertTriangle, Loader2, ArrowLeft, Wrench, Siren } from 'lucide-react';
+import { Pencil, PlusCircle, RefreshCw, Clock, AlertTriangle, Loader2, Wrench, Siren } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
-import { ImageModal } from '@/components/cp/ImageModal';
 import { cn } from '@/lib/utils';
-import { generateThumbnailUrl } from '@/lib/image-utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
-const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: () => void }) => {
+const NextCheckBadge = ({ dna, onClick }: { dna: DNA; onClick: (e: React.MouseEvent) => void }) => {
   const [remainingMinutes, setRemainingMinutes] = React.useState<number | null>(null);
 
   React.useEffect(() => {
@@ -244,7 +226,8 @@ export function WorkstationTable() {
       if (!dna.WP || !dna.PO || !dna.OP || !dna.Char) {
           return '#';
       }
-      return `/erfassung?ap=${dna.WP}&po=${dna.PO}&op=${dna.OP}&charNum=${dna.Char}`;
+      const baseUrl = dna.charType === 'A' ? '/inputattr' : '/erfassung';
+      return `${baseUrl}?ap=${dna.WP}&po=${dna.PO}&op=${dna.OP}&charNum=${dna.Char}`;
   }
 
   const handleRowClick = (ap: string) => {
@@ -260,6 +243,23 @@ export function WorkstationTable() {
     
     router.push(`/merkmale?ap=${encodeURIComponent(ap)}`);
   };
+  
+  const handleBadgeClick = (e: React.MouseEvent, dna: DNA) => {
+      e.stopPropagation();
+      const url = getErfassungUrl(dna);
+      if (url === '#') return;
+      router.push(url);
+  }
+
+  const handleIncidentClick = (e: React.MouseEvent, ap: string, po?: string) => {
+    e.stopPropagation();
+    router.push(`/incident?ap=${encodeURIComponent(ap)}&po=${encodeURIComponent(po || '')}`);
+  }
+
+  const handleEventClick = (e: React.MouseEvent, ap: string) => {
+    e.stopPropagation();
+    router.push(`/event/new?ap=${encodeURIComponent(ap)}`);
+  }
 
   return (
     <>
@@ -384,106 +384,99 @@ export function WorkstationTable() {
             </form>
         </DialogContent>
       </Dialog>
-      <Card>
-        <CardHeader className="py-2 px-0">
-           <div className="flex items-center justify-between">
-                <h2 className="font-headline text-xl font-semibold">WPs</h2>
-                <Button size="icon" variant="outline" onClick={fetchData} className="h-8 w-8">
-                    <RefreshCw className="h-4 w-4" />
-                    <span className="sr-only">Refresh</span>
-                </Button>
-           </div>
-        </CardHeader>
-        <CardContent className="px-0">
-             <div className="rounded-lg border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Arbeitsplatz</TableHead>
-                            <TableHead>Verbleibende Zeit</TableHead>
-                            <TableHead>Verletzungen</TableHead>
-                            <TableHead>PO</TableHead>
-                            <TableHead>OP</TableHead>
-                            <TableHead>LOT</TableHead>
-                            <TableHead className="text-right">Aktionen</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            Array.from({ length: 5 }).map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell colSpan={7}><Skeleton className="h-6 w-full" /></TableCell>
-                                </TableRow>
-                            ))
-                        ) : workstations.length > 0 ? (
-                           workstations.map((ws) => {
-                                const dnaForWorkstation = allDna.filter(d => d.WP === ws.AP && d.PO === ws.POcurrent && d.OP === ws.OPcurrent);
-                                const exceptionDnas = dnaForWorkstation.filter(dna => dna.checkStatus && dna.checkStatus !== 'OK');
-                                let nextDueDna: DNA | null = null;
-                                let shortestTime = Infinity;
+        <div className="rounded-lg border">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Arbeitsplatz</TableHead>
+                        <TableHead>Verbleibende Zeit</TableHead>
+                        <TableHead>Verletzungen</TableHead>
+                        <TableHead>PO</TableHead>
+                        <TableHead>OP</TableHead>
+                        <TableHead>LOT</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {isLoading ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell colSpan={7}><Skeleton className="h-6 w-full" /></TableCell>
+                            </TableRow>
+                        ))
+                    ) : workstations.length > 0 ? (
+                        workstations.map((ws) => {
+                            const dnaForWorkstation = allDna.filter(d => d.WP === ws.AP && d.PO === ws.POcurrent && d.OP === ws.OPcurrent);
+                            const exceptionDnas = dnaForWorkstation.filter(dna => dna.checkStatus && dna.checkStatus !== 'OK');
+                            let nextDueDna: DNA | null = null;
+                            let shortestTime = Infinity;
 
-                                dnaForWorkstation.forEach(dna => {
-                                    if (dna.lastCheckTimestamp && dna.Frequency) {
-                                        const lastCheckTime = new Date(dna.lastCheckTimestamp).getTime();
-                                        const dueTime = lastCheckTime + dna.Frequency * 60 * 1000;
-                                        const now = new Date().getTime();
-                                        const remainingMinutes = dueTime - now;
-                                        if (remainingMinutes < shortestTime) {
-                                            shortestTime = remainingMinutes;
-                                            nextDueDna = dna;
-                                        }
+                            dnaForWorkstation.forEach(dna => {
+                                if (dna.lastCheckTimestamp && dna.Frequency) {
+                                    const lastCheckTime = new Date(dna.lastCheckTimestamp).getTime();
+                                    const dueTime = lastCheckTime + dna.Frequency * 60 * 1000;
+                                    const now = new Date().getTime();
+                                    const remainingMinutes = dueTime - now;
+                                    if (remainingMinutes < shortestTime) {
+                                        shortestTime = remainingMinutes;
+                                        nextDueDna = dna;
                                     }
-                                });
+                                }
+                            });
 
-                                return (
-                                <TableRow key={ws.AP} onClick={() => handleRowClick(ws.AP)} className="cursor-pointer">
-                                    <TableCell className="font-medium">{ws.AP}</TableCell>
-                                    <TableCell>
-                                        {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={() => router.push(getErfassungUrl(nextDueDna!))} />}
-                                    </TableCell>
-                                    <TableCell>
-                                        {exceptionDnas.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                                {exceptionDnas.map(dna => (
-                                                    <Button
-                                                        key={dna.idDNA}
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-auto p-0"
-                                                        onClick={() => router.push(getErfassungUrl(dna))}
-                                                    >
-                                                        <Badge variant="destructive" className="cursor-pointer">
-                                                            <AlertTriangle className="mr-1.5 h-3.5 w-3.5" />
-                                                            M#{dna.Char}
-                                                        </Badge>
-                                                    </Button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>{ws.POcurrent || 'N/A'}</TableCell>
-                                    <TableCell>{ws.OPcurrent || 'N/A'}</TableCell>
-                                    <TableCell>{ws.LOTcurrent || 'N/A'}</TableCell>
-                                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                                        <Button variant="ghost" size="icon" onClick={() => openDialogForEdit(ws)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                                );
-                           })
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                    Keine Arbeitsplätze gefunden.
+                            return (
+                            <TableRow key={ws.AP} onClick={() => handleRowClick(ws.AP)} className="cursor-pointer">
+                                <TableCell className="font-medium">{ws.AP}</TableCell>
+                                <TableCell>
+                                    {nextDueDna && <NextCheckBadge dna={nextDueDna} onClick={(e) => handleBadgeClick(e, nextDueDna!)} />}
+                                </TableCell>
+                                <TableCell>
+                                    {exceptionDnas.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                            {exceptionDnas.map(dna => (
+                                                <Button
+                                                    key={dna.idDNA}
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-auto p-0"
+                                                    onClick={(e) => handleBadgeClick(e, dna)}
+                                                >
+                                                    <Badge variant="destructive" className="cursor-pointer">
+                                                        <AlertTriangle className="mr-1.5 h-3.5 w-3.5" />
+                                                        M#{dna.Char}
+                                                    </Badge>
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </TableCell>
+                                <TableCell>{ws.POcurrent || 'N/A'}</TableCell>
+                                <TableCell>{ws.OPcurrent || 'N/A'}</TableCell>
+                                <TableCell>{ws.LOTcurrent || 'N/A'}</TableCell>
+                                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                    <Button variant="ghost" size="icon" onClick={() => openDialogForEdit(ws)}>
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" onClick={(e) => handleEventClick(e, ws.AP)}>
+                                        <Wrench className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" onClick={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
+                                        <Siren className="h-4 w-4" />
+                                    </Button>
                                 </TableCell>
                             </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-        </CardContent>
-      </Card>
+                            );
+                        })
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                Keine Arbeitsplätze gefunden.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+        </div>
     </>
   );
 }

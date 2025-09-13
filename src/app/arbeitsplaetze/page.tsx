@@ -135,11 +135,11 @@ export default function ArbeitsplaetzePage() {
                 </div>
 
                 <div className="flex items-center gap-1 md:gap-2">
-                    <div className="hidden md:flex items-center gap-1 rounded-md bg-muted p-1">
+                    <div className="flex items-center gap-1 rounded-md bg-muted p-1">
                       <Button
                         variant={view === 'grid' ? 'secondary' : 'ghost'}
                         size="sm"
-                        className="h-7"
+                        className="h-7 px-2"
                         onClick={() => setView('grid')}
                       >
                         <LayoutGrid className="h-4 w-4" />
@@ -147,7 +147,7 @@ export default function ArbeitsplaetzePage() {
                       <Button
                         variant={view === 'list' ? 'secondary' : 'ghost'}
                         size="sm"
-                        className="h-7"
+                        className="h-7 px-2"
                         onClick={() => setView('list')}
                       >
                         <TableIcon className="h-4 w-4" />
@@ -174,6 +174,7 @@ export default function ArbeitsplaetzePage() {
                 </div>
             </header>
             <main className="flex-1 p-4 md:p-6">
+                <h2 className="font-headline text-xl font-semibold mb-4">WPs</h2>
                 {view === 'grid' ? <WorkstationGrid /> : <WorkstationTable />}
             </main>
         </div>
