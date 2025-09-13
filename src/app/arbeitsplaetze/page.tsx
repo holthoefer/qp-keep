@@ -144,7 +144,7 @@ export default function ArbeitsplaetzePage() {
                         onClick={() => setView('grid')}
                       >
                         <LayoutGrid className={cn("h-4 w-4", view === 'list' && "text-muted-foreground")} />
-                        <span className={cn("ml-2", view === 'grid' && "hidden")}>Grid</span>
+                        <span className={cn("ml-2 md:hidden", view === 'grid' && "hidden")}>Grid</span>
                       </Button>
                       <Button
                         variant={view === 'list' ? 'secondary' : 'ghost'}

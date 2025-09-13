@@ -450,13 +450,6 @@ export function WorkstationTable() {
                                         <DropdownMenuItem onSelect={(e) => handleIncidentClick(e, ws.AP, ws.POcurrent)}>
                                             <Siren className="mr-2 h-4 w-4" /> Incident melden
                                         </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                         <DropdownMenuItem asChild>
-                                            <Link href={`/auftraege`}>
-                                                <FolderKanban className="mr-2 h-4 w-4" />
-                                                Aufträge anzeigen
-                                            </Link>
-                                        </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
