@@ -36,6 +36,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Workstation, Auftrag, ControlPlan, ProcessStep, DNA } from '@/types';
 import { getWorkstations, saveWorkstation, getAuftraege, getControlPlans, getDnaData } from '@/lib/data';
+import { generateThumbnailUrl } from '@/lib/image-utils';
 
 
 export default function ArbeitsplaetzePage() {
@@ -112,8 +113,13 @@ export default function ArbeitsplaetzePage() {
     
     const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const ap = formData.get('AP') as string;
+        
+        const currentTarget = event.currentTarget;
+        const formData = new FormData(currentTarget);
+        
+        // AP field is disabled when editing, so we get it from state.
+        const ap = editingWorkstation?.AP || formData.get('AP') as string;
+        
         let poCurrent = formData.get('POcurrent') as string;
         let opCurrent = formData.get('OPcurrent') as string;
 
@@ -211,12 +217,25 @@ export default function ArbeitsplaetzePage() {
               }}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>
-                        {editingWorkstation ? 'Arbeitsplatz bearbeiten' : 'Neuen Arbeitsplatz anlegen'}
-                        </DialogTitle>
-                        <DialogDescription>
-                        {editingWorkstation ? `Änderungen für ${editingWorkstation.AP} vornehmen.` : 'Füllen Sie die Details aus.'}
-                        </DialogDescription>
+                        <div className="flex items-start gap-4">
+                            {editingWorkstation?.imageUrl && (
+                                <Image
+                                    src={generateThumbnailUrl(editingWorkstation.imageUrl)}
+                                    alt={`Thumbnail für ${editingWorkstation.AP}`}
+                                    width={40}
+                                    height={40}
+                                    className="rounded-md object-cover aspect-square border"
+                                />
+                            )}
+                            <div>
+                                <DialogTitle>
+                                {editingWorkstation ? 'Arbeitsplatz bearbeiten' : 'Neuen Arbeitsplatz anlegen'}
+                                </DialogTitle>
+                                <DialogDescription>
+                                {editingWorkstation ? `Änderungen für ${editingWorkstation.AP} vornehmen.` : 'Füllen Sie die Details aus.'}
+                                </DialogDescription>
+                            </div>
+                        </div>
                     </DialogHeader>
                     <form onSubmit={handleSave} ref={formRef}>
                     <div className="grid gap-4 py-4">
@@ -232,8 +251,8 @@ export default function ArbeitsplaetzePage() {
                                 'col-span-3 font-bold',
                                 !editingWorkstation && 'bg-green-100 dark:bg-green-900/50'
                             )}
-                            readOnly
-                            disabled
+                            readOnly={!!editingWorkstation}
+                            disabled={!!editingWorkstation}
                         />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -245,6 +264,7 @@ export default function ArbeitsplaetzePage() {
                             name="Beschreibung"
                             defaultValue={editingWorkstation?.Beschreibung}
                             className="col-span-3"
+                            readOnly={!!editingWorkstation}
                             disabled={!!editingWorkstation}
                         />
                         </div>
@@ -410,7 +430,7 @@ export default function ArbeitsplaetzePage() {
                      <div className="flex items-center gap-1 rounded-md bg-muted p-1">
                       {view === 'grid' ? (
                            <Button
-                            variant='secondary'
+                            variant='ghost'
                             size="sm"
                             className="h-7 px-2"
                             onClick={() => setView('list')}
